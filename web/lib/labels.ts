@@ -1,7 +1,7 @@
 import { FOLDED_PLDDT, INTERFACE_LOST_SHARE } from '../../src/isoforms.ts'
 import { FEATURE_GROUPS } from '../../src/types.ts'
 import type { FeatureGroup, Totals } from '../../src/types.ts'
-import { GROUPS, GROUP_LABELS } from './features.ts'
+import { GROUPS, GROUP_MISSING } from './features.ts'
 
 const SHARES: Record<number, string> = { 0.5: 'half' }
 
@@ -10,7 +10,7 @@ export function share(value: number) {
 }
 
 export function groupMissing(group: FeatureGroup) {
-  return `missing in full a feature from ${GROUP_LABELS[group].toLowerCase()}`
+  return GROUP_MISSING[group]
 }
 
 export const INTERFACE_MISSING = `missing at least ${share(INTERFACE_LOST_SHARE)} of a predicted partner interface`
