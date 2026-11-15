@@ -7,11 +7,11 @@
   "modelsPending": 13517,
   "maneSelectNotCanonical": 1005,
   "lacking": {
-    "targeting": 2515,
-    "domains": 5342,
-    "sites": 2542,
-    "modifications": 7446,
-    "interface": 660,
-    "folded": 13998
+    "targeting": 2477,
+    "domains": 5514,
+    "sites": 2597,
+    "modifications": 7501,
+    "interface": 941,
+    "folded": 13954
   }
 }
