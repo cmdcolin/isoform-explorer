@@ -670,3 +670,80 @@ table.browse th[title] button {
   text-decoration: underline dotted;
   text-underline-offset: 3px;
 }
+
+table.browse td:first-child {
+  min-width: 13rem;
+}
+
+table.browse .protein {
+  display: block;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.column-notes {
+  max-width: 760px;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+.column-notes dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 8px 0 0;
+}
+
+.column-notes dt {
+  font-weight: 600;
+}
+
+.column-notes dd {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.browse-wrap {
+  background:
+    linear-gradient(to right, var(--surface) 30%, transparent) left / 40px 100% no-repeat local,
+    linear-gradient(to left, var(--surface) 30%, transparent) right / 40px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 0.2), transparent) left / 14px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 0.2), transparent) right / 14px 100% no-repeat scroll;
+}
+
+.scroll-hint {
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  table.browse td:first-child,
+  table.browse th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 9rem;
+    max-width: 9rem;
+    background: var(--surface);
+    box-shadow: 1px 0 0 var(--border);
+  }
+
+  table.browse .protein {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  table.browse .protein .muted {
+    display: none;
+  }
+
+  .column-notes dl {
+    grid-template-columns: 1fr;
+  }
+
+  .column-notes dd {
+    margin-bottom: 6px;
+  }
+}

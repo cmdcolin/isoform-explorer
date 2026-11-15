@@ -50,7 +50,7 @@ const references = [
       <li>
         AlphaFold DB has a model of exactly the sequence for {n(t.withModel)} alternative isoforms, and a full-length
         model of the canonical sequence for {n(t.canonicalModels)} proteins. For {n(t.modelsPending)} of these models
-        the confidence (pLDDT) is not fetched yet, so their folded and confidence numbers are blank for now.
+        the confidence (pLDDT) is not fetched yet, so their counts of confidently modelled residues are blank for now.
       </li>
       <li>
         For {n(t.maneSelectNotCanonical)} proteins the MANE Select transcript encodes an alternative isoform rather than
@@ -122,8 +122,8 @@ const references = [
         trigger nonsense-mediated decay, quoted as UniProt's.
       </li>
       <li>
-        <strong>Folded residues:</strong> canonical residues with pLDDT ≥ {FOLDED_PLDDT} in the AlphaFold DB monomer that the isoform
-        lacks. Not given when the canonical protein has no full-length model.
+        <strong>Confidently modelled residues:</strong> canonical residues with pLDDT ≥ {FOLDED_PLDDT} in the AlphaFold DB
+        monomer that the isoform lacks. Not given when the canonical protein has no full-length model.
       </li>
       <li>
         <strong>Predicted partner interfaces:</strong> for each AlphaFold DB complex with ipSAE ≥ {CONFIDENT}, the interface residues
@@ -147,9 +147,10 @@ const references = [
         alternative terminus, is "replaced by N different residues". Counts of lost features use missing residues only.
       </li>
       <li>
-        <strong>Structure only where the model is confident.</strong> Folded counts use pLDDT ≥ {FOLDED_PLDDT}. Where the absent
-        residues are mostly below pLDDT {UNFOLDED_PLDDT} in the canonical model, the page says the model shows no fold there and does not
-        count it as fold lost.
+        <strong>Structure only where the model is confident.</strong> Counts of confidently modelled residues use pLDDT ≥
+        {FOLDED_PLDDT}. Where most absent residues are below pLDDT {UNFOLDED_PLDDT} in the canonical model, the page gives
+        that count instead. Every pLDDT statement is a count of residues by the model's confidence; the site never says a
+        region is unfolded.
       </li>
       <li>
         <strong>A kept interface is not binding.</strong> No isoform was modelled with a partner. A full circle means the

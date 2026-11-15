@@ -11,7 +11,7 @@ interface Props {
 }
 
 const DEFAULT_DESCRIPTION =
-  'If this transcript is the one being made, what does the protein lose? Residues, UniProt features, folded structure and predicted partner interfaces, for every described human protein isoform.'
+  'If this transcript is the one being made, what does the protein lose? Residues, UniProt features, confidently modelled structure and predicted partner interfaces, for every described human protein isoform.'
 const { title, description = DEFAULT_DESCRIPTION, nav, indexed = true } = Astro.props
 const fullTitle = title ? `${title} · Isoform explorer` : 'Isoform explorer'
 const canonical = new URL(Astro.url.pathname, Astro.site)

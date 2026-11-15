@@ -1,7 +1,7 @@
 import type { IndexRow } from '../../src/types.ts'
 import {
   browseQuery,
-  isoformsIn,
+  countLine,
   nextSort,
   rowHtml,
   rowsFor,
@@ -11,6 +11,15 @@ import {
 import type { View } from '../lib/browse.ts'
 
 const PAGE = 100
+
+function recordOf<T>(json: string | undefined, as: (value: unknown) => T) {
+  const value: unknown = JSON.parse(json ?? '{}')
+  return Object.fromEntries(
+    typeof value === 'object' && value !== null
+      ? Object.entries(value).map(([key, inner]) => [key, as(inner)])
+      : [],
+  )
+}
 
 function isRow(value: unknown): value is IndexRow {
   return (
@@ -46,19 +55,23 @@ function wire(form: HTMLFormElement, table: HTMLTableElement) {
   let shown: IndexRow[] = []
   let limit = PAGE
 
-  const describe = () => {
-    const proteins = `${shown.length.toLocaleString()} of ${rows.length.toLocaleString()} proteins`
-    return view.has
-      ? `${proteins}, ${isoformsIn(shown, view.has).toLocaleString()} isoforms`
-      : proteins
+  const phrases = recordOf(table.dataset.phrases, String)
+  const totals = recordOf(table.dataset.totals, Number)
+  const wrap = table.closest('.browse-wrap')
+  const hint = document.querySelector<HTMLElement>('.scroll-hint')
+  const fits = () => {
+    if (wrap && hint) {
+      hint.hidden = wrap.scrollWidth <= wrap.clientWidth
+    }
   }
+  addEventListener('resize', fits)
 
   const draw = () => {
     if (body) {
       body.innerHTML = shown.slice(0, limit).map(rowHtml).join('')
     }
     if (count) {
-      count.textContent = describe()
+      count.textContent = countLine(shown, rows.length, view, phrases, totals)
     }
     if (more) {
       const left = shown.length - limit
@@ -75,6 +88,7 @@ function wire(form: HTMLFormElement, table: HTMLTableElement) {
           : 'none',
       )
     }
+    fits()
   }
 
   const show = (next: View) => {

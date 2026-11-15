@@ -5,7 +5,7 @@ import { browseQuery } from '../lib/browse.ts'
 import { examples, gene, totals } from '../lib/data.ts'
 import { exampleSentence } from '../lib/examples.ts'
 import { GROUPS } from '../lib/features.ts'
-import { FOLDED, MISSING } from '../lib/labels.ts'
+import { INTERFACE_MISSING, MODELLED_MISSING, groupMissing } from '../lib/labels.ts'
 import { geneHref, href } from '../lib/site.ts'
 
 const t = totals()
@@ -16,9 +16,9 @@ const scope = [
   [t.withTranscript, 'of those isoforms with an Ensembl or RefSeq transcript', browse({ sort: 'transcripts' })],
 ] as const
 const lacking = [
-  ...GROUPS.map(group => [t.lacking[group], `missing ${MISSING[group]}`, browse({ has: group })] as const),
-  [t.lacking.interface, `missing ${MISSING.interface}`, browse({ has: 'interface' })],
-  [t.lacking.folded, `missing ${FOLDED}`, browse({ sort: 'folded' })],
+  ...GROUPS.map(group => [t.lacking[group], groupMissing(group), browse({ has: group })] as const),
+  [t.lacking.interface, INTERFACE_MISSING, browse({ has: 'interface' })],
+  [t.lacking.folded, MODELLED_MISSING, browse({ sort: 'modelled' })],
 ] as const
 const worked = examples().map(example => ({ example, sentence: exampleSentence(example, gene(example.page)) }))
 const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']

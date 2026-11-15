@@ -169,3 +169,23 @@ test('a later lookup file is fetched only when the earlier ones miss', async () 
   await lookupsFor(parseQuery('ENSG00000141510'), load)
   expect(fetched).toHaveLength(3)
 })
+
+test('a transcript UniProt lists under an entry but ties to no isoform says so', () => {
+  expect(
+    outcome(parseQuery('NM_023029.3'), {
+      refseq: { NM_023029: ['FGFR2'] },
+    }),
+  ).toEqual({
+    kind: 'choose',
+    intro:
+      'UniProt lists NM_023029 under FGFR2 but ties it to no described isoform.',
+    choices: [
+      {
+        href: href('gene/FGFR2/'),
+        gene: 'FGFR2',
+        accession: undefined,
+        isoform: undefined,
+      },
+    ],
+  })
+})

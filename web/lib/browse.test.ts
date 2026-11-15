@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import type { IndexRow } from '../../src/types.ts'
 import {
   browseQuery,
-  isoformsIn,
+  countLine,
   nextSort,
   rowHtml,
   rowsFor,
@@ -43,18 +43,18 @@ const rows = [
 ]
 const texts = rows.map(searchText)
 
-test('a plain visit sorts by most residues absent, largest first', () => {
+test('a plain visit lists proteins by gene symbol, A to Z', () => {
   const view = viewFrom(new URLSearchParams())
   expect(view).toEqual({
     query: '',
     has: '',
-    sort: 'absent',
-    descending: true,
+    sort: 'gene',
+    descending: false,
   })
   expect(rowsFor(rows, texts, view).map(r => r.gene)).toEqual([
+    'AAA',
     'BBB',
     'CCC',
-    'AAA',
   ])
 })
 
@@ -63,8 +63,42 @@ test('a tile link keeps proteins with such an isoform, sorted by that count', ()
   expect(view.sort).toBe('targeting')
   const kept = rowsFor(rows, texts, view)
   expect(kept.map(r => r.gene)).toEqual(['BBB', 'CCC'])
-  expect(isoformsIn(kept, 'targeting')).toBe(3)
-  expect(isoformsIn(kept, '')).toBe(0)
+})
+
+test('the count line restates the number the tile showed', () => {
+  const phrases = {
+    targeting: 'missing a whole thing',
+    modelled: 'missing modelled residues',
+  }
+  const totals = { targeting: 3, modelled: 7 }
+  const count = (params: string, shown = rows) =>
+    countLine(shown, 3, viewFrom(new URLSearchParams(params)), phrases, totals)
+  expect(count('')).toBe('3 of 3 proteins · 3 isoforms, 3 with a transcript')
+  expect(count('has=targeting', rows.slice(1))).toBe(
+    '2 of 3 proteins · 2 isoforms, 2 with a transcript · 3 missing a whole thing',
+  )
+  expect(count('sort=modelled')).toBe(
+    '3 of 3 proteins · 3 isoforms, 3 with a transcript · 7 missing modelled residues',
+  )
+  expect(count('sort=modelled&q=aaa', rows.slice(0, 1))).toBe(
+    '1 of 3 proteins · 1 isoforms, 1 with a transcript',
+  )
+})
+
+test('a filtered list puts the exact symbol first, then symbols starting with it', () => {
+  const app = [
+    row('APPBP2'),
+    row('GOLGA2', { protein: 'Golgi apparatus protein' }),
+    row('APP', { protein: 'Amyloid-beta precursor protein' }),
+    row('ZAPP', { accession: 'Q00APP' }),
+  ]
+  const view = viewFrom(new URLSearchParams('q=app'))
+  expect(rowsFor(app, app.map(searchText), view).map(r => r.gene)).toEqual([
+    'APP',
+    'APPBP2',
+    'GOLGA2',
+    'ZAPP',
+  ])
 })
 
 test('unknown filters and sorts fall back to the defaults', () => {
@@ -82,7 +116,10 @@ test('the text filter matches gene, accession or protein name, any case', () => 
 })
 
 test('sorting a column twice reverses it; text columns start A to Z', () => {
-  const byGene = nextSort(viewFrom(new URLSearchParams()), 'gene')
+  const byGene = nextSort(
+    viewFrom(new URLSearchParams('sort=isoforms')),
+    'gene',
+  )
   expect(byGene.descending).toBe(false)
   expect(rowsFor(rows, texts, byGene).map(r => r.gene)).toEqual([
     'AAA',
@@ -95,15 +132,15 @@ test('sorting a column twice reverses it; text columns start A to Z', () => {
 test('the address names only what differs from the default view', () => {
   expect(browseQuery(viewFrom(new URLSearchParams()))).toBe('')
   expect(browseQuery({ has: 'interface' })).toBe('?has=interface')
-  expect(browseQuery({ sort: 'folded' })).toBe('?sort=folded')
+  expect(browseQuery({ sort: 'modelled' })).toBe('?sort=modelled')
   expect(browseQuery({ query: 'kras', sort: 'gene', descending: true })).toBe(
-    '?q=kras&sort=gene&order=desc',
+    '?q=kras&order=desc',
   )
   const view = viewFrom(new URLSearchParams('q=x&has=sites&order=asc'))
   expect(viewFrom(new URLSearchParams(browseQuery(view)))).toEqual(view)
 })
 
-test('a row links its gene page and leaves folded blank without pLDDT', () => {
+test('a row links its gene page and leaves the modelled count blank without pLDDT', () => {
   const html = rowHtml(
     row('HLA-A', { page: 'HLA-A_P04439', foldedAbsent: null }),
   )

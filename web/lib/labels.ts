@@ -1,5 +1,7 @@
 import { FOLDED_PLDDT, INTERFACE_LOST_SHARE } from '../../src/isoforms.ts'
-import type { FeatureGroup } from '../../src/types.ts'
+import { FEATURE_GROUPS } from '../../src/types.ts'
+import type { FeatureGroup, Totals } from '../../src/types.ts'
+import { GROUPS, GROUP_LABELS } from './features.ts'
 
 const SHARES: Record<number, string> = { 0.5: 'half' }
 
@@ -7,42 +9,43 @@ export function share(value: number) {
   return SHARES[value] ?? `${Math.round(value * 100)}%`
 }
 
-export const LOST_IN_FULL: Record<FeatureGroup, string> = {
-  targeting:
-    'a whole targeting or topology feature, such as a signal peptide or transmembrane segment',
-  domains: 'a whole domain, repeat, zinc finger, region or motif',
-  sites: 'a whole active, binding or other site',
-  modifications:
-    'a modified residue, glycosylation or lipidation site, disulfide bond or cross-link',
+export function groupMissing(group: FeatureGroup) {
+  return `missing in full a feature from ${GROUP_LABELS[group].toLowerCase()}`
 }
 
-export const MISSING: Record<FeatureGroup | 'interface', string> = {
-  ...LOST_IN_FULL,
-  interface: `at least ${share(INTERFACE_LOST_SHARE)} of a predicted partner interface`,
+export const INTERFACE_MISSING = `missing at least ${share(INTERFACE_LOST_SHARE)} of a predicted partner interface`
+
+export const MODELLED = `confidently modelled canonical residues (pLDDT ≥ ${FOLDED_PLDDT} in the AlphaFold DB model)`
+
+export const MODELLED_MISSING = `missing ${MODELLED}`
+
+export const LACKING_PHRASES: Record<string, string> = {
+  ...Object.fromEntries(GROUPS.map(group => [group, groupMissing(group)])),
+  interface: INTERFACE_MISSING,
+  modelled: MODELLED_MISSING,
 }
 
-export const SHORT_MISSING: Record<FeatureGroup | 'interface', string> = {
-  targeting: 'a whole targeting or topology feature',
-  domains: 'a whole domain or region',
-  sites: 'a whole site',
-  modifications: 'a modification',
-  interface: `at least ${share(INTERFACE_LOST_SHARE)} of a partner interface`,
+export function lackingTotals(totals: Totals) {
+  return {
+    ...totals.lacking,
+    modelled: totals.lacking.folded,
+  }
 }
 
-export const FOLDED = `canonical residues the AlphaFold DB model places with pLDDT ≥ ${FOLDED_PLDDT}`
-
-export const COLUMN_TITLES: Record<string, string> = {
+export const COLUMN_NOTES: Record<string, string> = {
+  gene: 'Gene symbol, then UniProt’s protein name and accession.',
   isoforms:
-    'Alternative isoforms UniProt describes; the canonical is not counted',
+    'Alternative isoforms UniProt describes; the canonical isoform is not counted.',
   transcripts:
-    'Alternative isoforms with at least one Ensembl or RefSeq transcript',
+    'Alternative isoforms with at least one Ensembl or RefSeq transcript UniProt maps to them.',
   absent:
-    'The most canonical residues any isoform does not carry over, missing or replaced, out of the canonical length',
-  folded: `The most ${FOLDED} that any isoform does not carry over; blank without the canonical model’s pLDDT`,
+    'The most canonical residues any one isoform does not carry over, missing or replaced, out of the canonical length.',
+  modelled: `The most ${MODELLED} any one isoform does not carry over, missing or replaced; blank until the canonical model’s pLDDT is fetched.`,
   ...Object.fromEntries(
-    Object.entries(MISSING).map(([key, text]) => [
-      key,
-      `Isoforms missing ${text}`,
+    GROUPS.map(group => [
+      group,
+      `Isoforms ${groupMissing(group)}: ${FEATURE_GROUPS[group].join(', ').toLowerCase()}. Missing only; a replaced residue never counts.`,
     ]),
   ),
+  interface: `Isoforms ${INTERFACE_MISSING}.`,
 }

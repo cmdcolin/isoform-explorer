@@ -9,7 +9,8 @@ export interface BrowseColumn {
   num?: boolean
   cell: (row: IndexRow) => string
   sort: (row: IndexRow) => string | number
-  count?: (row: IndexRow) => number
+  keep?: (row: IndexRow) => boolean
+  isoforms?: (row: IndexRow) => number
 }
 
 const lostColumns = GROUPS.map((group): BrowseColumn => ({
@@ -18,22 +19,17 @@ const lostColumns = GROUPS.map((group): BrowseColumn => ({
   num: true,
   cell: row => String(row.lost[group]),
   sort: row => row.lost[group],
-  count: row => row.lost[group],
+  keep: row => row.lost[group] > 0,
+  isoforms: row => row.lost[group],
 }))
 
 export const COLUMNS: BrowseColumn[] = [
   {
     key: 'gene',
     label: 'Gene',
-    cell: row => `<a href="${geneHref(row.page)}">${esc(row.gene)}</a>`,
-    sort: row => row.gene,
-  },
-  {
-    key: 'protein',
-    label: 'Protein',
     cell: row =>
-      `${esc(row.protein)} <span class="muted">${esc(row.accession)}</span>`,
-    sort: row => row.protein,
+      `<a href="${geneHref(row.page)}">${esc(row.gene)}</a><span class="protein">${esc(row.protein)} <span class="muted">${esc(row.accession)}</span></span>`,
+    sort: row => row.gene,
   },
   {
     key: 'isoforms',
@@ -57,8 +53,8 @@ export const COLUMNS: BrowseColumn[] = [
     sort: row => row.mostAbsent,
   },
   {
-    key: 'folded',
-    label: 'Folded residues absent',
+    key: 'modelled',
+    label: 'Confidently modelled residues absent',
     num: true,
     cell: row => (row.foldedAbsent === null ? '' : String(row.foldedAbsent)),
     sort: row => row.foldedAbsent ?? -1,
@@ -70,11 +66,12 @@ export const COLUMNS: BrowseColumn[] = [
     num: true,
     cell: row => String(row.interfacesLost),
     sort: row => row.interfacesLost,
-    count: row => row.interfacesLost,
+    keep: row => row.interfacesLost > 0,
+    isoforms: row => row.interfacesLost,
   },
 ]
 
-export const FILTERS = COLUMNS.filter(column => column.count !== undefined)
+export const FILTERS = COLUMNS.filter(column => column.keep !== undefined)
 
 export interface View {
   query: string
@@ -83,7 +80,7 @@ export interface View {
   descending: boolean
 }
 
-export const DEFAULT_SORT = 'absent'
+export const DEFAULT_SORT = 'gene'
 
 function columnOf(key: string) {
   return COLUMNS.find(c => c.key === key)
@@ -156,26 +153,59 @@ function compare(a: string | number, b: string | number) {
   return a < b ? -1 : a > b ? 1 : 0
 }
 
+function rank(row: IndexRow, query: string) {
+  const gene = row.gene.toUpperCase()
+  return query === '' || gene === query || row.accession === query
+    ? 0
+    : gene.startsWith(query)
+      ? 1
+      : 2
+}
+
 export function rowsFor(rows: IndexRow[], texts: string[], view: View) {
   const query = view.query.toUpperCase()
   const column = columnOf(view.sort) ?? COLUMNS[0]
-  const count = FILTERS.find(f => f.key === view.has)?.count
+  const keep = columnOf(view.has)?.keep
   const kept = rows.filter(
     (row, index) =>
       (query === '' || (texts[index] ?? '').includes(query)) &&
-      (count === undefined || count(row) > 0),
+      (keep === undefined || keep(row)),
   )
   return column
     ? kept.sort((a, b) => {
         const order = compare(column.sort(a), column.sort(b))
-        return (view.descending ? -order : order) || compare(a.gene, b.gene)
+        return (
+          rank(a, query) - rank(b, query) ||
+          (view.descending ? -order : order) ||
+          compare(a.gene, b.gene)
+        )
       })
     : kept
 }
 
-export function isoformsIn(rows: IndexRow[], has: string) {
-  const count = FILTERS.find(f => f.key === has)?.count
-  return count ? rows.reduce((n, row) => n + count(row), 0) : 0
+export function sumOf(rows: IndexRow[], count: (row: IndexRow) => number) {
+  return rows.reduce((n, row) => n + count(row), 0)
+}
+
+export function countLine(
+  shown: IndexRow[],
+  all: number,
+  view: View,
+  phrases: Record<string, string>,
+  totals: Record<string, number>,
+) {
+  const n = (value: number) => value.toLocaleString('en-US')
+  const key = view.has || view.sort
+  const isoforms = columnOf(key)?.isoforms
+  const total = view.query === '' ? totals[key] : undefined
+  const lacking = isoforms ? sumOf(shown, isoforms) : total
+  return [
+    `${n(shown.length)} of ${n(all)} proteins`,
+    `${n(sumOf(shown, row => row.isoforms))} isoforms, ${n(sumOf(shown, row => row.withTranscript))} with a transcript`,
+    ...(lacking !== undefined && phrases[key]
+      ? [`${n(lacking)} ${phrases[key]}`]
+      : []),
+  ].join(' · ')
 }
 
 export function rowHtml(row: IndexRow) {

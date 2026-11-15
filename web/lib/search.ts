@@ -91,26 +91,36 @@ export function outcome(query: Query, lookups: Lookups): Outcome {
     query.kind === 'accession' && query.key !== entryOf(query.key)
       ? lookups.accessions?.[entryOf(query.key)]
       : undefined
+  const untied =
+    query.kind === 'transcript' &&
+    hit !== undefined &&
+    hit.every(target => !target.includes('#'))
   return query.kind === 'empty'
     ? { kind: 'none' }
-    : hit?.length === 1 && hit[0] !== undefined
-      ? { kind: 'go', href: choiceOf(hit[0]).href }
-      : hit
-        ? {
-            kind: 'choose',
-            intro:
-              query.kind === 'transcript'
-                ? `UniProt maps ${query.key} to ${hit.length} isoforms:`
-                : `${hit.length} proteins match ${query.key}:`,
-            choices: hit.map(choiceOf),
-          }
-        : entry
+    : untied
+      ? {
+          kind: 'choose',
+          intro: `UniProt lists ${query.key} under ${hit.map(t => choiceOf(t).gene).join(' and ')} but ties it to no described isoform.`,
+          choices: hit.map(choiceOf),
+        }
+      : hit?.length === 1 && hit[0] !== undefined
+        ? { kind: 'go', href: choiceOf(hit[0]).href }
+        : hit
           ? {
               kind: 'choose',
-              intro: `${entryOf(query.key)} has no isoform ${query.key}. Its page:`,
-              choices: entry.map(choiceOf),
+              intro:
+                query.kind === 'transcript'
+                  ? `UniProt maps ${query.key} to ${hit.length} isoforms:`
+                  : `${hit.length} proteins match ${query.key}:`,
+              choices: hit.map(choiceOf),
             }
-          : { kind: 'miss', reason: missReason(query) }
+          : entry
+            ? {
+                kind: 'choose',
+                intro: `${entryOf(query.key)} has no isoform ${query.key}. Its page:`,
+                choices: entry.map(choiceOf),
+              }
+            : { kind: 'miss', reason: missReason(query) }
 }
 
 export function suggestions(raw: string, genes: Lookup, limit = 8) {
