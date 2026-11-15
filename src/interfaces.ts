@@ -22,6 +22,7 @@ const CONFIDENT = 0.6
 const MIN_PLDDT = 70
 const MAX_COMPLEXES = 30
 const WORKERS = 8
+const FILE_SERVER_SLOTS = 2
 const PROGRESS_EVERY = 250
 
 export interface ChainAtom {
@@ -160,6 +161,33 @@ export function confidentInterfaces(interfaces: PartnerInterface[]) {
   )
 }
 
+export function limiter(slots: number) {
+  let free = slots
+  const waiting: (() => void)[] = []
+  const release = () => {
+    const next = waiting.shift()
+    if (next) {
+      next()
+    } else {
+      free += 1
+    }
+  }
+  return async <T>(task: () => Promise<T>) => {
+    if (free > 0) {
+      free -= 1
+    } else {
+      await new Promise<void>(resolve => waiting.push(resolve))
+    }
+    try {
+      return await task()
+    } finally {
+      release()
+    }
+  }
+}
+
+const fileServer = limiter(FILE_SERVER_SLOTS)
+
 async function complexChains(entity: string, accession: string) {
   const chains = records(
     await getJson(
@@ -173,7 +201,9 @@ async function complexChains(entity: string, accession: string) {
   const atoms =
     own && partner && cifUrl
       ? atomsByChain(
-          await getText(cifUrl, join(DATA, 'cif', `${entity}.cif.gz`)),
+          await fileServer(() =>
+            getText(cifUrl, join(DATA, 'cif', `${entity}.cif.gz`)),
+          ),
         )
       : new Map<string, ChainAtom[]>()
   return {

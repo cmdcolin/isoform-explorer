@@ -17,22 +17,40 @@ const ATTEMPTS = 9
 const TIMEOUT = 300_000
 const DOWNLOAD_TIMEOUT = 3_600_000
 const HEADERS = { 'user-agent': 'isoform-explorer' }
+const THROTTLED = [403, 429]
+const THROTTLE_PAUSE = 60_000
+const MAX_THROTTLE_PAUSE = 300_000
+
+const pausedUntil = new Map<string, number>()
+
+function pauseHost(host: string, attempt: number) {
+  const pause = Math.min(THROTTLE_PAUSE * (attempt + 1), MAX_THROTTLE_PAUSE)
+  pausedUntil.set(
+    host,
+    Math.max(pausedUntil.get(host) ?? 0, Date.now() + pause),
+  )
+}
 
 async function request(
   url: URL,
   absentStatuses: number[],
   attempt = 0,
 ): Promise<Uint8Array | undefined> {
+  await sleep(Math.max(0, (pausedUntil.get(url.host) ?? 0) - Date.now()))
   const response = await fetch(url, {
     headers: HEADERS,
     signal: AbortSignal.timeout(TIMEOUT),
   }).catch(() => undefined)
+  const throttled = THROTTLED.includes(response?.status ?? 0)
+  if (throttled) {
+    pauseHost(url.host, attempt)
+  }
   return response?.ok
     ? new Uint8Array(await response.arrayBuffer())
     : response && absentStatuses.includes(response.status)
       ? undefined
       : attempt + 1 < ATTEMPTS
-        ? sleep(1000 * 2 ** attempt).then(() =>
+        ? sleep(throttled ? 0 : 1000 * 2 ** attempt).then(() =>
             request(url, absentStatuses, attempt + 1),
           )
         : Promise.reject(
