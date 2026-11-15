@@ -54,9 +54,11 @@ import {
 } from './uniprot.ts'
 import type { UniProtEntry } from './uniprot.ts'
 
-const FOLDED = 70
-const UNFOLDED = 50
-const BANDS = [90, FOLDED, UNFOLDED, 0]
+export const FOLDED_PLDDT = 70
+export const UNFOLDED_PLDDT = 50
+export const INTERFACE_LOST_SHARE = 0.5
+export const SWAP_SHARE = 0.5
+const BANDS = [90, FOLDED_PLDDT, UNFOLDED_PLDDT, 0]
 const MOST = 0.5
 
 type Fate = 'kept' | 'missing' | 'replaced'
@@ -127,7 +129,9 @@ export function fates(sequence: string, edits: SequenceEdit[]) {
   for (const [start, end, replacement] of edits) {
     const positions = replacedPositions(sequence, start, end, replacement)
     const carried = new Set(positions)
-    const lost = positions.includes(null) ? 'replaced' : 'missing'
+    const added = positions.filter(position => position === null).length
+    const removed = end - start + 1 - (positions.length - added)
+    const lost = added >= SWAP_SHARE * removed ? 'replaced' : 'missing'
     for (let position = start; position <= end; position += 1) {
       if (!carried.has(position)) {
         fate[position - 1] = lost
@@ -184,7 +188,7 @@ export function interfaceLosses(
 
 export function lacksInterface(isoform: Pick<Isoform, 'interfaces'>) {
   return Object.values(isoform.interfaces).some(
-    ([missing, , total]) => missing >= MOST * total,
+    ([missing, , total]) => missing >= INTERFACE_LOST_SHARE * total,
   )
 }
 
@@ -321,8 +325,8 @@ export function losingConfidence(
   return positions.filter(
     (position, index) =>
       position !== null &&
-      (canonicalScores[position - 1] ?? 0) >= FOLDED &&
-      (scores[index] ?? 0) < UNFOLDED,
+      (canonicalScores[position - 1] ?? 0) >= FOLDED_PLDDT &&
+      (scores[index] ?? 0) < UNFOLDED_PLDDT,
   ).length
 }
 
@@ -474,7 +478,7 @@ function isoformRecord(
   const folded = (wanted: (fate: Fate) => boolean) =>
     canonicalScores
       ? canonicalScores.filter(
-          (score, i) => score >= FOLDED && wanted(fate[i] ?? 'kept'),
+          (score, i) => score >= FOLDED_PLDDT && wanted(fate[i] ?? 'kept'),
         ).length
       : null
   return {

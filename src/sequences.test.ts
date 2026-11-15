@@ -38,6 +38,15 @@ describe('replacedPositions', () => {
     expect(replacedPositions('MABCDEF', 3, 5, 'BXD')).toEqual([3, null, 5])
   })
 
+  it('keeps no interior letter a same-length swap happens to share', () => {
+    expect(replacedPositions('MABCDEFG', 3, 6, 'XCYZ')).toEqual([
+      null,
+      null,
+      null,
+      null,
+    ])
+  })
+
   it('keeps shared ends of a different-length replacement', () => {
     expect(replacedPositions('MABCDEFG', 3, 6, 'BXYZE')).toEqual([
       3,

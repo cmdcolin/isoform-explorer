@@ -21,9 +21,9 @@ import type { Download } from './trickle.ts'
 
 const ALPHAFOLD_API = 'https://alphafold.ebi.ac.uk/api'
 const HUMAN = 9606
-const CONTACT = 5
-const CONFIDENT = 0.6
-const MIN_PLDDT = 70
+export const CONTACT = 5
+export const CONFIDENT = 0.6
+export const MIN_PLDDT = 70
 const MAX_COMPLEXES = 30
 const WORKERS = 8
 const FILE_SERVER_QUIET = 15 * 60_000

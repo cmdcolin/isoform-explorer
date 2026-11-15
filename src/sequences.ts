@@ -104,15 +104,11 @@ export function replacedPositions(
   const original = sequence.slice(start - 1, end)
   const [prefix, suffix] = sharedEnds(original, replacement)
   const middle = replacement.length - prefix - suffix
-  return original.length === replacement.length
-    ? [...replacement].map((letter, k) =>
-        letter === original[k] ? start + k : null,
-      )
-    : [
-        ...Array.from({ length: prefix }, (_, k) => start + k),
-        ...Array.from({ length: middle }, () => null),
-        ...Array.from({ length: suffix }, (_, k) => end - suffix + 1 + k),
-      ]
+  return [
+    ...Array.from({ length: prefix }, (_, k) => start + k),
+    ...Array.from({ length: middle }, () => null),
+    ...Array.from({ length: suffix }, (_, k) => end - suffix + 1 + k),
+  ]
 }
 
 export function applyEdits(sequence: string, edits: Edit[]) {

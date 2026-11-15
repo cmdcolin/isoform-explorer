@@ -20,6 +20,7 @@ import {
   pageNames,
   readInterfaces,
   segments,
+  SWAP_SHARE,
   totals,
   trimmedEdit,
   withinSequence,
@@ -192,6 +193,59 @@ describe('fates', () => {
       'kept',
       'kept',
     ])
+  })
+})
+
+describe('swap or truncation', () => {
+  const tally = (fate: string[]) => ({
+    missing: fate.filter(f => f === 'missing').length,
+    replaced: fate.filter(f => f === 'replaced').length,
+  })
+
+  it('takes a swap to add at least half as many residues as it removes', () => {
+    expect(SWAP_SHARE).toBe(0.5)
+  })
+
+  it('calls four residues swapped for two replaced, at the boundary', () => {
+    expect(tally(fates('MABCDEFG', [[3, 6, 'XY']]))).toEqual({
+      missing: 0,
+      replaced: 4,
+    })
+  })
+
+  it('calls five residues swapped for two missing, just below it', () => {
+    expect(tally(fates('MABCDEFGH', [[3, 7, 'XY']]))).toEqual({
+      missing: 5,
+      replaced: 0,
+    })
+  })
+
+  it('reads a C-terminal truncation ending in one new residue as missing, like FGFR2 isoform 2', () => {
+    const canonical = `${'A'.repeat(767)}E${'Y'.repeat(53)}`
+    expect(tally(fates(canonical, [[768, 821, 'I']]))).toEqual({
+      missing: 54,
+      replaced: 0,
+    })
+  })
+
+  it('reads a mutually exclusive exon swap as replaced, like FGFR2 IIIb', () => {
+    const canonical = `${'A'.repeat(313)}${'C'.repeat(17)}${'A'.repeat(100)}`
+    expect(tally(fates(canonical, [[314, 330, 'D'.repeat(15)]]))).toEqual({
+      missing: 0,
+      replaced: 17,
+    })
+  })
+
+  it('reads a ten-residue swap then a deletion as 10 replaced and the rest missing, like p53 beta', () => {
+    const canonical = `${'A'.repeat(331)}PLDGEYFSLQ${'K'.repeat(52)}`
+    expect(
+      tally(
+        fates(canonical, [
+          [332, 341, 'DQTSFQKSNC'],
+          [342, 393, ''],
+        ]),
+      ),
+    ).toEqual({ missing: 52, replaced: 10 })
   })
 })
 

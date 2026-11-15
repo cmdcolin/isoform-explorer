@@ -28,9 +28,9 @@ Everything is computed from UniProt's `Alternative sequence` edits, placed on
 the canonical (UniProt "displayed") sequence. No structure is needed for the
 first three, so they cover every described isoform, not only the modelled ones.
 
-- **Residues:** canonical residues with nothing in their place (`missing`),
-  canonical residues in a stretch that has other sequence in its place
-  (`replaced`), and isoform residues the canonical lacks (`novel`).
+- **Residues:** canonical residues an edit removes are `replaced` when the edit
+  is a swap and `missing` otherwise; isoform residues the canonical lacks are
+  `novel`.
 - **UniProt features of the canonical protein that overlap those residues,** in
   four groups (`FEATURE_GROUPS` in `src/types.ts`):
   - targeting and topology: signal and transit peptides, propeptides,
@@ -62,10 +62,13 @@ story. The same standard applies here.
 - **No consequence.** The site lists what the sequence lacks. It never says an
   isoform is non-functional, mislocalised, secreted, soluble, degraded or
   dominant negative, except by quoting UniProt's note.
-- **Replaced is not lost.** A stretch swapped for other sequence (mutually
-  exclusive exons, an alternative terminus) is "replaced by N different
-  residues". The lost-feature counts on the home page and browse table use
-  `missing` only.
+- **Replaced is not lost.** Each UniProt edit is a swap, its removed residues
+  `replaced`, when after trimming the ends it shares with the canonical it
+  adds at least half as many residues as it removes (`SWAP_SHARE` in
+  `src/isoforms.ts`); otherwise they are `missing` and the added ones only
+  `novel`. A swap (mutually exclusive exons, an alternative terminus of
+  similar length) reads "replaced by N different residues"; the lost-feature
+  counts on the home page and browse table use `missing` only.
 - **Structure only where the model is confident.** Folded counts use
   pLDDT ≥ 70. Where the absent residues are mostly below pLDDT 50 in the
   canonical model, say the model shows no fold there; do not count it as fold
@@ -119,7 +122,8 @@ story. The same standard applies here.
     Described isoform rather than the canonical.
   - `lacking.<group>`: isoforms missing in full at least one feature of the
     group: every residue of a range, or either residue of a disulfide bond or
-    cross-link. Missing only; a replaced residue never counts.
+    cross-link. Missing only: residues of a swap (an edit adding at least
+    half as many residues as it removes) never count.
   - `lacking.interface`: isoforms missing at least half of the interface
     residues of at least one predicted partner.
   - `lacking.folded`: isoforms missing at least one canonical residue with
