@@ -44,9 +44,9 @@ first three, so they cover every described isoform, not only the modelled ones.
     when either cysteine is.
 - **UniProt's own note on the isoform** (inactive, dominant negative, a
   premature stop that may trigger decay), quoted as UniProt's.
-- **Folded residues:** canonical residues with pLDDT ≥ 70 in the AlphaFold DB
-  monomer that the isoform lacks. `null` when the canonical has no full-length
-  model.
+- **Confidently modelled residues:** canonical residues with pLDDT ≥ 70 in the
+  AlphaFold DB monomer that the isoform lacks (the pipeline's `foldedAbsent`
+  and `foldedMissing`). `null` when the canonical has no full-length model.
 - **Predicted partner interfaces:** for each AlphaFold DB complex with
   ipSAE ≥ 0.6, the interface residues (within 5 Å of the partner, pLDDT ≥ 70)
   the isoform lacks. Same rules as Interface explorer.
@@ -69,18 +69,23 @@ story. The same standard applies here.
   `novel`. A swap (mutually exclusive exons, an alternative terminus of
   similar length) reads "replaced by N different residues"; the lost-feature
   counts on the home page and browse table use `missing` only.
-- **Structure only where the model is confident.** Folded counts use
-  pLDDT ≥ 70. Where the absent residues are mostly below pLDDT 50 in the
-  canonical model, say the model shows no fold there; do not count it as fold
-  lost.
+- **Counts by confidence, never "no fold".** pLDDT is the prediction's
+  confidence, not a measurement of folding. For the residues an isoform lacks,
+  give the counts: of the M missing (or replaced) residues, N are confidently
+  modelled (pLDDT ≥ 70) in the canonical model and K are below pLDDT 50. Never
+  summarise a stretch as folded or unfolded: a majority below 50 can sit beside
+  a confidently modelled domain that is lost with it (BRCA1 isoform 2 lacks
+  both BRCT domains).
 - **A kept interface is not binding.** No isoform was modelled with a partner.
   A full circle means the residues are present, nothing more.
 - **Losing confidence is a model's opinion.** pLDDT is the prediction's
   confidence, not a measurement of folding. Say so beside the number.
-- **Not expression.** No GTEx, no tissue claims, no "major isoform". The MANE
-  Select transcript is marked because it is a fact about annotation; when it
-  encodes a non-canonical isoform, the page says so, since "loses" is measured
-  against UniProt's canonical.
+- **Not expression.** The site computes and asserts nothing about expression:
+  no GTEx, no tissue claims, no "major isoform" of its own. UniProt's notes are
+  quoted verbatim and attributed, including where UniProt mentions expression
+  ("A major isoform"). The MANE Select transcript is marked because it is a
+  fact about annotation; when it encodes a non-canonical isoform, the page says
+  so, since "loses" is measured against UniProt's canonical.
 - **Not novel transcripts.** Only isoforms UniProt describes. A transcript not
   mapped to one is not on the site; About says so.
 

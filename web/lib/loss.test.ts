@@ -10,8 +10,8 @@ import {
   editEffects,
   featureEffects,
   featureLabel,
-  foldText,
-  interfaceSummary,
+  confidenceText,
+  interfaceLossText,
   lossText,
   maneIsoform,
   modelText,
@@ -160,8 +160,8 @@ describe('features under the change that removes them', () => {
       ]),
     ).toEqual([
       [0, 20, 0, 'all 20 missing'],
-      [2, 0, 1, '1 of 2 ends replaced'],
-      [3, 0, 1, 'replaced'],
+      [2, 0, 1, '1 of 2 ends in a replaced stretch'],
+      [3, 0, 1, 'in a replaced stretch'],
     ])
   })
 
@@ -184,8 +184,16 @@ describe('features under the change that removes them', () => {
   test('labels say what kind of feature and where', () => {
     expect(featureLabel(feature('Signal', 1, 21))).toBe('signal peptide (1–21)')
     expect(featureLabel(feature('Transmembrane', 56, 75, 'Helical'))).toBe(
-      'Helical (transmembrane, 56–75)',
+      'transmembrane segment (56–75)',
     )
+    expect(
+      featureLabel(
+        feature('Transmembrane', 56, 75, 'Helical; Name=S3 of repeat IV'),
+      ),
+    ).toBe('transmembrane segment S3 of repeat IV (56–75)')
+    expect(
+      featureLabel(feature('Domain', 5, 40, 'EGF-like 2; calcium-binding')),
+    ).toBe('EGF-like 2 (domain, calcium-binding, 5–40)')
     expect(featureLabel(feature('Disulfide bond', 24, 86))).toBe(
       'disulfide bond (24 and 86)',
     )
@@ -196,38 +204,74 @@ describe('features under the change that removes them', () => {
 })
 
 describe('the answer sentence', () => {
-  test('names missing features first and counts the rest, never calling replaced residues lost', () => {
+  test('names sites and domains before regions, counts modifications and never names topological domains', () => {
     const r = record({
       features: [
-        feature('Signal', 1, 20),
+        feature('Topological domain', 1, 100, 'Cytoplasmic'),
         feature('Region', 10, 60, 'Interaction with X'),
         feature('Domain', 30, 80, 'Kinase'),
+        feature('Active site', 50, 50, 'Proton acceptor'),
         feature('Modified residue', 5, 5, 'Phosphoserine'),
       ],
     })
     const i = isoform({
-      segments: [[1, 21, 80]],
-      edits: [edit(1, 20)],
-      missing: 20,
+      segments: [[1, 1, 39]],
+      edits: [edit(40, 100)],
+      missing: 61,
     })
     expect(answer(r, i)).toBe(
-      'Lacks residues 1–20 (20 of 100); missing in full: signal peptide (1–20) and 1 modification; cut: Interaction with X (region, 10–60).',
+      'Lacks residues 40–100 (61 of 100); missing in full: Proton acceptor (active site, 50); cut: Kinase (domain, 30–80) and Interaction with X (region, 10–60).',
     )
   })
 
-  test('an isoform with only a swap has nothing missing', () => {
+  test('cut features are ordered by the share of the feature lost', () => {
+    const r = record({
+      features: [
+        feature('Region', 1, 100, 'Long'),
+        feature('Region', 80, 95, 'Short'),
+      ],
+    })
+    const i = isoform({
+      segments: [[1, 1, 89]],
+      edits: [edit(90, 100)],
+      missing: 11,
+    })
+    expect(answer(r, i)).toBe(
+      'Lacks residues 90–100 (11 of 100); cut: Short (region, 80–95) and Long (region, 1–100).',
+    )
+  })
+
+  test('a swap leads with the swap and the feature it sits in', () => {
+    const r = record({
+      features: [
+        feature('Domain', 60, 100, 'Ig-like 3'),
+        feature('Glycosylation', 80, 80, 'N-linked'),
+      ],
+    })
     const i = isoform({
       segments: [[1, 1, 76]],
       edits: [edit(77, 100, 'ABCDEFGHIJKLMN')],
       replaced: 24,
       novel: 14,
     })
-    expect(residueClause(editEffects(i), 100, i)).toBe(
-      'nothing is missing; residues 77–100 are replaced by 14 different residues',
+    expect(answer(r, i)).toBe(
+      'Swaps 24 residues of the Ig-like 3 domain (77–100) for 14 different ones; nothing else is missing; in a replaced stretch: 1 modification.',
     )
   })
 
-  test('an isoform with only an insertion has nothing missing or replaced', () => {
+  test('a truncation ending in a short new tail has the tail in its place', () => {
+    const i = isoform({
+      segments: [[1, 1, 79]],
+      edits: [edit(80, 100, 'Q')],
+      missing: 21,
+      novel: 1,
+    })
+    expect(residueClause(editEffects(i), 100)).toBe(
+      'lacks residues 80–100 (21 of 100), with 1 different residue in their place',
+    )
+  })
+
+  test('an isoform with only an insertion carries every canonical residue', () => {
     const i = isoform({
       segments: [
         [1, 1, 50],
@@ -237,7 +281,7 @@ describe('the answer sentence', () => {
       novel: 4,
     })
     expect(answer(record({}), i)).toBe(
-      'Nothing is missing or replaced; it adds 4 residues the canonical lacks, at 50.',
+      'Carries every canonical residue and inserts 4 residues the canonical lacks, at 50.',
     )
   })
 })
@@ -254,20 +298,33 @@ describe('structure, interfaces and models', () => {
     },
   })
 
-  test('residues mostly below pLDDT 50 read as no fold, not fold lost', () => {
+  test('absent residues are counted by confidence, never summarised as no fold', () => {
     const i = isoform({
-      segments: [[1, 1, 60]],
-      edits: [edit(61, 100)],
-      missing: 40,
-      foldedAbsent: 0,
-      foldedMissing: 0,
+      segments: [[1, 1, 30]],
+      edits: [edit(31, 100)],
+      missing: 70,
+      foldedAbsent: 20,
+      foldedMissing: 20,
     })
-    expect(foldText(modelled, i)).toBe(
-      'The canonical model shows no fold where residues are missing: 40 of the 40 have pLDDT below 50.',
+    expect(confidenceText(modelled, i)).toBe(
+      'Of the 70 missing residues, 20 are confidently modelled in the canonical model (pLDDT ≥ 70) and 50 have pLDDT below 50.',
     )
   })
 
-  test('folded residues count only where the canonical model has pLDDT', () => {
+  test('one absent residue reads in the singular', () => {
+    const i = isoform({
+      segments: [[1, 1, 99]],
+      edits: [edit(100, 100)],
+      missing: 1,
+      foldedAbsent: 0,
+      foldedMissing: 0,
+    })
+    expect(confidenceText(modelled, i)).toBe(
+      'The missing residue has pLDDT below 50 in the canonical model.',
+    )
+  })
+
+  test('without the canonical model or its confidence nothing is counted', () => {
     const i = isoform({
       segments: [[1, 11, 90]],
       edits: [edit(1, 10)],
@@ -275,12 +332,9 @@ describe('structure, interfaces and models', () => {
       foldedAbsent: 10,
       foldedMissing: 10,
     })
-    expect(foldText(modelled, i)).toBe(
-      'All 10 missing residues are folded in the canonical model (pLDDT ≥ 70).',
-    )
-    expect(foldText(record({}), i)).toMatch(/no full-length model/)
+    expect(confidenceText(record({}), i)).toMatch(/no full-length model/)
     expect(
-      foldText(
+      confidenceText(
         record({
           canonical: {
             ...modelled.canonical,
@@ -334,14 +388,10 @@ describe('structure, interfaces and models', () => {
     )
   })
 
-  test('a present interface is reported as present, never as binding', () => {
-    const r = record({ interfaces: { KLK11: [1, 2, 3, 4], GENE: [50, 51] } })
-    expect(interfaceSummary(r, isoform({}))).toBe(
-      'Every predicted interface residue is present, for 2 partners.',
-    )
+  test('interface losses lead with counts per partner', () => {
     expect(
-      interfaceSummary(r, isoform({ interfaces: { KLK11: [2, 1, 4] } })),
-    ).toBe('Missing at least half of the predicted interface with KLK11.')
+      interfaceLossText({ name: 'KLK11', missing: 8, replaced: 9, total: 18 }),
+    ).toBe('KLK11: 8 missing and 9 replaced, of 18 interface residues')
   })
 })
 

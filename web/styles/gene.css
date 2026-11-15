@@ -358,3 +358,37 @@
     padding: 2px 12px 10px;
   }
 }
+
+.scroll-hint {
+  display: none;
+  margin: 4px 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.gene-map .map-wrap {
+  background:
+    linear-gradient(to right, var(--surface) 30%, transparent) left / 32px 100%
+      no-repeat local,
+    linear-gradient(to left, var(--surface) 30%, transparent) right / 32px 100%
+      no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 28%), transparent)
+      left / 14px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 28%), transparent)
+      right / 14px 100% no-repeat scroll;
+}
+
+.shared-notes {
+  margin: 0 0 24px;
+  max-width: 820px;
+}
+
+.shared-notes h2 {
+  font-size: 17px;
+}
+
+@media (max-width: 800px) {
+  .scroll-hint {
+    display: block;
+  }
+}

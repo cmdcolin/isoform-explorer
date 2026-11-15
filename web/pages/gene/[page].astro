@@ -17,10 +17,9 @@ import {
   editPreview,
   featureLabel,
   featureRuns,
-  foldText,
+  confidenceText,
   interfaceLossText,
   interfaceRows,
-  interfaceSummary,
   listText,
   lossText,
   maneIsoform,
@@ -49,6 +48,18 @@ const uniprot = `https://www.uniprot.org/uniprotkb/${record.accession}/entry`
 const others = record.isoforms.length
 const events = listText(record.events.map(e => e.toLowerCase()))
 const partners = Object.keys(record.interfaces).length
+const noteKey = (n: { topic: string; text: string }) => `${n.topic}\n${n.text}`
+const sharedNotes = [
+  ...Map.groupBy(
+    [canonical, ...record.isoforms].flatMap(i => i.notes.map(n => ({ note: n, accession: i.accession }))),
+    entry => noteKey(entry.note),
+  ).values(),
+]
+  .filter(entries => entries.length > 1)
+  .map(entries => ({ note: entries[0]?.note ?? { topic: '', text: '' }, accessions: entries.map(e => e.accession) }))
+const shared = new Set(sharedNotes.map(s => noteKey(s.note)))
+const ownNotes = (i: { notes: { topic: string; text: string }[] }) => i.notes.filter(n => !shared.has(noteKey(n)))
+const sharesNotes = (i: { notes: { topic: string; text: string }[] }) => i.notes.some(n => shared.has(noteKey(n)))
 
 function titleOf(i: { name: string; synonyms: string[]; accession: string }) {
   const named = i.accession.endsWith(`-${i.name}`) ? '' : i.name
@@ -108,17 +119,19 @@ const sections = record.isoforms.map(i => {
     answer: answer(record, i),
     strip: isoformStrip(record, i),
     changes: blocksOf,
-    fold: foldText(record, i),
-    interfaceSummary: interfaceSummary(record, i),
-    touched: interfaces.filter(r => r.missing + r.replaced > 0).map(r => ({ ...r, span: spanData(blocks(r.residues)) })),
+    confidence: confidenceText(record, i),
+    partners: interfaces.length,
+    touched: interfaces.filter(r => r.missing + r.replaced > 0).map(r => ({ text: interfaceLossText(r), span: spanData(blocks(r.residues)) })),
     intact: interfaces.filter(r => r.missing + r.replaced === 0).map(r => r.name),
+    notes: ownNotes(i),
+    sharesNotes: sharesNotes(i),
     model: modelText(record, i),
     transcripts: transcriptLinks(i.transcripts),
     superposed: superposedUrl(i),
   }
 })
 const canonicalLinks = transcriptLinks(canonical.transcripts)
-const description = `What each of the ${others} alternative ${others === 1 ? 'isoform' : 'isoforms'} of ${record.gene} (${record.protein}) lacks relative to the canonical protein: residues, UniProt features, folded structure${partners ? ' and predicted partner interfaces' : ''}.`
+const description = `What ${others === 1 ? 'the one alternative isoform' : `each of the ${others} alternative isoforms`} of ${record.gene} (${record.protein}) lacks relative to the canonical protein: residues, UniProt features, model confidence${partners ? ' and predicted partner interfaces' : ''}.`
 ---
 
 <Layout title={`${record.gene} isoforms`} description={description}>
@@ -126,8 +139,8 @@ const description = `What each of the ${others} alternative ${others === 1 ? 'is
     <h1>{record.gene} <span class="muted">· {record.protein}</span></h1>
     <p class="lede">
       UniProt <a href={uniprot}>{record.accession}</a> describes {others + 1} isoforms of this {count(record.length)}-residue
-      protein{events && <>, from {events}</>}. Each section below lists what one of the {others} alternative isoforms lacks
-      relative to the canonical isoform, <a href={`#${canonical.accession}`}>{canonical.accession}</a>.
+      protein{events && <>, from {events}</>}. {others === 1 ? 'The section below lists what the one alternative isoform lacks relative to' : `Each section below lists what one of the ${others} alternative isoforms lacks relative to`}{' '}
+      the canonical isoform, <a href={`#${canonical.accession}`}>{canonical.accession}</a>.
     </p>
     {
       maneElsewhere ? (
@@ -173,7 +186,10 @@ const description = `What each of the ${others} alternative ${others === 1 ? 'is
     Hover a feature, a partner row or a loss listed below to run its residues down the rows; click a row to jump to its
     section.
   </p>
-  <Fragment set:html={isoformMap(record, mane?.accession)} />
+  <div class="gene-map">
+    <p class="scroll-hint">Scroll the map sideways to see all {count(record.length)} residues →</p>
+    <Fragment set:html={isoformMap(record, mane?.accession)} />
+  </div>
   <div class="legend">
     <span><span class="swatch kept"></span>carried over</span>
     <span>gap: missing</span>
@@ -204,6 +220,18 @@ const description = `What each of the ${others} alternative ${others === 1 ? 'is
     ) : null
   }
   {partners === 0 && <p class="muted">No AlphaFold DB complex of this protein has a confident predicted interface.</p>}
+  {
+    sharedNotes.length > 0 && (
+      <div class="shared-notes" id="shared-notes">
+        <h2>UniProt notes on several isoforms</h2>
+        {sharedNotes.map(n => (
+          <p class="quote">
+            “{n.note.text}.” <cite>UniProt, {n.note.topic}; on {listText(n.accessions)}</cite>
+          </p>
+        ))}
+      </div>
+    )
+  }
 
   <section class="isoform" id={canonical.accession} data-isoform={canonical.accession}>
     <h2>
@@ -230,11 +258,12 @@ const description = `What each of the ${others} alternative ${others === 1 ? 'is
           <>
             <dt>UniProt's notes</dt>
             <dd>
-              {canonical.notes.map(n => (
+              {ownNotes(canonical).map(n => (
                 <p class="quote">
                   “{n.text}.” <cite>UniProt, {n.topic}</cite>
                 </p>
               ))}
+              {sharesNotes(canonical) && <p class="muted">Also UniProt's <a href="#shared-notes">notes on several isoforms</a>, above.</p>}
             </dd>
           </>
         )
@@ -339,28 +368,39 @@ const description = `What each of the ${others} alternative ${others === 1 ? 'is
           </div>
         ))}
         <dl class="facts">
-          <dt>Folded residues</dt>
-          <dd>{s.fold}</dd>
-          {s.interfaceSummary && (
+          <dt>Canonical model confidence</dt>
+          <dd>{s.confidence}</dd>
+          {s.partners > 0 && (
             <>
               <dt>Partner interfaces</dt>
               <dd>
-                <p>{s.interfaceSummary}</p>
-                {s.touched.length > 0 && (
+                {s.touched.length > 0 && s.touched.length <= COLLAPSE / 2 && (
                   <p>
                     {s.touched.map((r, k) => (
                       <>
                         {k > 0 && '; '}
-                        <span data-span={r.span}>
-                          {r.name}: {interfaceLossText(r)}
-                        </span>
+                        <span data-span={r.span}>{r.text}</span>
                       </>
                     ))}
                     .
                   </p>
                 )}
-                <p class="muted">
-                  {s.touched.length > 0 && s.intact.length > 0 && <>Every interface residue is present for {listText(s.intact)}. </>}
+                {s.touched.length > COLLAPSE / 2 && (
+                  <details>
+                    <summary>{plural(s.touched.length, 'partner')} with interface residues missing or replaced</summary>
+                    {s.touched.map((r, k) => (
+                      <>
+                        {k > 0 && '; '}
+                        <span data-span={r.span}>{r.text}</span>
+                      </>
+                    ))}
+                    .
+                  </details>
+                )}
+                <p class={s.touched.length ? 'muted' : ''}>
+                  {s.touched.length === 0
+                    ? `Every predicted interface residue is present, for ${plural(s.partners, 'partner')}. `
+                    : s.intact.length > 0 && `Every interface residue is present for ${listText(s.intact)}. `}
                   Present residues are not evidence of binding: no isoform was modelled with a partner.
                 </p>
               </dd>
@@ -372,7 +412,8 @@ const description = `What each of the ${others} alternative ${others === 1 ? 'is
             <>
               <dt>UniProt's notes</dt>
               <dd>
-                {s.isoform.notes.map(n => (
+                {s.sharesNotes && <p class="muted">See UniProt's <a href="#shared-notes">notes on several isoforms</a>, above.</p>}
+                {s.notes.map(n => (
                   <p class="quote">
                     “{n.text}.” <cite>UniProt, {n.topic}</cite>
                   </p>
@@ -415,7 +456,7 @@ const description = `What each of the ${others} alternative ${others === 1 ? 'is
           </dd>
         </dl>
         <div class="actions">
-          <a class="button" href={`${uniprot}#sequences`}>UniProt isoform</a>
+          <a class="button" href={`${uniprot}#${s.isoform.accession}`}>UniProt isoform</a>
           {s.isoform.model && (
             <a class="button" href={`https://alphafold.ebi.ac.uk/entry/${s.isoform.model.entry}`}>AlphaFold DB entry</a>
           )}
@@ -424,7 +465,6 @@ const description = `What each of the ${others} alternative ${others === 1 ? 'is
               Superposed on the canonical in JBrowse
             </a>
           )}
-          {genomeUrl && <a class="button" href={genomeUrl}>Transcripts on the genome</a>}
         </div>
       </section>
     ))

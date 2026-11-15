@@ -3,7 +3,6 @@ import {
   type Edit,
   type Feature,
   type FeatureGroup,
-  type FeatureType,
   type GeneRecord,
   type Isoform,
   type Model,
@@ -11,7 +10,6 @@ import {
 } from '../../src/types.ts'
 import {
   FOLDED_PLDDT,
-  INTERFACE_LOST_SHARE,
   SWAP_SHARE,
   UNFOLDED_PLDDT,
   featurePositions,
@@ -27,15 +25,17 @@ const NAMED = 3
 export type Run = [start: number, end: number]
 export type Fate = 'missing' | 'replaced'
 
-const NOUNS: Partial<Record<FeatureType, string>> = {
+const NOUNS: Record<string, string> = {
   Signal: 'signal peptide',
   'DNA binding': 'DNA-binding region',
+  Transmembrane: 'transmembrane segment',
+  Intramembrane: 'intramembrane segment',
 }
 
 const GROUP_COUNTS: Record<FeatureGroup, [string, string]> = {
   targeting: [
-    'targeting or topology feature',
-    'targeting or topology features',
+    'processing, targeting or topology feature',
+    'processing, targeting and topology features',
   ],
   domains: ['domain or region', 'domains and regions'],
   sites: ['site', 'sites'],
@@ -92,14 +92,41 @@ export function featurePlace(feature: Feature) {
     : span(feature.start, feature.end)
 }
 
+export function featureNoun(feature: Feature) {
+  return NOUNS[feature.type] ?? feature.type.toLowerCase()
+}
+
+const MEMBRANE: readonly string[] = ['Transmembrane', 'Intramembrane']
+
+export function featureName(feature: Feature) {
+  const parts = feature.description.split('; ').filter(Boolean)
+  const named = parts.find(p => p.startsWith('Name='))?.slice(5)
+  const qualifiers = parts
+    .filter(p => !p.startsWith('Name='))
+    .map(p => p.replace(/^Note=/, ''))
+  const membrane = MEMBRANE.includes(feature.type)
+  const main = membrane
+    ? named?.replace(/^Segment /, '')
+    : (qualifiers[0] ?? named)
+  const rest = membrane
+    ? qualifiers.filter(q => q !== 'Helical')
+    : qualifiers.slice(1)
+  return {
+    main: main ?? '',
+    qualifiers: rest.map(q => `${q.charAt(0).toLowerCase()}${q.slice(1)}`),
+  }
+}
+
 export function featureLabel(feature: Feature) {
-  const noun = NOUNS[feature.type] ?? feature.type.toLowerCase()
-  const place = featurePlace(feature)
-  return /^\d+$/.test(feature.description)
-    ? `${noun} ${feature.description} (${place})`
-    : feature.description
-      ? `${feature.description} (${noun}, ${place})`
-      : `${noun} (${place})`
+  const noun = featureNoun(feature)
+  const { main, qualifiers } = featureName(feature)
+  const membrane = MEMBRANE.includes(feature.type)
+  const inside = [...qualifiers, featurePlace(feature)].join(', ')
+  return !main
+    ? `${noun} (${inside})`
+    : membrane || /^[\d-]+$/.test(main)
+      ? `${noun} ${main} (${inside})`
+      : `${main} (${noun}, ${inside})`
 }
 
 export function mergeRuns(runs: Run[]) {
@@ -287,6 +314,8 @@ export function changeFeatures(change: Change, features: Feature[]) {
   return featureEffects(features, change.effects)
 }
 
+const IN_SWAP = 'in a replaced stretch'
+
 export function lossText(effect: FeatureEffect) {
   const { missing, replaced, size } = effect
   const ends = isBond(effect.feature) && size === 2
@@ -298,43 +327,64 @@ export function lossText(effect: FeatureEffect) {
         : `all ${count(size)} ${what}`
   const part = (n: number, what: string) =>
     ends ? `1 of 2 ends ${what}` : `${count(n)} of ${count(size)} ${what}`
+  const swapped = size === 1 || ends ? IN_SWAP : 'replaced'
   return missing === size
     ? whole('missing')
     : replaced === size
-      ? whole('replaced')
+      ? whole(swapped)
       : missing && replaced
         ? ends
-          ? 'one end missing, the other replaced'
+          ? `one end missing, the other ${IN_SWAP}`
           : `${count(missing)} missing and ${count(replaced)} replaced, of ${count(size)}`
         : missing
           ? part(missing, 'missing')
-          : part(replaced, 'replaced')
+          : part(replaced, swapped)
 }
 
-const PRIORITY: FeatureType[] = [
+const PRIORITY: readonly string[] = [
+  'Active site',
   'Signal',
   'Transit peptide',
   'Propeptide',
+  'Chain',
+  'Peptide',
   'Transmembrane',
   'Intramembrane',
   'Domain',
-  'Repeat',
   'Zinc finger',
   'DNA binding',
+  'Repeat',
+  'Binding site',
+  'Disulfide bond',
   'Motif',
+  'Site',
   'Coiled coil',
-  'Topological domain',
   'Region',
 ]
 
-function featureClause(effects: FeatureEffect[]) {
+function rank(effect: FeatureEffect) {
+  return PRIORITY.indexOf(effect.feature.type)
+}
+
+export function inSentence(effect: FeatureEffect) {
+  return effect.feature.type !== 'Topological domain'
+}
+
+export function byPriority(a: FeatureEffect, b: FeatureEffect) {
+  return rank(a) - rank(b) || a.feature.start - b.feature.start
+}
+
+export function byShareLost(a: FeatureEffect, b: FeatureEffect) {
+  return b.missing / b.size - a.missing / a.size || byPriority(a, b)
+}
+
+export function featureClause(
+  effects: FeatureEffect[],
+  order: (a: FeatureEffect, b: FeatureEffect) => number = byPriority,
+) {
   const named = effects
-    .filter(e => PRIORITY.includes(e.feature.type))
-    .toSorted(
-      (a, b) =>
-        PRIORITY.indexOf(a.feature.type) - PRIORITY.indexOf(b.feature.type) ||
-        a.feature.start - b.feature.start,
-    )
+    .filter(e => rank(e) >= 0)
+    .toSorted(order)
     .slice(0, NAMED)
   const counted = GROUPS.flatMap(group => {
     const rest = effects.filter(e => e.group === group && !named.includes(e))
@@ -348,63 +398,133 @@ function featureClause(effects: FeatureEffect[]) {
   return listText([...named.map(e => featureLabel(e.feature)), ...counted])
 }
 
+function envelope(runs: Run[]): Run {
+  return [
+    Math.min(...runs.map(([start]) => start)),
+    Math.max(...runs.map(([, end]) => end)),
+  ]
+}
+
+export function swapHost(runs: Run[], features: Feature[]) {
+  const total = runLength(runs)
+  return features
+    .filter(
+      f =>
+        !isBond(f) &&
+        f.type !== 'Topological domain' &&
+        PRIORITY.includes(f.type),
+    )
+    .map(feature => ({
+      feature,
+      inside: overlap(runs, [feature.start, feature.end]),
+    }))
+    .filter(h => h.inside === total)
+    .toSorted(
+      (a, b) =>
+        a.feature.end - a.feature.start - (b.feature.end - b.feature.start) ||
+        PRIORITY.indexOf(a.feature.type) - PRIORITY.indexOf(b.feature.type),
+    )[0]?.feature
+}
+
+export function hostName(feature: Feature) {
+  const noun = featureNoun(feature)
+  const { main } = featureName(feature)
+  return !main
+    ? `the ${noun}`
+    : MEMBRANE.includes(feature.type) || main.length <= 4
+      ? `${noun} ${main}`
+      : `the ${main} ${noun}`
+}
+
+function swapPhrase(effects: EditEffect[], features: Feature[]) {
+  const runs = mergeRuns(effects.flatMap(e => e.absent))
+  const removed = runLength(runs)
+  const added = effects.reduce((sum, e) => sum + e.novel, 0)
+  const [start, end] = envelope(runs)
+  const host = swapHost(runs, features)
+  const of = host ? ` of ${hostName(host)}` : ''
+  return `swaps ${removed === 1 ? `residue ${span(start, end)}${of}` : `${count(removed)} residues${of} (${span(start, end)})`} for ${added === 1 ? 'a different one' : `${count(added)} different ones`}`
+}
+
 export function residueClause(
   effects: EditEffect[],
   length: number,
-  totals: Pick<Isoform, 'missing' | 'replaced' | 'novel'>,
+  features: Feature[] = [],
 ) {
-  const missing = absentOf(effects, 'missing')
-  const replaced = absentOf(effects, 'replaced')
-  const swappedIn = effects
-    .filter(e => e.fate === 'replaced')
-    .reduce((sum, e) => sum + e.novel, 0)
-  const added = totals.novel - swappedIn
-  const insertions = effects.filter(e => e.fate === 'missing' && e.novel > 0)
-  const lacks = totals.missing
-    ? missing.length <= 3
-      ? `lacks ${totals.missing === 1 ? 'residue' : 'residues'} ${runsText(missing)} (${count(totals.missing)} of ${count(length)})`
-      : `lacks ${count(totals.missing)} of ${count(length)} residues, in ${missing.length} stretches`
-    : ''
-  const swaps = totals.replaced
-    ? `${
-        replaced.length === 1
-          ? `${totals.replaced === 1 ? 'residue' : 'residues'} ${runsText(replaced)} ${totals.replaced === 1 ? 'is' : 'are'}`
-          : replaced.length <= 3
-            ? `residues ${runsText(replaced)} (${count(totals.replaced)}) are`
-            : `${count(totals.replaced)} residues in ${replaced.length} stretches are`
-      } replaced by ${plural(swappedIn, 'different residue')}`
-    : ''
-  const adds = added
-    ? `${totals.missing || totals.replaced ? 'it also adds' : 'it adds'} ${plural(added, 'residue')} the canonical lacks${
-        insertions.length === 1 && insertions[0]
-          ? `, at ${span(insertions[0].edit.start, insertions[0].edit.end)}`
-          : insertions.length > 1
-            ? `, at ${insertions.length} places`
-            : ''
+  const missingRuns = absentOf(effects, 'missing')
+  const missing = runLength(missingRuns)
+  const tails = effects.filter(
+    e => e.fate === 'missing' && e.removed > 0 && e.novel > 0,
+  )
+  const inserts = effects.filter(e => e.removed === 0 && e.novel > 0)
+  const tailNovel = tails.reduce((sum, e) => sum + e.novel, 0)
+  const swaps = changes(effects).filter(c => c.replaced > 0)
+  const swapPhrases =
+    swaps.length <= 2
+      ? swaps.map(c =>
+          swapPhrase(
+            c.effects.filter(e => e.fate === 'replaced'),
+            features,
+          ),
+        )
+      : [
+          `swaps ${count(swaps.reduce((sum, c) => sum + c.replaced, 0))} residues in ${swaps.length} stretches for ${count(swaps.reduce((sum, c) => sum + c.swappedIn, 0))} different ones`,
+        ]
+  const inserted = inserts.reduce((sum, e) => sum + e.novel, 0)
+  const insertPhrase = inserts.length
+    ? `inserts ${plural(inserted, 'residue')} the canonical lacks, at ${
+        inserts.length === 1 && inserts[0]
+          ? span(inserts[0].edit.start, inserts[0].edit.end)
+          : `${inserts.length} places`
       }`
     : ''
-  return totals.missing
-    ? [lacks, swaps, adds].filter(Boolean).join('; ')
-    : totals.replaced
-      ? ['nothing is missing', swaps, adds].filter(Boolean).join('; ')
-      : added
-        ? `nothing is missing or replaced; ${adds}`
-        : 'nothing is missing or replaced'
+  const tailPhrase = !tails.length
+    ? ''
+    : tails.length === 1 && missingRuns.length === 1
+      ? `, with ${plural(tailNovel, 'different residue')} in their place`
+      : `, with ${plural(tailNovel, 'different residue')} in place of ${tails.length <= 2 ? runsText(tails.flatMap(e => e.absent)) : `${tails.length} of those stretches`}`
+  const lacks = missing
+    ? `${
+        missingRuns.length <= 3
+          ? `lacks ${missing === 1 ? 'residue' : 'residues'} ${runsText(missingRuns)} (${count(missing)} of ${count(length)})`
+          : `lacks ${count(missing)} of ${count(length)} residues, in ${missingRuns.length} stretches`
+      }${tailPhrase}`
+    : ''
+  return missing
+    ? [lacks, ...swapPhrases, insertPhrase].filter(Boolean).join('; ')
+    : swapPhrases.length
+      ? [
+          listText([...swapPhrases, insertPhrase].filter(Boolean)),
+          'nothing else is missing',
+        ].join('; ')
+      : inserts.length
+        ? `carries every canonical residue and ${insertPhrase}`
+        : 'carries every canonical residue'
 }
 
 export function answer(record: GeneRecord, isoform: Isoform) {
   const effects = editEffects(isoform)
-  const lost = featureEffects(record.features, effects)
+  const lost = featureEffects(record.features, effects).filter(inSentence)
+  const hosts = changes(effects)
+    .filter(c => c.replaced > 0)
+    .map(c =>
+      swapHost(
+        mergeRuns(
+          c.effects.filter(e => e.fate === 'replaced').flatMap(e => e.absent),
+        ),
+        record.features,
+      ),
+    )
   const full = lost.filter(inFull)
   const cut = lost.filter(e => e.missing > 0 && !inFull(e))
-  const swapped = lost.filter(e => e.replaced > 0 && e.missing === 0)
+  const swapped = lost.filter(
+    e => e.replaced > 0 && e.missing === 0 && !hosts.includes(e.feature),
+  )
   const clauses = [
-    residueClause(effects, record.length, isoform),
+    residueClause(effects, record.length, record.features),
     full.length ? `missing in full: ${featureClause(full)}` : '',
-    cut.length ? `cut: ${featureClause(cut)}` : '',
-    swapped.length
-      ? `replaced in part or in full: ${featureClause(swapped)}`
-      : '',
+    cut.length ? `cut: ${featureClause(cut, byShareLost)}` : '',
+    swapped.length ? `in a replaced stretch: ${featureClause(swapped)}` : '',
   ].filter(Boolean)
   const sentence = clauses.join('; ')
   return `${sentence.charAt(0).toUpperCase()}${sentence.slice(1)}.`
@@ -416,50 +536,51 @@ export function residueBands(plddt: Model['plddt']) {
   )
 }
 
-function foldOf(
+function confidenceOf(
   runs: Run[],
   bands: number[],
-  folded: number,
-  which: 'missing' | 'replaced',
+  confident: number,
+  which: Fate,
 ) {
   const total = runLength(runs)
-  const unfolded = runs
+  const low = runs
     .flatMap(([start, end]) => bands.slice(start - 1, end))
     .filter(band => band < UNFOLDED_PLDDT).length
-  return unfolded > total / 2
-    ? `The canonical model shows no fold where residues are ${which}: ${count(unfolded)} of the ${count(total)} have pLDDT below ${UNFOLDED_PLDDT}.`
-    : folded === 0
-      ? `${total === 1 ? `The ${which} residue is not` : `None of the ${count(total)} ${which} residues is`} folded in the canonical model (pLDDT below ${FOLDED_PLDDT}).`
-      : `${
-          folded === total
-            ? total === 1
-              ? `The ${which} residue is`
-              : `All ${count(total)} ${which} residues are`
-            : `${count(folded)} of the ${count(total)} ${which} residues ${folded === 1 ? 'is' : 'are'}`
-        } folded in the canonical model (pLDDT ≥ ${FOLDED_PLDDT}).`
+  return total === 1
+    ? `The ${which} residue ${
+        confident
+          ? `is confidently modelled in the canonical model (pLDDT ≥ ${FOLDED_PLDDT})`
+          : low
+            ? `has pLDDT below ${UNFOLDED_PLDDT} in the canonical model`
+            : `has pLDDT between ${UNFOLDED_PLDDT} and ${FOLDED_PLDDT} in the canonical model`
+      }.`
+    : `Of the ${count(total)} ${which} residues, ${count(confident)} ${confident === 1 ? 'is' : 'are'} confidently modelled in the canonical model (pLDDT ≥ ${FOLDED_PLDDT}) and ${count(low)} ${low === 1 ? 'has' : 'have'} pLDDT below ${UNFOLDED_PLDDT}.`
 }
 
-export function foldText(record: GeneRecord, isoform: Isoform) {
+export function confidenceText(record: GeneRecord, isoform: Isoform) {
   const model = record.canonical.model
   const effects = editEffects(isoform)
   const bands = residueBands(model?.plddt ?? null)
-  const missing = absentOf(effects, 'missing')
-  const replaced = absentOf(effects, 'replaced')
   return !model
-    ? 'AlphaFold DB has no full-length model of the canonical protein, so folded residues are not counted.'
+    ? 'AlphaFold DB has no full-length model of the canonical protein, so absent residues are not counted by confidence.'
     : !model.plddt ||
         isoform.foldedAbsent === null ||
         isoform.foldedMissing === null
-      ? `The canonical model's confidence (${model.entry}) is not yet fetched, so folded residues are not counted.`
+      ? `The canonical model's confidence (${model.entry}) is not yet fetched, so absent residues are not counted by it.`
       : !isoform.missing && !isoform.replaced
         ? 'Every canonical residue is present.'
         : [
             isoform.missing
-              ? foldOf(missing, bands, isoform.foldedMissing, 'missing')
+              ? confidenceOf(
+                  absentOf(effects, 'missing'),
+                  bands,
+                  isoform.foldedMissing,
+                  'missing',
+                )
               : '',
             isoform.replaced
-              ? foldOf(
-                  replaced,
+              ? confidenceOf(
+                  absentOf(effects, 'replaced'),
                   bands,
                   isoform.foldedAbsent - isoform.foldedMissing,
                   'replaced',
@@ -496,30 +617,18 @@ export function interfaceRows(record: GeneRecord, isoform: Isoform) {
 }
 
 export function interfaceLossText(row: {
+  name: string
   missing: number
   replaced: number
   total: number
 }) {
-  return [
-    row.missing ? `${count(row.missing)} missing` : '',
-    row.replaced ? `${count(row.replaced)} replaced` : '',
-  ]
-    .filter(Boolean)
-    .join(', ')
-    .concat(` of ${plural(row.total, 'interface residue')}`)
-}
-
-export function interfaceSummary(record: GeneRecord, isoform: Isoform) {
-  const rows = interfaceRows(record, isoform)
-  const half = rows.filter(r => r.missing >= INTERFACE_LOST_SHARE * r.total)
-  const touched = rows.filter(r => r.missing + r.replaced > 0)
-  return !rows.length
-    ? ''
-    : half.length
-      ? `Missing at least half of the predicted interface with ${listText(half.map(r => r.name))}.`
-      : touched.length
-        ? `Missing or replaced under half of the predicted interface with ${listText(touched.map(r => r.name))}.`
-        : `Every predicted interface residue is present, for ${plural(rows.length, 'partner')}.`
+  return `${row.name}: ${
+    row.missing && row.replaced
+      ? `${count(row.missing)} missing and ${count(row.replaced)} replaced`
+      : row.missing
+        ? `${count(row.missing)} missing`
+        : `${count(row.replaced)} replaced`
+  }, of ${plural(row.total, 'interface residue')}`
 }
 
 export function modelText(record: GeneRecord, isoform: Isoform) {

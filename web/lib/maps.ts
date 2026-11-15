@@ -12,6 +12,7 @@ import {
   carriedRuns,
   editEffects,
   featureLabel,
+  featureName,
   featureRuns,
   groupOf,
   overlap,
@@ -42,7 +43,7 @@ const FEATURE_ROWS: {
   holds: (feature: Feature) => boolean
 }[] = [
   {
-    label: 'Topology',
+    label: 'Processing, topology',
     title: GROUP_LABELS.targeting,
     ticks: false,
     holds: f => groupOf(f) === 'targeting',
@@ -73,7 +74,9 @@ const FEATURE_ROWS: {
   },
 ]
 
-const FEATURE_CLASSES: Partial<Record<FeatureType, string>> = {
+const FEATURE_CLASSES: Record<string, string> = {
+  Chain: 'topo',
+  Peptide: 'sig',
   Signal: 'sig',
   'Transit peptide': 'sig',
   Propeptide: 'sig',
@@ -220,13 +223,15 @@ function featureMark(s: Scale, feature: Feature, y: number, height: number) {
   const kind =
     FEATURE_CLASSES[feature.type] ??
     (TICKS.includes(groupOf(feature)) ? 'mod' : 'dom')
-  const name = feature.description || feature.type
+  const name = featureName(feature).main
   const first = runs[0] ?? [feature.start, feature.end]
   const room = s.width(first) - 4
   return `<g class="f ${kind}" data-span="${spanData(runs)}"><title>${esc(featureLabel(feature))}</title>${runs
     .map(run => rect(s, run, y, height))
     .join('')}${
-    !TICKS.includes(groupOf(feature)) && name.length * CHARACTER_WIDTH < room
+    name &&
+    !TICKS.includes(groupOf(feature)) &&
+    name.length * CHARACTER_WIDTH < room
       ? `<text x="${fixed(s.x(first[0]) + 2.5)}" y="${y + height - 2.5}">${esc(name)}</text>`
       : ''
   }</g>`
