@@ -17,7 +17,11 @@ const scope = [
 ] as const
 const lacking = [
   ...GROUPS.map(group => [t.lacking[group], groupMissing(group), browse({ has: group })] as const),
-  [t.lacking.interface, INTERFACE_MISSING, browse({ has: 'interface' })],
+  [
+    t.lacking.interface,
+    `${INTERFACE_MISSING}, among the ${t.interfaceProteins.toLocaleString()} proteins that have one`,
+    browse({ has: 'interface' }),
+  ],
   [t.lacking.folded, MODELLED_MISSING, browse({ has: 'modelled' })],
 ] as const
 const worked = examples().map(example => ({ example, sentence: exampleSentence(example, gene(example.page)) }))

@@ -149,12 +149,8 @@ export interface IndexRow {
   length: number
   isoforms: number
   withTranscript: number
-  /** Most canonical residues any isoform does not carry over. */
-  mostAbsent: number
   /** Most canonical residues any isoform is missing. */
   mostMissing: number
-  /** Most `foldedAbsent` of any isoform; null without canonical pLDDT. */
-  foldedAbsent: number | null
   /** Most `foldedMissing` of any isoform; null without canonical pLDDT. */
   foldedMissing: number | null
   /** Isoforms lacking, in full, at least one feature of the group. */

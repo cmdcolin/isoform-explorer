@@ -599,7 +599,6 @@ function largest(values: number[]) {
 
 export function indexRow(gene: GeneRecord) {
   const { isoforms } = gene
-  const folded = isoforms.flatMap(i => i.foldedAbsent ?? [])
   const foldedMissing = isoforms.flatMap(i => i.foldedMissing ?? [])
   const canonicalPlddt = gene.canonical.model?.plddt
   return {
@@ -610,9 +609,7 @@ export function indexRow(gene: GeneRecord) {
     length: gene.length,
     isoforms: isoforms.length,
     withTranscript: isoforms.filter(hasTranscript).length,
-    mostAbsent: largest(isoforms.map(i => i.missing + i.replaced)),
     mostMissing: largest(isoforms.map(i => i.missing)),
-    foldedAbsent: canonicalPlddt ? largest(folded) : null,
     foldedMissing: canonicalPlddt ? largest(foldedMissing) : null,
     lost: perGroup(
       group => isoforms.filter(i => lacksGroup(gene, i, group)).length,

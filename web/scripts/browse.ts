@@ -31,8 +31,8 @@ function isRow(value: unknown): value is IndexRow {
     typeof value.gene === 'string' &&
     'lost' in value &&
     typeof value.lost === 'object' &&
-    'mostAbsent' in value &&
-    typeof value.mostAbsent === 'number'
+    'mostMissing' in value &&
+    typeof value.mostMissing === 'number'
   )
 }
 
