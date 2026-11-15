@@ -1,0 +1,19 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { href } from '../lib/site.ts'
+---
+
+<Layout nav="home">
+  <section class="hero">
+    <h1>If this transcript is the one being made, what does the protein lose?</h1>
+    <p class="lede">
+      For each alternative isoform UniProt describes, the residues, features, folded structure and predicted partner
+      interfaces of the canonical protein that its sequence lacks.
+    </p>
+    <p class="note">
+      Placeholder start page: the search box, counts and worked examples come next. Meanwhile, <a href={href('about/')}
+        >About</a
+      > says what the site counts and what it does not claim.
+    </p>
+  </section>
+</Layout>

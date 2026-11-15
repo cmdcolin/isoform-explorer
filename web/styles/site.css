@@ -1,0 +1,528 @@
+:root {
+  color-scheme: light;
+  --surface: #fcfcfb;
+  --surface-2: #f2f1ed;
+  --border: #dedcd5;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --link: #1f63b5;
+  --interface: #2a78d6;
+  --caution: #d97a14;
+  --chain: #bdb8ab;
+  --partner: #3f9b78;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --surface-2: #242422;
+    --border: #3a3936;
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --link: #79aef0;
+    --interface: #3987e5;
+    --caution: #e8a046;
+    --chain: #77746c;
+    --partner: #4fb38c;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+a {
+  color: var(--link);
+}
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px max(16px, calc((100% - 1048px) / 2));
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 650;
+  font-size: 18px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.brand-logo {
+  width: 28px;
+  height: 28px;
+}
+
+.site-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+
+.site-header nav a[aria-current] {
+  color: var(--text);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.site-header nav .sibling-link {
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
+}
+
+h1:focus {
+  outline: none;
+}
+
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+}
+
+h1 {
+  font-size: 26px;
+  margin: 8px 0 4px;
+}
+
+h2 {
+  font-size: 22px;
+  line-height: 1.25;
+  margin: 32px 0 8px;
+}
+
+h3 {
+  font-size: 15px;
+  margin: 24px 0 6px;
+}
+
+section {
+  margin: 0 0 56px;
+}
+
+.prose {
+  max-width: 760px;
+}
+
+.lede {
+  color: var(--text-2);
+  max-width: 760px;
+}
+
+.hero h1 {
+  font-size: clamp(28px, 5vw, 42px);
+  line-height: 1.15;
+  margin: 24px 0 12px;
+  max-width: 22ch;
+}
+
+.hero .lede {
+  font-size: 17px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 0 40px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.tile {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+}
+
+a.tile:hover {
+  border-color: var(--interface);
+}
+
+.tile .value {
+  font-size: 26px;
+  font-weight: 650;
+}
+
+.tile .label {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.case {
+  margin: 0 0 16px;
+  padding: 4px 16px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.case p {
+  max-width: 760px;
+  color: var(--text-2);
+}
+
+.note {
+  border-left: 3px solid var(--caution);
+  padding: 6px 12px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  max-width: 760px;
+}
+
+.muted {
+  color: var(--text-2);
+}
+
+.tip,
+.hover-hint {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.button {
+  display: inline-block;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+.button.primary {
+  background: var(--interface);
+  border-color: var(--interface);
+  color: #fff;
+}
+
+a.button[href^="http"]::after {
+  content: "";
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin-left: 0.4em;
+  vertical-align: -0.05em;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+input[type="search"] {
+  font: inherit;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  min-width: 240px;
+  max-width: 100%;
+}
+
+.search input[type="search"] {
+  width: min(100%, 520px);
+  font-size: 17px;
+  padding: 10px 12px;
+}
+
+.filters label {
+  margin-right: 12px;
+  font-size: 14px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+th {
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+th button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+td.nowrap,
+td .nowrap,
+td.num {
+  white-space: nowrap;
+}
+
+td.num,
+th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+td.wide {
+  min-width: 13rem;
+}
+
+tr:hover td {
+  background: var(--surface-2);
+}
+
+.cell-note {
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.cell-note.caution {
+  color: var(--caution);
+  font-weight: 600;
+}
+
+details summary {
+  cursor: pointer;
+  color: var(--link);
+}
+
+details.more {
+  white-space: normal;
+}
+
+details.more summary {
+  font-size: 12px;
+}
+
+.references {
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.references a {
+  overflow-wrap: anywhere;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 5px;
+  vertical-align: baseline;
+}
+
+.folded-swatch {
+  background: var(--chain);
+}
+
+.loose-swatch {
+  background: var(--border);
+}
+
+.replaced-swatch {
+  background: none;
+  border: 1.5px dashed var(--text);
+}
+
+.dot-swatch {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 4px;
+  vertical-align: -1px;
+  border-radius: 50%;
+  border: 1.5px solid var(--interface);
+  background: linear-gradient(90deg, var(--surface) 50%, var(--interface) 50%);
+}
+
+.feature-swatch.binding {
+  background: color-mix(in srgb, var(--partner) 25%, transparent);
+  border: 1px solid var(--partner);
+}
+
+.feature-swatch.site {
+  background: var(--text);
+  border: 1px solid var(--text);
+}
+
+.map-wrap {
+  overflow-x: auto;
+}
+
+.map {
+  width: 100%;
+  min-width: 760px;
+  height: auto;
+  margin: 8px 0 4px;
+}
+
+.map .axis {
+  stroke: var(--text-2);
+}
+
+.map .tick {
+  fill: var(--text-2);
+  font-size: 11px;
+}
+
+.map .row-label {
+  font-size: 12px;
+  fill: var(--text-2);
+}
+
+.map .row-hit {
+  fill: transparent;
+}
+
+.map .baseline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.map .folded {
+  fill: var(--chain);
+}
+
+.map .loose {
+  fill: var(--border);
+}
+
+.map .replaced {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}
+
+.map .interface-tick {
+  fill: var(--interface);
+}
+
+.map .dot-ring {
+  fill: var(--surface);
+  stroke: var(--interface);
+  stroke-width: 1.5;
+}
+
+.map .kept {
+  fill: var(--interface);
+}
+
+.map .partner-dot.lit .dot-ring {
+  stroke-width: 2.5;
+}
+
+.map .guide {
+  visibility: hidden;
+  pointer-events: none;
+  fill: var(--text);
+  fill-opacity: 0.18;
+}
+
+.map .guide.shown {
+  visibility: visible;
+}
+
+.map .lit .row-label {
+  fill: var(--text);
+  font-weight: 600;
+}
+
+.map .lit .row-hit {
+  fill: var(--text);
+  fill-opacity: 0.06;
+}
+
+.map .feature rect {
+  fill: var(--surface-2);
+  stroke: var(--text-2);
+  stroke-width: 0.75;
+}
+
+.map .feature.region rect {
+  stroke-dasharray: 2 1.5;
+}
+
+.map .feature.binding rect {
+  fill: var(--partner);
+  fill-opacity: 0.25;
+  stroke: var(--partner);
+}
+
+.map .feature.site rect {
+  fill: var(--text);
+  stroke: var(--text);
+}
+
+.map .feature text {
+  font-size: 9.5px;
+  fill: var(--text);
+  pointer-events: none;
+}
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 16px max(16px, calc((100% - 1048px) / 2));
+  color: var(--text-2);
+  font-size: 13px;
+  text-align: center;
+}

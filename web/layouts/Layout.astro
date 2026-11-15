@@ -1,0 +1,71 @@
+---
+import '../styles/site.css'
+import { INTERFACE_EXPLORER, href } from '../lib/site.ts'
+
+interface Props {
+  title?: string
+  description?: string
+  nav?: 'home' | 'browse' | 'about'
+  indexed?: boolean
+}
+
+const DEFAULT_DESCRIPTION =
+  'If this transcript is the one being made, what does the protein lose? Residues, UniProt features, folded structure and predicted partner interfaces, for every described human protein isoform.'
+const { title, description = DEFAULT_DESCRIPTION, nav, indexed = true } = Astro.props
+const fullTitle = title ? `${title} · Isoform explorer` : 'Isoform explorer'
+const canonical = new URL(Astro.url.pathname, Astro.site)
+const links = [
+  ['home', 'Home', ''],
+  ['browse', 'Browse', 'browse/'],
+  ['about', 'About', 'about/'],
+] as const
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {indexed && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title ?? 'Isoform explorer: what does this transcript’s protein lose?'} />
+    <meta property="og:description" content={description} />
+    {indexed && <meta property="og:url" content={canonical} />}
+    <link rel="icon" href={href('logo.svg')} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={href('apple-touch-icon.png')} />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href={href()}>
+        <img class="brand-logo" src={href('logo.svg')} alt="" />
+        Isoform explorer
+      </a>
+      <nav>
+        {
+          links.map(([key, label, path]) => (
+            <a href={href(path)} aria-current={nav === key ? 'page' : undefined}>
+              {label}
+            </a>
+          ))
+        }
+        <a class="sibling-link" href={INTERFACE_EXPLORER}>Interface explorer</a>
+      </nav>
+    </header>
+    <main id="app">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      Prototype. Proteins, isoforms, features and transcript cross-references from <a href="https://www.uniprot.org/"
+        >UniProt</a
+      >, predicted structures and complexes from <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> (CC-BY 4.0),
+      viewer <a href="https://jbrowse.org/jb2/">JBrowse 2</a>. A sibling of <a href={INTERFACE_EXPLORER}
+        >Interface explorer</a
+      >, by Colin Diesh with Claude AI assistance.
+    </footer>
+    <script>
+      import '../scripts/guides.ts'
+    </script>
+  </body>
+</html>

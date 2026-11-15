@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { href } from '../lib/site.ts'
+---
+
+<Layout title="Not found" indexed={false}>
+  <h1>Not found</h1>
+  <p>
+    There is no page here. Try <a href={href('browse/')}>browsing the proteins</a>, the <a href={href()}>start page</a> or <a href={href('about/')}>About</a>.
+  </p>
+</Layout>
