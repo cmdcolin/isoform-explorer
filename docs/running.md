@@ -23,7 +23,9 @@ committed). `pnpm all` runs the first two in order.
   sequence from UniProt's alternative-sequence edits, places what each one lacks
   on the canonical sequence, attaches AlphaFold DB monomer models (list per
   protein from the API) with their cached pLDDT, and reads the interfaces from
-  `out/interfaces.json`. Writes `site/data/genes/`, `index.json`, `totals.json`,
+  `out/interfaces.json`. It also caches Interface explorer's page lists and
+  the GRCh38 places of the isoforms' Ensembl transcripts (one batched pass
+  over Ensembl's REST API), so a rerun needs no network. Writes `site/data/genes/`, `index.json`, `totals.json`,
   `examples.json` and the search maps in `site/data/search/`. With accessions it
   rewrites only those gene files, not the totals. It ends by saying how many
   proteins' model lists and how many models' pLDDT are still pending.

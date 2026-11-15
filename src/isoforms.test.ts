@@ -440,6 +440,7 @@ describe('summaries', () => {
       model: { entry: 'AF-P1-F1', cif: '', meanPlddt: 80, plddt: [] },
     },
     isoforms: [lacking, swapped],
+    interfaces: { A: [1, 2, 3, 4] },
     ensemblGenes: ['ENSG1.4'],
     unmapped: {
       ensembl: ['ENST9.1'],
@@ -474,6 +475,7 @@ describe('summaries', () => {
         withTranscript: 1,
         withModel: 1,
         canonicalModels: 1,
+        interfaceProteins: 1,
         modelsPending: 0,
         maneSelectNotCanonical: 1,
         lacking: {

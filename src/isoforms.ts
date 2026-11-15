@@ -49,7 +49,6 @@ import type {
 import {
   BONDS,
   accessionOf,
-  diseaseAccessions,
   eventsOf,
   featuresOf,
   geneOf,
@@ -438,7 +437,6 @@ export function withinSequence(
 }
 
 export interface Sources {
-  disease: Set<string>
   interfaces: Map<string, Record<string, number[]>>
   alphaFold: AlphaFoldDb
   explorer: (accession: string) => GeneRecord['explorer']
@@ -448,7 +446,7 @@ export interface Sources {
 export async function geneRecord(
   entry: UniProtEntry,
   page: string,
-  { disease, interfaces: predicted, alphaFold, explorer, places }: Sources,
+  { interfaces: predicted, alphaFold, explorer, places }: Sources,
 ) {
   const accession = accessionOf(entry)
   const sequence = sequenceOf(entry)
@@ -636,6 +634,9 @@ export function totals(genes: GeneRecord[]) {
     withTranscript: counted(({ isoform }) => hasTranscript(isoform)),
     withModel: counted(({ isoform }) => isoform.model !== null),
     canonicalModels: genes.filter(gene => gene.canonical.model !== null).length,
+    interfaceProteins: genes.filter(
+      gene => Object.keys(gene.interfaces).length > 0,
+    ).length,
     modelsPending: genes.reduce(
       (n, gene) =>
         n +
@@ -822,7 +823,6 @@ export function hasAlternative(entry: UniProtEntry) {
 
 async function main(workers = '8', ...accessions: string[]) {
   const entries = (await isoformEntries()).filter(hasAlternative)
-  const disease = await diseaseAccessions()
   const interfaces = readInterfaces()
   const pages = pageNames(entries)
   const wanted = entries.filter(
@@ -836,7 +836,6 @@ async function main(workers = '8', ...accessions: string[]) {
   )
   const places = await transcriptPlaces(mapped)
   const sources = {
-    disease,
     interfaces,
     alphaFold,
     explorer: await explorerPages(),

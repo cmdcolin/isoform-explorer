@@ -116,8 +116,17 @@ story. The same standard applies here.
 ## Data
 
 - `site/data/genes/<page>.json`: `GeneRecord`. `page` is the gene symbol, or
-  `<gene>_<accession>` when two entries share a symbol.
-- `site/data/index.json`: `IndexRow[]`. `site/data/totals.json`: `Totals`,
+  `<gene>_<accession>` when two entries share a symbol. Besides the isoforms it
+  holds `explorer` (Interface explorer gene and isoform page names, matched by
+  accession from that site's published `genes.json` and `isoforms.json`),
+  `locus` (GRCh38 span of the isoforms' Ensembl transcripts, from one batched
+  Ensembl REST lookup; null without them or across chromosomes),
+  `ensemblGenes`, and `unmapped`: the ENST, NM and NP ids UniProt lists for the
+  entry without naming an isoform. A model whose pLDDT is not cached yet keeps
+  its entry and CIF link with null pLDDT fields.
+- `site/data/index.json`: `IndexRow[]`; `mostMissing` and `foldedMissing` are
+  the missing-only maxima over the isoforms, `mostAbsent` and `foldedAbsent`
+  also count replaced residues. `site/data/totals.json`: `Totals`,
   counting alternative isoforms (the canonical is never counted) unless a
   line says proteins:
   - `proteins`: reviewed human entries with at least one Described isoform;
@@ -126,6 +135,9 @@ story. The same standard applies here.
   - `withModel`: isoforms whose own AlphaFold DB model has exactly the
     rebuilt isoform sequence; `canonicalModels`: proteins whose canonical has
     one full-length `-F1-` model of exactly its sequence.
+  - `interfaceProteins`: proteins with at least one confident predicted
+    partner interface.
+  - `modelsPending`: canonical and isoform models whose pLDDT is not cached.
   - `maneSelectNotCanonical`: proteins whose MANE Select transcript encodes a
     Described isoform rather than the canonical.
   - `lacking.<group>`: isoforms missing in full at least one feature of the
@@ -146,12 +158,16 @@ story. The same standard applies here.
   dropped) to `<page>#<isoform accession>`. Split so the browser loads the
   transcript maps only when the query looks like a transcript: `genes.json`
   (upper-case symbol → pages), `accessions.json` (entry accession → page,
-  isoform accession → `page#isoform`), `ensembl.json` and `refseq.json`. Each
+  isoform accession → `page#isoform`), `ensembl.json` (ENST, and ENSG to the
+  page) and `refseq.json` (NM and NP); a transcript tied to no isoform leads
+  to the page. Each
   value is a list, since a symbol or transcript can name more than one target
   (`SEARCH` and `Lookup` in `src/types.ts`).
 - `out/interfaces.json`: per accession, partner → confident interface residues.
   Written by `src/interfaces.ts`, read by `src/isoforms.ts`, absent partners
   simply give no interface rows.
+- Regeneration is deterministic: `pnpm isoforms` run twice from the same
+  `data/` and `out/` leaves `site/data` byte-identical.
 - `src/types.ts` is the contract between pipeline and site. The pipeline owns
   it; pages import types from it and never restate them.
 

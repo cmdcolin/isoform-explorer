@@ -152,11 +152,11 @@ export interface IndexRow {
   /** Most canonical residues any isoform does not carry over. */
   mostAbsent: number
   /** Most canonical residues any isoform is missing. */
-  mostMissing?: number
+  mostMissing: number
   /** Most `foldedAbsent` of any isoform; null without canonical pLDDT. */
   foldedAbsent: number | null
   /** Most `foldedMissing` of any isoform; null without canonical pLDDT. */
-  foldedMissing?: number | null
+  foldedMissing: number | null
   /** Isoforms lacking, in full, at least one feature of the group. */
   lost: Record<FeatureGroup, number>
   /** Isoforms missing at least half of a partner's interface. */
@@ -171,6 +171,8 @@ export interface Totals {
   withModel: number
   /** Proteins whose canonical has a full-length AlphaFold DB model. */
   canonicalModels: number
+  /** Proteins with at least one confident predicted partner interface. */
+  interfaceProteins: number
   /** Canonical and isoform models whose pLDDT is not yet cached. */
   modelsPending: number
   maneSelectNotCanonical: number

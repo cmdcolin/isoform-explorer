@@ -88,15 +88,6 @@ export function isoformEntries() {
   )
 }
 
-export async function diseaseAccessions() {
-  const entries = await stream(
-    `${HUMAN} AND cc_disease:*`,
-    'accession',
-    join(DATA, 'uniprot_disease_accessions.json'),
-  )
-  return new Set(entries.map(accessionOf))
-}
-
 export function accessionOf(entry: UniProtEntry) {
   return text(entry.primaryAccession) ?? ''
 }
