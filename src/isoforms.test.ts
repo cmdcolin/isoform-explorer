@@ -17,6 +17,7 @@ import {
   lacksInterface,
   losingConfidence,
   lookups,
+  mergedEdits,
   pageNames,
   readInterfaces,
   segments,
@@ -236,16 +237,50 @@ describe('swap or truncation', () => {
     })
   })
 
-  it('reads a ten-residue swap then a deletion as 10 replaced and the rest missing, like p53 beta', () => {
+  it('reads a ten-residue swap then an abutting deletion as one truncation, like p53 beta', () => {
     const canonical = `${'A'.repeat(331)}PLDGEYFSLQ${'K'.repeat(52)}`
+    const edits: [number, number, string][] = [
+      [332, 341, 'DQTSFQKSNC'],
+      [342, 393, ''],
+    ]
+    expect(tally(fates(canonical, edits))).toEqual({
+      missing: 62,
+      replaced: 0,
+    })
+  })
+})
+
+describe('mergedEdits', () => {
+  it('joins abutting edits into one', () => {
     expect(
-      tally(
-        fates(canonical, [
-          [332, 341, 'DQTSFQKSNC'],
-          [342, 393, ''],
-        ]),
-      ),
-    ).toEqual({ missing: 52, replaced: 10 })
+      mergedEdits([
+        [346, 364, ''],
+        [345, 345, 'I'],
+      ]),
+    ).toEqual([[345, 364, 'I']])
+  })
+
+  it('keeps edits apart when canonical residues lie between them', () => {
+    expect(
+      mergedEdits([
+        [3, 4, 'X'],
+        [6, 7, ''],
+      ]),
+    ).toEqual([
+      [3, 4, 'X'],
+      [6, 7, ''],
+    ])
+  })
+
+  it('reads one change written two ways the same, like APP isoforms 8 and 11', () => {
+    const canonical = `${'A'.repeat(344)}M${'C'.repeat(19)}${'A'.repeat(406)}`
+    const twoEdits = fates(canonical, [
+      [345, 345, 'I'],
+      [346, 364, ''],
+    ])
+    const oneEdit = fates(canonical, [[345, 364, 'I']])
+    expect(twoEdits).toEqual(oneEdit)
+    expect(oneEdit.filter(f => f === 'missing')).toHaveLength(20)
   })
 })
 
@@ -361,7 +396,12 @@ describe('summaries', () => {
   const lacking = isoform({
     accession: 'P1-2',
     missing: 61,
-    transcripts: { ensembl: ['ENST1.1'], refseq: ['NM_1.2'], maneSelect: true },
+    transcripts: {
+      ensembl: ['ENST1.1'],
+      refseq: ['NM_1.2'],
+      refseqProteins: ['NP_1.1'],
+      maneSelect: true,
+    },
     features: [
       [0, 20, 0],
       [1, 31, 0],
@@ -392,6 +432,12 @@ describe('summaries', () => {
       model: { entry: 'AF-P1-F1', cif: '', meanPlddt: 80, plddt: [] },
     },
     isoforms: [lacking, swapped],
+    ensemblGenes: ['ENSG1.4'],
+    unmapped: {
+      ensembl: ['ENST9.1'],
+      refseq: ['NM_9.1'],
+      refseqProteins: ['NP_9.1'],
+    },
   })
 
   it('counts lost features from missing residues only', () => {
@@ -404,7 +450,9 @@ describe('summaries', () => {
       isoforms: 2,
       withTranscript: 1,
       mostAbsent: 61,
+      mostMissing: 61,
       foldedAbsent: 12,
+      foldedMissing: 12,
       lost: { targeting: 1, domains: 1, sites: 1, modifications: 0 },
       interfacesLost: 1,
     })
@@ -441,8 +489,17 @@ describe('summaries', () => {
       'P1-2': ['G1#P1-2'],
       'P1-3': ['G1#P1-3'],
     })
-    expect(found.ensembl).toEqual({ ENST1: ['G1#P1-2'] })
-    expect(found.refseq).toEqual({ NM_1: ['G1#P1-2'] })
+    expect(found.ensembl).toEqual({
+      ENSG1: ['G1'],
+      ENST1: ['G1#P1-2'],
+      ENST9: ['G1'],
+    })
+    expect(found.refseq).toEqual({
+      NM_1: ['G1#P1-2'],
+      NM_9: ['G1'],
+      NP_1: ['G1#P1-2'],
+      NP_9: ['G1'],
+    })
   })
 
   it('picks worked examples by rule, smallest change first', () => {

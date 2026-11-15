@@ -33,8 +33,11 @@ first three, so they cover every described isoform, not only the modelled ones.
   `novel`.
 - **UniProt features of the canonical protein that overlap those residues,** in
   four groups (`FEATURE_GROUPS` in `src/types.ts`):
-  - targeting and topology: signal and transit peptides, propeptides,
-    transmembrane and intramembrane segments, topological domains;
+  - processing, targeting and topology: signal and transit peptides,
+    propeptides, chains and peptides, transmembrane and intramembrane
+    segments, topological domains. Peptides are always kept; a chain only
+    when the entry has more than one chain or peptide and it is not the
+    longest of them, so the whole mature protein is never listed;
   - domains and regions: domains, repeats, zinc fingers, DNA-binding regions,
     coiled coils, regions, motifs. Regions described only as "Disordered" and
     compositional-bias features are left out;
@@ -62,11 +65,11 @@ story. The same standard applies here.
 - **No consequence.** The site lists what the sequence lacks. It never says an
   isoform is non-functional, mislocalised, secreted, soluble, degraded or
   dominant negative, except by quoting UniProt's note.
-- **Replaced is not lost.** Each UniProt edit is a swap, its removed residues
-  `replaced`, when after trimming the ends it shares with the canonical it
-  adds at least half as many residues as it removes (`SWAP_SHARE` in
-  `src/isoforms.ts`); otherwise they are `missing` and the added ones only
-  `novel`. A swap (mutually exclusive exons, an alternative terminus of
+- **Replaced is not lost.** An isoform's abutting UniProt edits are first
+  joined into one; each edit is then a swap, its removed residues `replaced`,
+  when after trimming the ends it shares with the canonical it adds at least
+  half as many residues as it removes (`SWAP_SHARE` in `src/isoforms.ts`);
+  otherwise they are `missing` and the added ones only `novel`. A swap (mutually exclusive exons, an alternative terminus of
   similar length) reads "replaced by N different residues"; the lost-feature
   counts on the home page and browse table use `missing` only.
 - **Counts by confidence, never "no fold".** pLDDT is the prediction's

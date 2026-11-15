@@ -25,6 +25,8 @@ const ENTRY_FIELDS = [
   'xref_refseq',
   'xref_ensembl',
   'xref_mane-select',
+  'ft_chain',
+  'ft_peptide',
   'ft_signal',
   'ft_transit',
   'ft_propep',
@@ -129,8 +131,22 @@ function position(location: Record<string, unknown>, end: 'start' | 'end') {
   return number(record(location[end]).value)
 }
 
+const PRODUCTS: readonly FeatureType[] = ['Chain', 'Peptide']
+
+const span = (feature: Feature) => feature.end - feature.start + 1
+
+export function withoutWholeChains(features: Feature[]) {
+  const products = features.filter(f => PRODUCTS.includes(f.type))
+  const longest = Math.max(0, ...products.map(span))
+  return features.filter(feature =>
+    feature.type === 'Chain'
+      ? products.length > 1 && span(feature) < longest
+      : true,
+  )
+}
+
 export function featuresOf(entry: UniProtEntry) {
-  return records(entry.features)
+  const features = records(entry.features)
     .flatMap(feature => {
       const type = featureType(feature.type)
       const location = record(feature.location)
@@ -154,6 +170,7 @@ export function featuresOf(entry: UniProtEntry) {
         a.end - b.end ||
         FEATURE_TYPES.indexOf(a.type) - FEATURE_TYPES.indexOf(b.type),
     )
+  return withoutWholeChains(features)
 }
 
 const NOTE_TOPICS: Record<string, string> = {

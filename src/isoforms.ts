@@ -11,16 +11,22 @@ import {
   text,
   writeJson,
 } from './json.ts'
+import { locusOf, transcriptPlaces } from './ensembl.ts'
+import type { Place } from './ensembl.ts'
+import { explorerPages } from './explorer.ts'
 import { pythonRound } from './numeric.ts'
 import { DATA, OUT, SITE_DATA } from './paths.ts'
 import {
   applyEdits,
+  compareEdits,
   compareText,
   editsByIsoform,
   ensemblByIsoform,
   maneIsoform,
   maneTranscripts,
   refseqByIsoform,
+  refseqProteinsByIsoform,
+  ensemblGenes,
   replacedPositions,
   unversioned,
 } from './sequences.ts'
@@ -124,9 +130,26 @@ export async function inPool<T, R>(
   return results
 }
 
+export function mergedEdits(edits: SequenceEdit[]) {
+  const merged: SequenceEdit[] = []
+  for (const [start, end, replacement] of [...edits].sort(compareEdits)) {
+    const last = merged.at(-1)
+    if (last && start <= last[1] + 1) {
+      merged[merged.length - 1] = [
+        last[0],
+        Math.max(last[1], end),
+        last[2] + replacement,
+      ]
+    } else {
+      merged.push([start, end, replacement])
+    }
+  }
+  return merged
+}
+
 export function fates(sequence: string, edits: SequenceEdit[]) {
   const fate: Fate[] = Array.from(sequence, () => 'kept')
-  for (const [start, end, replacement] of edits) {
+  for (const [start, end, replacement] of mergedEdits(edits)) {
     const positions = replacedPositions(sequence, start, end, replacement)
     const carried = new Set(positions)
     const added = positions.filter(position => position === null).length
@@ -353,6 +376,7 @@ export function readInterfaces(path = join(OUT, 'interfaces.json')) {
 function transcriptsOf(entry: UniProtEntry) {
   const ensembl = ensemblByIsoform(entry)
   const refseq = refseqByIsoform(entry)
+  const refseqProteins = refseqProteinsByIsoform(entry)
   const mane = maneIsoform(entry)
   const maneIds = maneTranscripts(entry)
   const ordered = (ids: string[]) =>
@@ -361,11 +385,28 @@ function transcriptsOf(entry: UniProtEntry) {
         Number(!maneIds.has(unversioned(a))) -
           Number(!maneIds.has(unversioned(b))) || compareText(a, b),
     )
-  return (isoform: string) => ({
-    ensembl: ordered(ensembl.get(isoform) ?? []),
-    refseq: ordered(refseq.get(isoform) ?? []),
-    maneSelect: isoform === mane,
-  })
+  const unmapped = (
+    byIsoform: Map<string | undefined, string[]>,
+    shown: Set<string>,
+  ) =>
+    ordered(
+      [...byIsoform].flatMap(([isoform, ids]) =>
+        isoform !== undefined && shown.has(isoform) ? [] : ids,
+      ),
+    )
+  return {
+    of: (isoform: string) => ({
+      ensembl: ordered(ensembl.get(isoform) ?? []),
+      refseq: ordered(refseq.get(isoform) ?? []),
+      refseqProteins: ordered(refseqProteins.get(isoform) ?? []),
+      maneSelect: isoform === mane,
+    }),
+    unmapped: (shown: Set<string>) => ({
+      ensembl: unmapped(ensembl, shown),
+      refseq: unmapped(refseq, shown),
+      refseqProteins: unmapped(refseqProteins, shown),
+    }),
+  }
 }
 
 function isoformNumber(isoform: string) {
@@ -396,16 +437,25 @@ export function withinSequence(
   )
 }
 
+export interface Sources {
+  disease: Set<string>
+  interfaces: Map<string, Record<string, number[]>>
+  alphaFold: AlphaFoldDb
+  explorer: (accession: string) => GeneRecord['explorer']
+  places: Map<string, Place | null>
+}
+
 export async function geneRecord(
   entry: UniProtEntry,
   page: string,
-  disease: boolean,
-  predicted: Record<string, number[]>,
-  alphaFold: AlphaFoldDb,
+  { disease, interfaces: predicted, alphaFold, explorer, places }: Sources,
 ) {
   const accession = accessionOf(entry)
   const sequence = sequenceOf(entry)
-  const interfaces = withinSequence(predicted, sequence.length)
+  const interfaces = withinSequence(
+    predicted.get(accession) ?? {},
+    sequence.length,
+  )
   const isoforms = editsByIsoform(entry)
   const displayed = [...isoforms].find(([, info]) => info.displayed)
   const notes = notesByMolecule(entry)
@@ -428,32 +478,43 @@ export async function geneRecord(
           model: models.get(isoform),
           alphaFold,
           notes: notes.get(`Isoform ${info.name}`) ?? [],
-          transcripts: transcripts(isoform),
+          transcripts: transcripts.of(isoform),
         }),
       )
     } else {
       console.log(`${isoform}: edits outside or overlapping the sequence`)
     }
   }
+  const canonicalAccession = displayed?.[0] ?? `${accession}-1`
+  const canonicalTranscripts = transcripts.of(canonicalAccession)
+  const shown = [canonicalTranscripts, ...built.map(i => i.transcripts)]
   return {
     page,
     gene: geneOf(entry) || accession,
     accession,
     protein: proteinOf(entry),
     length: sequence.length,
-    disease,
+    disease: disease.has(accession),
     events: eventsOf(entry),
     canonical: {
-      accession: displayed?.[0] ?? `${accession}-1`,
+      accession: canonicalAccession,
       name: displayed?.[1].name ?? '',
       synonyms: displayed?.[1].synonyms ?? [],
       notes: notes.get(`Isoform ${displayed?.[1].name}`) ?? [],
-      transcripts: transcripts(displayed?.[0] ?? ''),
+      transcripts: canonicalTranscripts,
       model: canonical?.model ?? null,
     },
     features,
     interfaces,
     isoforms: built,
+    ensemblGenes: ensemblGenes(entry),
+    unmapped: transcripts.unmapped(
+      new Set([canonicalAccession, ...built.map(i => i.accession)]),
+    ),
+    explorer: explorer(accession),
+    locus: locusOf(
+      shown.flatMap(t => t.ensembl).map(id => places.get(unversioned(id))),
+    ),
   } satisfies GeneRecord
 }
 
@@ -472,8 +533,9 @@ function isoformRecord(
   },
 ) {
   const { sequence, canonicalScores } = context
-  const built = applyEdits(sequence, info.edits)
-  const fate = fates(sequence, info.edits)
+  const edits = mergedEdits(info.edits)
+  const built = applyEdits(sequence, edits)
+  const fate = fates(sequence, edits)
   const own = context.alphaFold.scored(context.model, built.sequence)
   const folded = (wanted: (fate: Fate) => boolean) =>
     canonicalScores
@@ -489,7 +551,7 @@ function isoformRecord(
     length: built.sequence.length,
     transcripts: context.transcripts,
     segments: segments(built.positions),
-    edits: info.edits.map(edit => trimmedEdit(sequence, edit)),
+    edits: edits.map(edit => trimmedEdit(sequence, edit)),
     missing: fate.filter(f => f === 'missing').length,
     replaced: fate.filter(f => f === 'replaced').length,
     novel: built.positions.filter(p => p === null).length,
@@ -541,6 +603,8 @@ function largest(values: number[]) {
 export function indexRow(gene: GeneRecord) {
   const { isoforms } = gene
   const folded = isoforms.flatMap(i => i.foldedAbsent ?? [])
+  const foldedMissing = isoforms.flatMap(i => i.foldedMissing ?? [])
+  const canonicalPlddt = gene.canonical.model?.plddt
   return {
     page: gene.page,
     gene: gene.gene,
@@ -550,7 +614,9 @@ export function indexRow(gene: GeneRecord) {
     isoforms: isoforms.length,
     withTranscript: isoforms.filter(hasTranscript).length,
     mostAbsent: largest(isoforms.map(i => i.missing + i.replaced)),
-    foldedAbsent: gene.canonical.model?.plddt ? largest(folded) : null,
+    mostMissing: largest(isoforms.map(i => i.missing)),
+    foldedAbsent: canonicalPlddt ? largest(folded) : null,
+    foldedMissing: canonicalPlddt ? largest(foldedMissing) : null,
     lost: perGroup(
       group => isoforms.filter(i => lacksGroup(gene, i, group)).length,
     ),
@@ -619,9 +685,24 @@ export function lookups(genes: GeneRecord[]) {
       for (const transcript of isoform.transcripts.ensembl) {
         addTo(ensembl, unversioned(transcript), target)
       }
-      for (const transcript of isoform.transcripts.refseq) {
+      for (const transcript of [
+        ...isoform.transcripts.refseq,
+        ...(isoform.transcripts.refseqProteins ?? []),
+      ]) {
         addTo(refseq, unversioned(transcript), target)
       }
+    }
+    for (const id of [
+      ...(gene.ensemblGenes ?? []),
+      ...(gene.unmapped?.ensembl ?? []),
+    ]) {
+      addTo(ensembl, unversioned(id), gene.page)
+    }
+    for (const id of [
+      ...(gene.unmapped?.refseq ?? []),
+      ...(gene.unmapped?.refseqProteins ?? []),
+    ]) {
+      addTo(refseq, unversioned(id), gene.page)
     }
   }
   return {
@@ -749,6 +830,19 @@ async function main(workers = '8', ...accessions: string[]) {
     e => accessions.length === 0 || accessions.includes(accessionOf(e)),
   )
   const alphaFold = alphaFoldDb()
+  const mapped = wanted.flatMap(entry =>
+    [...ensemblByIsoform(entry)].flatMap(([isoform, ids]) =>
+      isoform === undefined ? [] : ids.map(unversioned),
+    ),
+  )
+  const places = await transcriptPlaces(mapped)
+  const sources = {
+    disease,
+    interfaces,
+    alphaFold,
+    explorer: await explorerPages(),
+    places,
+  } satisfies Sources
   const failed: string[] = []
   const genes = (
     await inPool(wanted, Number(workers), async entry => {
@@ -757,9 +851,7 @@ async function main(workers = '8', ...accessions: string[]) {
         return await geneRecord(
           entry,
           pages.get(accession) ?? accession,
-          disease.has(accession),
-          interfaces.get(accession) ?? {},
-          alphaFold,
+          sources,
         )
       } catch (error) {
         failed.push(accession)
@@ -795,6 +887,9 @@ async function main(workers = '8', ...accessions: string[]) {
   )
   console.log(
     `AlphaFold DB pending: ${alphaFold.pendingProteins.size} proteins' model lists (rerun), ${alphaFold.pendingModels.size} models' pLDDT (pnpm plddt)`,
+  )
+  console.log(
+    `Ensembl transcript places pending (rerun): ${new Set(mapped.filter(id => !places.has(id))).size}`,
   )
 }
 

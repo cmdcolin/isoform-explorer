@@ -5,6 +5,7 @@ import {
   featuresOf,
   notesByMolecule,
   proteinOf,
+  withoutWholeChains,
   withoutEvidence,
 } from './uniprot.ts'
 
@@ -147,5 +148,39 @@ describe('entry fields', () => {
         features: [{ type: 'Signal', evidences: [{ evidenceCode: 'x' }] }],
       }),
     ).toEqual({ features: [{ type: 'Signal' }] })
+  })
+})
+
+describe('withoutWholeChains', () => {
+  const chain = (start: number, end: number, description = '') => ({
+    type: 'Chain' as const,
+    start,
+    end,
+    description,
+  })
+
+  it('drops the chain of a single-chain protein', () => {
+    expect(withoutWholeChains([chain(1, 393)])).toEqual([])
+  })
+
+  it('keeps the shorter products of a precursor, never the longest', () => {
+    expect(
+      withoutWholeChains([
+        chain(18, 770, 'Amyloid-beta precursor protein'),
+        chain(672, 713, 'Amyloid-beta protein 42'),
+        { type: 'Peptide', start: 688, end: 713, description: 'P3(42)' },
+      ]),
+    ).toEqual([
+      chain(672, 713, 'Amyloid-beta protein 42'),
+      { type: 'Peptide', start: 688, end: 713, description: 'P3(42)' },
+    ])
+  })
+
+  it('keeps a lone peptide', () => {
+    expect(
+      withoutWholeChains([
+        { type: 'Peptide', start: 85, end: 116, description: 'Calcitonin' },
+      ]),
+    ).toHaveLength(1)
   })
 })

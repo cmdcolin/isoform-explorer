@@ -5,7 +5,9 @@ import {
   displayedIsoform,
   editsByIsoform,
   ensemblByIsoform,
+  ensemblGenes,
   maneIsoform,
+  refseqProteinsByIsoform,
   replacedPositions,
   sharedEnds,
   unversioned,
@@ -163,5 +165,45 @@ describe('transcripts', () => {
   it('drops a version suffix', () => {
     expect(unversioned('ENST00000269305.9')).toBe('ENST00000269305')
     expect(unversioned('NM_000546')).toBe('NM_000546')
+  })
+})
+
+describe('protein and gene ids', () => {
+  const entry = {
+    uniProtKBCrossReferences: [
+      {
+        database: 'RefSeq',
+        id: 'NP_075418.1',
+        properties: [{ key: 'NucleotideSequenceId', value: 'NM_023029.3' }],
+      },
+      {
+        database: 'RefSeq',
+        id: 'NP_000132.3',
+        properties: [{ key: 'NucleotideSequenceId', value: 'NM_000141.5' }],
+        isoformId: 'P21802-1',
+      },
+      {
+        database: 'Ensembl',
+        id: 'ENST1.1',
+        properties: [{ key: 'GeneId', value: 'ENSG00000066468.25' }],
+        isoformId: 'P21802-1',
+      },
+      {
+        database: 'Ensembl',
+        id: 'ENST2.1',
+        properties: [{ key: 'GeneId', value: 'ENSG00000066468.25' }],
+      },
+    ],
+  }
+
+  it('groups NP ids by isoform, keeping those UniProt ties to none', () => {
+    expect([...refseqProteinsByIsoform(entry)]).toEqual([
+      [undefined, ['NP_075418.1']],
+      ['P21802-1', ['NP_000132.3']],
+    ])
+  })
+
+  it('lists each Ensembl gene once', () => {
+    expect(ensemblGenes(entry)).toEqual(['ENSG00000066468.25'])
   })
 })

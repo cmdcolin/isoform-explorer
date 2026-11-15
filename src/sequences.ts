@@ -159,6 +159,28 @@ export function refseqByIsoform(entry: UniProtEntry) {
   return byIsoform
 }
 
+export function refseqProteinsByIsoform(entry: UniProtEntry) {
+  const byIsoform = new Map<string | undefined, string[]>()
+  for (const xref of xrefs(entry, 'RefSeq')) {
+    const protein = text(xref.id) ?? ''
+    if (protein.startsWith('NP_')) {
+      const isoform = text(xref.isoformId)
+      byIsoform.set(isoform, [...(byIsoform.get(isoform) ?? []), protein])
+    }
+  }
+  return byIsoform
+}
+
+export function ensemblGenes(entry: UniProtEntry) {
+  return [
+    ...new Set(
+      xrefs(entry, 'Ensembl').flatMap(x => propertyValues(x, 'GeneId')),
+    ),
+  ]
+    .filter(id => id.startsWith('ENSG'))
+    .sort(compareText)
+}
+
 export function ensemblByIsoform(entry: UniProtEntry) {
   const byIsoform = new Map<string | undefined, string[]>()
   for (const xref of xrefs(entry, 'Ensembl')) {

@@ -1,8 +1,15 @@
+/*
+ * Fields marked `?` are always written by the pipeline; they are optional only
+ * until the pages and their test fixtures use them.
+ */
+
 export const FEATURE_GROUPS = {
   targeting: [
     'Signal',
     'Transit peptide',
     'Propeptide',
+    'Chain',
+    'Peptide',
     'Transmembrane',
     'Intramembrane',
     'Topological domain',
@@ -64,6 +71,8 @@ export interface Edit {
 export interface Transcripts {
   ensembl: string[]
   refseq: string[]
+  /** NP ids of the isoform, with versions. */
+  refseqProteins?: string[]
   maneSelect: boolean
 }
 
@@ -128,6 +137,14 @@ export interface GeneRecord {
   features: Feature[]
   interfaces: Record<string, number[]>
   isoforms: Isoform[]
+  /** ENSG ids, with versions. */
+  ensemblGenes?: string[]
+  /** Transcripts UniProt lists for the entry without naming an isoform. */
+  unmapped?: { ensembl: string[]; refseq: string[]; refseqProteins: string[] }
+  /** Interface explorer page names for this accession, if it has them. */
+  explorer?: { gene: string | null; isoforms: string | null }
+  /** GRCh38 span of the isoforms' Ensembl transcripts, `chr17:7661779-7687546`. */
+  locus?: string | null
 }
 
 export interface IndexRow {
@@ -140,8 +157,12 @@ export interface IndexRow {
   withTranscript: number
   /** Most canonical residues any isoform does not carry over. */
   mostAbsent: number
+  /** Most canonical residues any isoform is missing. */
+  mostMissing?: number
   /** Most `foldedAbsent` of any isoform; null without canonical pLDDT. */
   foldedAbsent: number | null
+  /** Most `foldedMissing` of any isoform; null without canonical pLDDT. */
+  foldedMissing?: number | null
   /** Isoforms lacking, in full, at least one feature of the group. */
   lost: Record<FeatureGroup, number>
   /** Isoforms missing at least half of a partner's interface. */
@@ -175,7 +196,10 @@ export interface Example {
   replaced: number
 }
 
-/** Upper-case gene symbols, accessions and versionless ENST/NM to targets. */
+/**
+ * Upper-case gene symbols, accessions and versionless ENST, ENSG, NM and NP ids
+ * to `page#isoform`, or to `page` for ids not tied to an isoform.
+ */
 export type Lookup = Record<string, string[]>
 
 export const SEARCH = {
