@@ -1,0 +1,435 @@
+---
+import '../../styles/gene.css'
+import { isoformUrl, transcriptsUrl } from '../../../src/links.ts'
+import type { Isoform, Transcripts } from '../../../src/types.ts'
+import Layout from '../../layouts/Layout.astro'
+import { gene, indexRows } from '../../lib/data.ts'
+import { GROUPS, GROUP_LABELS } from '../../lib/features.ts'
+import {
+  FOLDED_PLDDT,
+  UNFOLDED_PLDDT,
+  answer,
+  changeFeatures,
+  changeText,
+  changes,
+  count,
+  editEffects,
+  editPreview,
+  featureLabel,
+  featureRuns,
+  foldText,
+  interfaceLossText,
+  interfaceRows,
+  interfaceSummary,
+  listText,
+  lossText,
+  maneIsoform,
+  modelText,
+  plural,
+  transcriptOf,
+} from '../../lib/loss.ts'
+import { blocks, isoformMap, isoformStrip, spanData } from '../../lib/maps.ts'
+import { JBROWSE, interfaceExplorerHref } from '../../lib/site.ts'
+
+export function getStaticPaths() {
+  const only = (process.env.PAGES ?? '').split(',').filter(Boolean)
+  return indexRows()
+    .filter(row => !only.length || only.includes(row.page))
+    .map(row => ({ params: { page: row.page } }))
+}
+
+const COLLAPSE = 12
+const record = gene(Astro.params.page ?? '')
+const canonical = record.canonical
+const mane = maneIsoform(record)
+const maneElsewhere = mane && mane.accession !== canonical.accession ? mane : undefined
+const symbol = record.gene !== record.accession
+const genomeUrl = symbol ? transcriptsUrl(record.gene, JBROWSE) : ''
+const uniprot = `https://www.uniprot.org/uniprotkb/${record.accession}/entry`
+const others = record.isoforms.length
+const events = listText(record.events.map(e => e.toLowerCase()))
+const partners = Object.keys(record.interfaces).length
+
+function titleOf(i: { name: string; synonyms: string[]; accession: string }) {
+  const named = i.accession.endsWith(`-${i.name}`) ? '' : i.name
+  return [named && `isoform ${named}`, ...i.synonyms].filter(Boolean).join(' · ')
+}
+
+function transcriptLinks(t: Transcripts) {
+  const mark = (index: number) => (t.maneSelect && index === 0 ? ' (MANE Select)' : '')
+  return {
+    ensembl: t.ensembl.map((id, index) => ({
+      id,
+      href: `https://www.ensembl.org/Homo_sapiens/Transcript/Summary?t=${id.split('.')[0]}`,
+      mark: mark(index),
+    })),
+    refseq: t.refseq.map((id, index) => ({
+      id,
+      href: `https://www.ncbi.nlm.nih.gov/nuccore/${id}`,
+      mark: mark(index),
+    })),
+  }
+}
+
+function superposedUrl(i: Isoform) {
+  const transcript = transcriptOf(i)
+  return symbol && transcript && i.model && canonical.model
+    ? isoformUrl(record.gene, transcript, [{ url: i.model.cif }, { url: canonical.model.cif }], JBROWSE)
+    : ''
+}
+
+const canonicalTranscript = transcriptOf(canonical)
+const canonical3d =
+  symbol && canonicalTranscript && canonical.model
+    ? isoformUrl(record.gene, canonicalTranscript, [{ url: canonical.model.cif }], JBROWSE)
+    : ''
+
+const sections = record.isoforms.map(i => {
+  const blocksOf = changes(editEffects(i)).map(change => {
+    const lost = changeFeatures(change, record.features)
+    return {
+      text: changeText(change),
+      removes: change.missing + change.replaced > 0,
+      span: spanData(change.effects.map(e => [e.edit.start, e.edit.end])),
+      previews: change.effects.map(e => editPreview(e.edit)),
+      groups: GROUPS.map(group => ({
+        group,
+        label: GROUP_LABELS[group],
+        items: lost
+          .filter(e => e.group === group)
+          .map(e => ({ label: featureLabel(e.feature), loss: lossText(e), span: spanData(featureRuns(e.feature)) })),
+      })).filter(g => g.items.length),
+    }
+  })
+  const interfaces = interfaceRows(record, i)
+  return {
+    isoform: i,
+    title: titleOf(i),
+    answer: answer(record, i),
+    strip: isoformStrip(record, i),
+    changes: blocksOf,
+    fold: foldText(record, i),
+    interfaceSummary: interfaceSummary(record, i),
+    touched: interfaces.filter(r => r.missing + r.replaced > 0).map(r => ({ ...r, span: spanData(blocks(r.residues)) })),
+    intact: interfaces.filter(r => r.missing + r.replaced === 0).map(r => r.name),
+    model: modelText(record, i),
+    transcripts: transcriptLinks(i.transcripts),
+    superposed: superposedUrl(i),
+  }
+})
+const canonicalLinks = transcriptLinks(canonical.transcripts)
+const description = `What each of the ${others} alternative ${others === 1 ? 'isoform' : 'isoforms'} of ${record.gene} (${record.protein}) lacks relative to the canonical protein: residues, UniProt features, folded structure${partners ? ' and predicted partner interfaces' : ''}.`
+---
+
+<Layout title={`${record.gene} isoforms`} description={description}>
+  <div class="gene-head">
+    <h1>{record.gene} <span class="muted">· {record.protein}</span></h1>
+    <p class="lede">
+      UniProt <a href={uniprot}>{record.accession}</a> describes {others + 1} isoforms of this {count(record.length)}-residue
+      protein{events && <>, from {events}</>}. Each section below lists what one of the {others} alternative isoforms lacks
+      relative to the canonical isoform, <a href={`#${canonical.accession}`}>{canonical.accession}</a>.
+    </p>
+    {
+      maneElsewhere ? (
+        <p class="note mane-note">
+          <strong>MANE Select encodes <a href={`#${maneElsewhere.accession}`}>{maneElsewhere.accession}</a>, not UniProt's
+          canonical isoform.</strong> Every loss on this page is measured against the canonical, {canonical.accession}, so the
+          section for {maneElsewhere.accession} lists what the MANE Select protein lacks relative to it, and the canonical
+          has no MANE Select transcript.
+        </p>
+      ) : mane ? (
+        <p class="muted">
+          The canonical isoform is the one the MANE Select transcript encodes ({[mane.transcripts.refseq[0], mane.transcripts.ensembl[0]].filter(Boolean).join(', ')}).
+        </p>
+      ) : (
+        <p class="muted">UniProt maps no MANE Select transcript to any isoform of this protein.</p>
+      )
+    }
+    {
+      record.disease && (
+        <p class="muted">
+          {record.gene} has a disease annotation in UniProt. Its ClinVar variants, placed on predicted partner interfaces, are on <a href={interfaceExplorerHref(record.gene)}>Interface explorer</a>; this site shows no variants.
+        </p>
+      )
+    }
+    <div class="actions">
+      <a class="button" href={uniprot}>UniProt entry</a>
+      {genomeUrl && <a class="button" href={genomeUrl}>Transcripts on the genome</a>}
+      {canonical.model && <a class="button" href={`https://alphafold.ebi.ac.uk/entry/${canonical.model.entry}`}>AlphaFold DB canonical model</a>}
+    </div>
+    {
+      genomeUrl && (
+        <p class="muted small">
+          The genome view looks up the gene symbol {record.gene} in JBrowse's RefSeq and GENCODE tracks; where RefSeq names
+          the gene differently, it finds no results.
+        </p>
+      )
+    }
+  </div>
+
+  <h2>Isoforms on the canonical sequence</h2>
+  <p class="muted">
+    Features of the canonical protein sit above one row per isoform, all on the canonical's {count(record.length)} residues.
+    Hover a feature, a partner row or a loss listed below to run its residues down the rows; click a row to jump to its
+    section.
+  </p>
+  <Fragment set:html={isoformMap(record, mane?.accession)} />
+  <div class="legend">
+    <span><span class="swatch kept"></span>carried over</span>
+    <span>gap: missing</span>
+    <span><span class="swatch replaced-swatch"></span>replaced by other residues</span>
+    <span><span class="swatch inserted"></span>residues the canonical lacks</span>
+    {
+      canonical.model?.plddt && (
+        <span>
+          canonical pLDDT <span class="swatch b90"></span>≥ 90 <span class="swatch b70"></span>≥ {FOLDED_PLDDT}
+          <span class="swatch b50"></span>≥ {UNFOLDED_PLDDT} <span class="swatch b0"></span>&lt; {UNFOLDED_PLDDT}
+        </span>
+      )
+    }
+    {
+      partners > 0 && (
+        <span>
+          <span class="swatch" style="background:var(--interface)"></span>predicted interface with a partner; circles show
+          the share of its residues present, which is not evidence of binding
+        </span>
+      )
+    }
+  </div>
+  {
+    !canonical.model ? (
+      <p class="muted">AlphaFold DB has no full-length model of the canonical protein, so there is no pLDDT row.</p>
+    ) : !canonical.model.plddt ? (
+      <p class="muted">The canonical model's confidence is not yet fetched, so there is no pLDDT row.</p>
+    ) : null
+  }
+  {partners === 0 && <p class="muted">No AlphaFold DB complex of this protein has a confident predicted interface.</p>}
+
+  <section class="isoform" id={canonical.accession} data-isoform={canonical.accession}>
+    <h2>
+      <a href={`#${canonical.accession}`}>{canonical.accession}</a> <span class="muted">canonical{titleOf(canonical) && ` · ${titleOf(canonical)}`} · {count(record.length)} residues</span>
+      {canonical.transcripts.maneSelect && <span class="badge">MANE Select</span>}
+    </h2>
+    <p class="answer">
+      UniProt's canonical isoform: every other section on this page is measured against its {count(record.length)} residues.
+      {maneElsewhere && <> MANE Select encodes <a href={`#${maneElsewhere.accession}`}>{maneElsewhere.accession}</a> instead.</>}
+    </p>
+    <dl class="facts">
+      <dt>Model</dt>
+      <dd>
+        {
+          !canonical.model
+            ? 'AlphaFold DB has no full-length model of the canonical sequence.'
+            : canonical.model.meanPlddt === null
+              ? `${canonical.model.entry}; its confidence is not yet fetched.`
+              : `${canonical.model.entry}, mean pLDDT ${canonical.model.meanPlddt.toFixed(1)}.`
+        }
+      </dd>
+      {
+        canonical.notes.length > 0 && (
+          <>
+            <dt>UniProt's notes</dt>
+            <dd>
+              {canonical.notes.map(n => (
+                <p class="quote">
+                  “{n.text}.” <cite>UniProt, {n.topic}</cite>
+                </p>
+              ))}
+            </dd>
+          </>
+        )
+      }
+      <dt>Transcripts</dt>
+      <dd>
+        {
+          canonicalLinks.ensembl.length + canonicalLinks.refseq.length === 0 ? (
+            'UniProt maps no Ensembl or RefSeq transcript to the canonical isoform.'
+          ) : (
+            <>
+              {canonicalLinks.refseq.length > 0 && (
+                <p>
+                  RefSeq:{' '}
+                  {canonicalLinks.refseq.map((t, k) => (
+                    <>
+                      {k > 0 && ', '}
+                      <a href={t.href}>{t.id}</a>
+                      {t.mark}
+                    </>
+                  ))}
+                </p>
+              )}
+              {canonicalLinks.ensembl.length > 0 && (
+                <p>
+                  Ensembl:{' '}
+                  {canonicalLinks.ensembl.map((t, k) => (
+                    <>
+                      {k > 0 && ', '}
+                      <a href={t.href}>{t.id}</a>
+                      {t.mark}
+                    </>
+                  ))}
+                </p>
+              )}
+            </>
+          )
+        }
+      </dd>
+    </dl>
+    <div class="actions">
+      {canonical3d && <a class="button" href={canonical3d}>Canonical model in JBrowse</a>}
+    </div>
+  </section>
+
+  {
+    sections.map(s => (
+      <section class="isoform" id={s.isoform.accession} data-isoform={s.isoform.accession}>
+        <h2>
+          <a href={`#${s.isoform.accession}`}>{s.isoform.accession}</a>{' '}
+          <span class="muted">
+            {s.title && `${s.title} · `}
+            {count(s.isoform.length)} residues
+          </span>
+          {s.isoform.transcripts.maneSelect && <span class="badge">MANE Select</span>}
+        </h2>
+        <p class="answer">{s.answer}</p>
+        <Fragment set:html={s.strip} />
+        {s.changes.map(c => (
+          <div class="change" data-span={c.span}>
+            <p class="change-head">{c.text}</p>
+            {c.previews.map(p => (
+              <span class="seq">{p}</span>
+            ))}
+            {c.groups.length ? (
+              <ul class="losses">
+                {c.groups.map(g =>
+                  g.items.length > COLLAPSE ? (
+                    <li>
+                      <details>
+                        <summary>
+                          {g.label}: {plural(g.items.length, 'feature')}
+                        </summary>
+                        {g.items.map((item, k) => (
+                          <>
+                            {k > 0 && '; '}
+                            <span data-span={item.span}>
+                              {item.label}: {item.loss}
+                            </span>
+                          </>
+                        ))}
+                      </details>
+                    </li>
+                  ) : (
+                    <li>
+                      <span class="group">{g.label}:</span>{' '}
+                      {g.items.map((item, k) => (
+                        <>
+                          {k > 0 && '; '}
+                          <span data-span={item.span}>
+                            {item.label}: {item.loss}
+                          </span>
+                        </>
+                      ))}
+                    </li>
+                  ),
+                )}
+              </ul>
+            ) : c.removes ? (
+              <p class="muted">No UniProt feature of the canonical protein lies here.</p>
+            ) : null}
+          </div>
+        ))}
+        <dl class="facts">
+          <dt>Folded residues</dt>
+          <dd>{s.fold}</dd>
+          {s.interfaceSummary && (
+            <>
+              <dt>Partner interfaces</dt>
+              <dd>
+                <p>{s.interfaceSummary}</p>
+                {s.touched.length > 0 && (
+                  <p>
+                    {s.touched.map((r, k) => (
+                      <>
+                        {k > 0 && '; '}
+                        <span data-span={r.span}>
+                          {r.name}: {interfaceLossText(r)}
+                        </span>
+                      </>
+                    ))}
+                    .
+                  </p>
+                )}
+                <p class="muted">
+                  {s.touched.length > 0 && s.intact.length > 0 && <>Every interface residue is present for {listText(s.intact)}. </>}
+                  Present residues are not evidence of binding: no isoform was modelled with a partner.
+                </p>
+              </dd>
+            </>
+          )}
+          <dt>Own model</dt>
+          <dd>{s.model}</dd>
+          {s.isoform.notes.length > 0 && (
+            <>
+              <dt>UniProt's notes</dt>
+              <dd>
+                {s.isoform.notes.map(n => (
+                  <p class="quote">
+                    “{n.text}.” <cite>UniProt, {n.topic}</cite>
+                  </p>
+                ))}
+              </dd>
+            </>
+          )}
+          <dt>Transcripts</dt>
+          <dd>
+            {s.transcripts.ensembl.length + s.transcripts.refseq.length === 0 ? (
+              'UniProt maps no Ensembl or RefSeq transcript to this isoform, so no transcript search leads here.'
+            ) : (
+              <>
+                {s.transcripts.refseq.length > 0 && (
+                  <p>
+                    RefSeq:{' '}
+                    {s.transcripts.refseq.map((t, k) => (
+                      <>
+                        {k > 0 && ', '}
+                        <a href={t.href}>{t.id}</a>
+                        {t.mark}
+                      </>
+                    ))}
+                  </p>
+                )}
+                {s.transcripts.ensembl.length > 0 && (
+                  <p>
+                    Ensembl:{' '}
+                    {s.transcripts.ensembl.map((t, k) => (
+                      <>
+                        {k > 0 && ', '}
+                        <a href={t.href}>{t.id}</a>
+                        {t.mark}
+                      </>
+                    ))}
+                  </p>
+                )}
+              </>
+            )}
+          </dd>
+        </dl>
+        <div class="actions">
+          <a class="button" href={`${uniprot}#sequences`}>UniProt isoform</a>
+          {s.isoform.model && (
+            <a class="button" href={`https://alphafold.ebi.ac.uk/entry/${s.isoform.model.entry}`}>AlphaFold DB entry</a>
+          )}
+          {s.superposed && (
+            <a class="button" href={s.superposed}>
+              Superposed on the canonical in JBrowse
+            </a>
+          )}
+          {genomeUrl && <a class="button" href={genomeUrl}>Transcripts on the genome</a>}
+        </div>
+      </section>
+    ))
+  }
+  <script>
+    import '../../scripts/columns.ts'
+  </script>
+</Layout>
