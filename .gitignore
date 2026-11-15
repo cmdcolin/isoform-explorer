@@ -1,8 +1,7 @@
-/data/
-/out/
+/data
+/out
 /dist/
 /.astro/
 *.log
-/_site/
-node_modules/
+node_modules
 .claude/
