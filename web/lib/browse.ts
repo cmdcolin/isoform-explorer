@@ -46,18 +46,20 @@ export const COLUMNS: BrowseColumn[] = [
     sort: row => row.withTranscript,
   },
   {
-    key: 'absent',
-    label: 'Most residues absent',
+    key: 'missing',
+    label: 'Most residues missing',
     num: true,
-    cell: row => `${row.mostAbsent} <span class="muted">/ ${row.length}</span>`,
-    sort: row => row.mostAbsent,
+    cell: row =>
+      `${row.mostMissing ?? ''} <span class="muted">/ ${row.length}</span>`,
+    sort: row => row.mostMissing ?? -1,
   },
   {
     key: 'modelled',
-    label: 'Confidently modelled residues absent',
+    label: 'Confidently modelled residues missing',
     num: true,
-    cell: row => (row.foldedAbsent === null ? '' : String(row.foldedAbsent)),
-    sort: row => row.foldedAbsent ?? -1,
+    cell: row => String(row.foldedMissing ?? ''),
+    sort: row => row.foldedMissing ?? -1,
+    keep: row => (row.foldedMissing ?? 0) > 0,
   },
   ...lostColumns,
   {

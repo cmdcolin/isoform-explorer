@@ -18,8 +18,9 @@ const lookups = {
   ensembl: {
     ENST00000420246: ['TP53#P04637-2'],
     ENST00000341656: ['SPDYE2B#A6NHP3-2', 'SPDYE2#Q495Y8-2'],
+    ENSG00000141510: ['TP53'],
   },
-  refseq: { NM_001126114: ['TP53#P04637-2'] },
+  refseq: { NM_001126114: ['TP53#P04637-2'], NP_001119586: ['TP53#P04637-2'] },
 }
 
 describe('reading a query', () => {
@@ -55,20 +56,40 @@ describe('reading a query', () => {
     expect(parseQuery('   ')).toEqual({ kind: 'empty' })
   })
 
-  test('gene and protein ids are named, not looked up', () => {
-    expect(parseQuery('ENSG00000141510')).toMatchObject({
-      kind: 'other',
-      what: 'an Ensembl gene id',
+  test('an Ensembl gene id reads the Ensembl map, a RefSeq protein id the RefSeq map', () => {
+    expect(parseQuery('ensg00000141510.18')).toEqual({
+      kind: 'ensemblGene',
+      key: 'ENSG00000141510',
+      sources: ['ensembl'],
     })
-    expect(parseQuery('NP_000537.3')).toMatchObject({
-      kind: 'other',
+    expect(parseQuery('NP_000537.3')).toEqual({
+      kind: 'protein',
       key: 'NP_000537',
+      sources: ['refseq'],
+    })
+  })
+
+  test('an Ensembl protein id is named, not looked up', () => {
+    expect(parseQuery('ENSP00000269305')).toMatchObject({
+      kind: 'other',
+      what: 'an Ensembl protein id',
     })
   })
 })
 
 describe('where a query leads', () => {
   const resolve = (raw: string) => outcome(parseQuery(raw), lookups)
+
+  test('an Ensembl gene goes to its page, a RefSeq protein to its isoform', () => {
+    expect(resolve('ENSG00000141510')).toEqual({
+      kind: 'go',
+      href: href('gene/TP53/'),
+    })
+    expect(resolve('np_001119586.1')).toEqual({
+      kind: 'go',
+      href: href('gene/TP53/#P04637-2'),
+    })
+  })
 
   test('one target goes straight to the gene page or the isoform on it', () => {
     expect(resolve('tp53')).toEqual({ kind: 'go', href: href('gene/TP53/') })
@@ -127,16 +148,26 @@ describe('where a query leads', () => {
   test('a miss says why, a transcript miss that it is not a described isoform', () => {
     expect(resolve('ENST00000000001')).toMatchObject({
       kind: 'miss',
-      reason: expect.stringContaining('UniProt does not map ENST00000000001'),
+      reason: expect.stringContaining(
+        'UniProt does not list ENST00000000001 under any protein',
+      ),
+    })
+    expect(resolve('NP_999999')).toMatchObject({
+      kind: 'miss',
+      reason: expect.stringContaining('unmapped protein has no page'),
     })
     expect(resolve('Q99999')).toMatchObject({ kind: 'miss' })
     expect(resolve('NOTAGENE')).toMatchObject({
       kind: 'miss',
       reason: expect.stringContaining('gene symbol NOTAGENE'),
     })
-    expect(resolve('ENSG00000141510')).toMatchObject({
+    expect(resolve('ENSG00000000001')).toMatchObject({
       kind: 'miss',
-      reason: expect.stringContaining('Ensembl gene id'),
+      reason: expect.stringContaining('the Ensembl gene ENSG00000000001'),
+    })
+    expect(resolve('ENSP00000269305')).toMatchObject({
+      kind: 'miss',
+      reason: expect.stringContaining('Ensembl protein id'),
     })
     expect(resolve('')).toEqual({ kind: 'none' })
   })
@@ -166,7 +197,7 @@ test('a later lookup file is fetched only when the earlier ones miss', async () 
   expect(fetched).toEqual(['accessions'])
   await lookupsFor(parseQuery('Q99999'), load)
   expect(fetched).toEqual(['accessions', 'accessions', 'genes'])
-  await lookupsFor(parseQuery('ENSG00000141510'), load)
+  await lookupsFor(parseQuery('ENSP00000269305'), load)
   expect(fetched).toHaveLength(3)
 })
 

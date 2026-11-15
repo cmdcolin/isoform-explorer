@@ -22,7 +22,9 @@ function row(gene: string, overrides: Partial<IndexRow> = {}): IndexRow {
     isoforms: 1,
     withTranscript: 1,
     mostAbsent: 10,
+    mostMissing: 8,
     foldedAbsent: 5,
+    foldedMissing: 4,
     lost: { targeting: 0, domains: 0, sites: 0, modifications: 0 },
     interfacesLost: 0,
     ...overrides,
@@ -30,13 +32,11 @@ function row(gene: string, overrides: Partial<IndexRow> = {}): IndexRow {
 }
 
 const rows = [
-  row('AAA', { mostAbsent: 5 }),
+  row('AAA', { foldedMissing: 0 }),
   row('BBB', {
-    mostAbsent: 50,
     lost: { targeting: 2, domains: 0, sites: 0, modifications: 0 },
   }),
   row('CCC', {
-    mostAbsent: 20,
     lost: { targeting: 1, domains: 1, sites: 0, modifications: 0 },
     interfacesLost: 1,
   }),
@@ -63,6 +63,12 @@ test('a tile link keeps proteins with such an isoform, sorted by that count', ()
   expect(view.sort).toBe('targeting')
   const kept = rowsFor(rows, texts, view)
   expect(kept.map(r => r.gene)).toEqual(['BBB', 'CCC'])
+  const modelled = rowsFor(
+    rows,
+    texts,
+    viewFrom(new URLSearchParams('has=modelled')),
+  )
+  expect(modelled.map(r => r.gene)).toEqual(['BBB', 'CCC'])
 })
 
 test('the count line restates the number the tile showed', () => {
@@ -76,6 +82,9 @@ test('the count line restates the number the tile showed', () => {
   expect(count('')).toBe('3 of 3 proteins · 3 isoforms, 3 with a transcript')
   expect(count('has=targeting', rows.slice(1))).toBe(
     '2 of 3 proteins · 2 isoforms, 2 with a transcript · 3 missing a whole thing',
+  )
+  expect(count('has=modelled', rows.slice(1))).toBe(
+    '2 of 3 proteins · 2 isoforms, 2 with a transcript · 7 missing modelled residues',
   )
   expect(count('sort=modelled')).toBe(
     '3 of 3 proteins · 3 isoforms, 3 with a transcript · 7 missing modelled residues',
@@ -142,7 +151,7 @@ test('the address names only what differs from the default view', () => {
 
 test('a row links its gene page and leaves the modelled count blank without pLDDT', () => {
   const html = rowHtml(
-    row('HLA-A', { page: 'HLA-A_P04439', foldedAbsent: null }),
+    row('HLA-A', { page: 'HLA-A_P04439', foldedMissing: null }),
   )
   expect(html).toContain(`href="${geneHref('HLA-A_P04439')}"`)
   expect(html).toContain('<td class="num"></td>')

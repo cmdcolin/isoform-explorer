@@ -73,8 +73,8 @@ const references = [
         features, and UniProt's note on each isoform.
       </li>
       <li>
-        <strong>Transcripts:</strong> Ensembl and RefSeq transcripts come from UniProt's cross-references, which name the
-        isoform each transcript encodes. The MANE Select transcript is marked from the same cross-references.
+        <strong>Transcripts:</strong> Ensembl and RefSeq transcripts come from UniProt's cross-references, which name the isoform each transcript encodes
+        or list it under the entry without naming one; a search for such a transcript says so. The MANE Select transcript is marked from the same cross-references.
       </li>
       <li>
         <strong><a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> monomers:</strong> per-residue confidence (pLDDT)
@@ -99,8 +99,9 @@ const references = [
       <li>
         <strong>Residues.</strong> <em>Missing</em>: canonical residues with nothing in their place. <em>Replaced</em>:
         canonical residues in a stretch that has other sequence in its place, at least {share(SWAP_SHARE)} as many residues as it
-        removes; with less than that, the canonical residues count as missing and the added ones as novel. <em>Novel</em>: isoform residues the
-        canonical protein lacks.
+        removes; with less than that, the canonical residues count as missing and the added ones as novel. <em>Novel</em>:
+        isoform residues the canonical protein lacks. Edits of one isoform that abut each other are joined into one before
+        replaced and missing are told apart.
       </li>
       <li>
         <strong>UniProt features of the canonical protein</strong> that overlap those residues, in four groups, by UniProt
@@ -110,6 +111,7 @@ const references = [
             groups.map(g => (
               <li>
                 {g.label}: {g.types}.
+                {g.group === 'targeting' && <> A chain is listed only when the entry has more than one chain or peptide and it is not the longest of them, so the whole mature protein never is.</>}
                 {g.group === 'domains' && <> Regions described only as "Disordered" and compositional-bias features are left out.</>}
                 {g.group === 'modifications' && <> A disulfide bond is two positions, not a range, and is lost when either cysteine is.</>}
               </li>

@@ -12,8 +12,8 @@ const t = totals()
   <h1>Browse</h1>
   <p class="lede">
     One row for each of the {t.proteins.toLocaleString()} proteins. Counts are of alternative isoforms, each measured
-    against the canonical sequence. The feature and partner interface columns count missing residues only; a residue
-    replaced by other sequence never counts there. See <a href={href('about/')}>About</a> for the rules.
+    against the canonical sequence, and only missing residues count: a residue replaced by other sequence never does.
+    See <a href={href('about/')}>About</a> for the rules.
   </p>
   <details class="column-notes">
     <summary>What each column counts</summary>

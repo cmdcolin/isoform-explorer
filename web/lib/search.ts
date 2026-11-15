@@ -8,17 +8,15 @@ export type Lookups = Partial<Record<Source, Lookup>>
 const ACCESSION =
   /^(?:[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2})(?:-\d+)?$/
 const ENSEMBL = /^ENST\d+$/
+const ENSEMBL_GENE = /^ENSG\d+$/
 const REFSEQ = /^(?:NM|NR|XM|XR)_\d+$/
-const OTHER_IDS: [RegExp, string][] = [
-  [/^ENSG\d+$/, 'an Ensembl gene id'],
-  [/^ENSP\d+$/, 'an Ensembl protein id'],
-  [/^(?:NP|XP)_\d+$/, 'a RefSeq protein id'],
-]
+const REFSEQ_PROTEIN = /^(?:NP|XP)_\d+$/
+const OTHER_IDS: [RegExp, string][] = [[/^ENSP\d+$/, 'an Ensembl protein id']]
 
 export type Query =
   | { kind: 'empty' }
   | {
-      kind: 'transcript' | 'accession' | 'gene'
+      kind: 'transcript' | 'protein' | 'ensemblGene' | 'accession' | 'gene'
       key: string
       sources: Source[]
     }
@@ -32,13 +30,17 @@ export function parseQuery(raw: string): Query {
     ? { kind: 'empty' }
     : ENSEMBL.test(key)
       ? { kind: 'transcript', key, sources: ['ensembl'] }
-      : REFSEQ.test(key)
-        ? { kind: 'transcript', key, sources: ['refseq'] }
-        : other
-          ? { kind: 'other', key, what: other[1] }
-          : ACCESSION.test(key)
-            ? { kind: 'accession', key, sources: ['accessions', 'genes'] }
-            : { kind: 'gene', key: text, sources: ['genes'] }
+      : ENSEMBL_GENE.test(key)
+        ? { kind: 'ensemblGene', key, sources: ['ensembl'] }
+        : REFSEQ.test(key)
+          ? { kind: 'transcript', key, sources: ['refseq'] }
+          : REFSEQ_PROTEIN.test(key)
+            ? { kind: 'protein', key, sources: ['refseq'] }
+            : other
+              ? { kind: 'other', key, what: other[1] }
+              : ACCESSION.test(key)
+                ? { kind: 'accession', key, sources: ['accessions', 'genes'] }
+                : { kind: 'gene', key: text, sources: ['genes'] }
 }
 
 export function dataPath(source: Source) {
@@ -69,15 +71,17 @@ function entryOf(accession: string) {
 }
 
 function missReason(query: Query) {
-  return query.kind === 'transcript'
-    ? `UniProt does not map ${query.key} to an isoform of any protein on this site, so it is not here. The site covers only isoforms UniProt describes; a novel or unmapped transcript has no page.`
-    : query.kind === 'accession'
-      ? `${query.key} is not a reviewed human UniProt entry with a described alternative isoform, nor an isoform of one.`
-      : query.kind === 'gene'
-        ? `No protein on this site has the gene symbol ${query.key}. The site covers reviewed human proteins with at least one alternative isoform described in UniProt.`
-        : query.kind === 'other'
-          ? `${query.key} looks like ${query.what}. Search by its gene symbol, a UniProt accession, or an Ensembl (ENST) or RefSeq (NM) transcript.`
-          : ''
+  return query.kind === 'transcript' || query.kind === 'protein'
+    ? `UniProt does not list ${query.key} under any protein on this site, so it is not here. The site covers only isoforms UniProt describes; a novel or unmapped ${query.kind} has no page.`
+    : query.kind === 'ensemblGene'
+      ? `UniProt does not list the Ensembl gene ${query.key} under any protein on this site. The site covers reviewed human proteins with at least one alternative isoform described in UniProt.`
+      : query.kind === 'accession'
+        ? `${query.key} is not a reviewed human UniProt entry with a described alternative isoform, nor an isoform of one.`
+        : query.kind === 'gene'
+          ? `No protein on this site has the gene symbol ${query.key}. The site covers reviewed human proteins with at least one alternative isoform described in UniProt.`
+          : query.kind === 'other'
+            ? `${query.key} looks like ${query.what}. Search by its gene symbol, a UniProt accession, an Ensembl transcript or gene (ENST, ENSG), or a RefSeq transcript or protein (NM, NP).`
+            : ''
 }
 
 export function outcome(query: Query, lookups: Lookups): Outcome {
@@ -92,7 +96,7 @@ export function outcome(query: Query, lookups: Lookups): Outcome {
       ? lookups.accessions?.[entryOf(query.key)]
       : undefined
   const untied =
-    query.kind === 'transcript' &&
+    (query.kind === 'transcript' || query.kind === 'protein') &&
     hit !== undefined &&
     hit.every(target => !target.includes('#'))
   return query.kind === 'empty'
@@ -109,7 +113,7 @@ export function outcome(query: Query, lookups: Lookups): Outcome {
           ? {
               kind: 'choose',
               intro:
-                query.kind === 'transcript'
+                query.kind === 'transcript' || query.kind === 'protein'
                   ? `UniProt maps ${query.key} to ${hit.length} isoforms:`
                   : `${hit.length} proteins match ${query.key}:`,
               choices: hit.map(choiceOf),

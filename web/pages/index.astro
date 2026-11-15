@@ -18,7 +18,7 @@ const scope = [
 const lacking = [
   ...GROUPS.map(group => [t.lacking[group], groupMissing(group), browse({ has: group })] as const),
   [t.lacking.interface, INTERFACE_MISSING, browse({ has: 'interface' })],
-  [t.lacking.folded, MODELLED_MISSING, browse({ sort: 'modelled' })],
+  [t.lacking.folded, MODELLED_MISSING, browse({ has: 'modelled' })],
 ] as const
 const worked = examples().map(example => ({ example, sentence: exampleSentence(example, gene(example.page)) }))
 const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']
