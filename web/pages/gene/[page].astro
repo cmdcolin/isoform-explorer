@@ -1,6 +1,6 @@
 ---
 import '../../styles/gene.css'
-import { isoformUrl, transcriptsUrl } from '../../../src/links.ts'
+import { isoformAtLocusUrl, isoformUrl, transcriptsUrl } from '../../../src/links.ts'
 import type { Isoform, Transcripts } from '../../../src/types.ts'
 import Layout from '../../layouts/Layout.astro'
 import { gene, indexRows } from '../../lib/data.ts'
@@ -28,7 +28,7 @@ import {
   transcriptOf,
 } from '../../lib/loss.ts'
 import { blocks, isoformMap, isoformStrip, spanData } from '../../lib/maps.ts'
-import { JBROWSE, interfaceExplorerHref } from '../../lib/site.ts'
+import { INTERFACE_EXPLORER, JBROWSE } from '../../lib/site.ts'
 
 export function getStaticPaths() {
   const only = (process.env.PAGES ?? '').split(',').filter(Boolean)
@@ -43,7 +43,17 @@ const canonical = record.canonical
 const mane = maneIsoform(record)
 const maneElsewhere = mane && mane.accession !== canonical.accession ? mane : undefined
 const symbol = record.gene !== record.accession
-const genomeUrl = symbol ? transcriptsUrl(record.gene, JBROWSE) : ''
+const genomeUrl = record.locus
+  ? transcriptsUrl(record.locus, JBROWSE)
+  : symbol
+    ? transcriptsUrl(record.gene, JBROWSE)
+    : ''
+const proteinViewUrl = (transcript: string, structures: { url: string }[]) =>
+  record.locus
+    ? isoformAtLocusUrl(record.gene, transcript, structures, record.locus, JBROWSE)
+    : isoformUrl(record.gene, transcript, structures, JBROWSE)
+const explorerGene = record.explorer.gene
+const explorerIsoforms = record.explorer.isoforms
 const uniprot = `https://www.uniprot.org/uniprotkb/${record.accession}/entry`
 const others = record.isoforms.length
 const events = listText(record.events.map(e => e.toLowerCase()))
@@ -85,14 +95,14 @@ function transcriptLinks(t: Transcripts) {
 function superposedUrl(i: Isoform) {
   const transcript = transcriptOf(i)
   return symbol && transcript && i.model && canonical.model
-    ? isoformUrl(record.gene, transcript, [{ url: i.model.cif }, { url: canonical.model.cif }], JBROWSE)
+    ? proteinViewUrl(transcript, [{ url: i.model.cif }, { url: canonical.model.cif }])
     : ''
 }
 
 const canonicalTranscript = transcriptOf(canonical)
 const canonical3d =
   symbol && canonicalTranscript && canonical.model
-    ? isoformUrl(record.gene, canonicalTranscript, [{ url: canonical.model.cif }], JBROWSE)
+    ? proteinViewUrl(canonicalTranscript, [{ url: canonical.model.cif }])
     : ''
 
 const sections = record.isoforms.map(i => {
@@ -159,9 +169,21 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
       )
     }
     {
-      record.disease && (
+      (explorerGene || explorerIsoforms) && (
         <p class="muted">
-          {record.gene} has a disease annotation in UniProt. Its ClinVar variants, placed on predicted partner interfaces, are on <a href={interfaceExplorerHref(record.gene)}>Interface explorer</a>; this site shows no variants.
+          Interface explorer shows{' '}
+          {explorerGene && (
+            <a href={`${INTERFACE_EXPLORER}gene/${encodeURIComponent(explorerGene)}/`}>
+              {record.gene}'s predicted interfaces with its ClinVar variants
+            </a>
+          )}
+          {explorerGene && explorerIsoforms && ' and '}
+          {explorerIsoforms && (
+            <a href={`${INTERFACE_EXPLORER}isoforms/${encodeURIComponent(explorerIsoforms)}/`}>
+              which ClinVar pathogenic sites each of its isoforms lacks
+            </a>
+          )}
+          ; this site shows no variants.
         </p>
       )
     }
@@ -171,7 +193,7 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
       {canonical.model && <a class="button" href={`https://alphafold.ebi.ac.uk/entry/${canonical.model.entry}`}>AlphaFold DB canonical model</a>}
     </div>
     {
-      genomeUrl && (
+      genomeUrl && !record.locus && (
         <p class="muted small">
           The genome view looks up the gene symbol {record.gene} in JBrowse's RefSeq and GENCODE tracks; where RefSeq names
           the gene differently, it finds no results.

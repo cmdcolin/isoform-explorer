@@ -1,8 +1,3 @@
-/*
- * Fields marked `?` are always written by the pipeline; they are optional only
- * until the pages and their test fixtures use them.
- */
-
 export const FEATURE_GROUPS = {
   targeting: [
     'Signal',
@@ -72,7 +67,7 @@ export interface Transcripts {
   ensembl: string[]
   refseq: string[]
   /** NP ids of the isoform, with versions. */
-  refseqProteins?: string[]
+  refseqProteins: string[]
   maneSelect: boolean
 }
 
@@ -124,7 +119,6 @@ export interface GeneRecord {
   accession: string
   protein: string
   length: number
-  disease: boolean
   events: string[]
   canonical: {
     accession: string
@@ -138,13 +132,13 @@ export interface GeneRecord {
   interfaces: Record<string, number[]>
   isoforms: Isoform[]
   /** ENSG ids, with versions. */
-  ensemblGenes?: string[]
+  ensemblGenes: string[]
   /** Transcripts UniProt lists for the entry without naming an isoform. */
-  unmapped?: { ensembl: string[]; refseq: string[]; refseqProteins: string[] }
+  unmapped: { ensembl: string[]; refseq: string[]; refseqProteins: string[] }
   /** Interface explorer page names for this accession, if it has them. */
-  explorer?: { gene: string | null; isoforms: string | null }
+  explorer: { gene: string | null; isoforms: string | null }
   /** GRCh38 span of the isoforms' Ensembl transcripts, `chr17:7661779-7687546`. */
-  locus?: string | null
+  locus: string | null
 }
 
 export interface IndexRow {

@@ -50,7 +50,12 @@ function isoform(overrides: Partial<Isoform>): Isoform {
     synonyms: [],
     notes: [],
     length: 0,
-    transcripts: { ensembl: [], refseq: [], maneSelect: false },
+    transcripts: {
+      ensembl: [],
+      refseq: [],
+      refseqProteins: [],
+      maneSelect: false,
+    },
     segments: [],
     edits: [],
     missing: 0,
@@ -72,19 +77,27 @@ function record(overrides: Partial<GeneRecord>): GeneRecord {
     accession: 'P00000',
     protein: 'Protein',
     length: 100,
-    disease: false,
     events: ['Alternative splicing'],
     canonical: {
       accession: 'P00000-1',
       name: '1',
       synonyms: [],
       notes: [],
-      transcripts: { ensembl: [], refseq: [], maneSelect: false },
+      transcripts: {
+        ensembl: [],
+        refseq: [],
+        refseqProteins: [],
+        maneSelect: false,
+      },
       model: null,
     },
     features: [],
     interfaces: {},
     isoforms: [],
+    ensemblGenes: [],
+    unmapped: { ensembl: [], refseq: [], refseqProteins: [] },
+    explorer: { gene: null, isoforms: null },
+    locus: null,
     ...overrides,
   }
 }
@@ -221,6 +234,26 @@ describe('the answer sentence', () => {
     })
     expect(answer(r, i)).toBe(
       'Lacks residues 40–100 (61 of 100); missing in full: Proton acceptor (active site, 50); cut: Kinase (domain, 30–80) and Interaction with X (region, 10–60).',
+    )
+  })
+
+  test('peptides and chains come first, two at most, before domains', () => {
+    const r = record({
+      features: [
+        feature('Chain', 18, 100, 'Soluble form'),
+        feature('Chain', 60, 99, 'Amyloid-beta 40'),
+        feature('Chain', 60, 100, 'C41'),
+        feature('Peptide', 70, 90, 'P3'),
+        feature('Transmembrane', 80, 95, 'Helical'),
+      ],
+    })
+    const i = isoform({
+      segments: [[1, 1, 59]],
+      edits: [edit(60, 100)],
+      missing: 41,
+    })
+    expect(answer(r, i)).toBe(
+      'Lacks residues 60–100 (41 of 100); missing in full: Amyloid-beta 40 (chain, 60–99), C41 (chain, 60–100), transmembrane segment (80–95) and 1 more processing, targeting or topology feature; cut: Soluble form (chain, 18–100).',
     )
   })
 

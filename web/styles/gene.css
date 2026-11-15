@@ -104,6 +104,12 @@
   stroke: var(--border);
 }
 
+.track .f.chain rect {
+  fill: none;
+  stroke: var(--text-2);
+  stroke-width: 0.8;
+}
+
 .track .f.tm rect,
 .track .f.sig rect {
   fill: var(--chain);

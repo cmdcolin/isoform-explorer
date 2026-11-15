@@ -61,3 +61,22 @@ export function isoformUrl(
 ) {
   return sessionUrl(isoformSpec(gene, transcriptId, structures), jbrowse)
 }
+
+export function isoformAtLocusUrl(
+  gene: string,
+  transcriptId: string | undefined,
+  structures: { url: string }[],
+  loc: string,
+  jbrowse: string,
+) {
+  const spec = isoformSpec(gene, transcriptId, structures)
+  return sessionUrl(
+    {
+      views: spec.views.map(view => ({
+        ...view,
+        connectedView: { ...view.connectedView, loc },
+      })),
+    },
+    jbrowse,
+  )
+}

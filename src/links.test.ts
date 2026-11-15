@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 
 import {
+  isoformAtLocusUrl,
   isoformSpec,
   isoformUrl,
   jbrowseUrl,
@@ -64,5 +65,24 @@ describe('links', () => {
     expect(
       isoformSpec('TP53', undefined, structures).views[0],
     ).not.toHaveProperty('transcriptId')
+  })
+
+  test('with a locus, the superposed view opens its genome view there', () => {
+    const structures = [{ url: 'isoform.cif' }]
+    expect(
+      sessionOf(
+        isoformAtLocusUrl(
+          'TP53',
+          'NM_001126114.3',
+          structures,
+          'chr17:7668402-7687546',
+          JBROWSE,
+        ),
+      ).views[0].connectedView,
+    ).toEqual({
+      assembly: 'hg38',
+      tracks: ['hg38-ncbiRefSeqCurated', 'hg38-gencodeComp'],
+      loc: 'chr17:7668402-7687546',
+    })
   })
 })

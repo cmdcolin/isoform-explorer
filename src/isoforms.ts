@@ -494,7 +494,6 @@ export async function geneRecord(
     accession,
     protein: proteinOf(entry),
     length: sequence.length,
-    disease: disease.has(accession),
     events: eventsOf(entry),
     canonical: {
       accession: canonicalAccession,

@@ -341,29 +341,34 @@ export function lossText(effect: FeatureEffect) {
           : part(replaced, swapped)
 }
 
-const PRIORITY: readonly string[] = [
-  'Active site',
-  'Signal',
-  'Transit peptide',
-  'Propeptide',
-  'Chain',
-  'Peptide',
-  'Transmembrane',
-  'Intramembrane',
-  'Domain',
-  'Zinc finger',
-  'DNA binding',
-  'Repeat',
-  'Binding site',
-  'Disulfide bond',
-  'Motif',
-  'Site',
-  'Coiled coil',
-  'Region',
+const PRIORITY: readonly (readonly string[])[] = [
+  ['Active site'],
+  ['Peptide', 'Chain'],
+  ['Signal'],
+  ['Transit peptide'],
+  ['Propeptide'],
+  ['Transmembrane'],
+  ['Intramembrane'],
+  ['Domain'],
+  ['Zinc finger'],
+  ['DNA binding'],
+  ['Repeat'],
+  ['Binding site'],
+  ['Disulfide bond'],
+  ['Motif'],
+  ['Site'],
+  ['Coiled coil'],
+  ['Region'],
 ]
+const PRODUCTS: readonly string[] = ['Peptide', 'Chain']
+const NAMED_PRODUCTS = 2
+
+function rankOf(type: string) {
+  return PRIORITY.findIndex(tier => tier.includes(type))
+}
 
 function rank(effect: FeatureEffect) {
-  return PRIORITY.indexOf(effect.feature.type)
+  return rankOf(effect.feature.type)
 }
 
 export function inSentence(effect: FeatureEffect) {
@@ -371,7 +376,11 @@ export function inSentence(effect: FeatureEffect) {
 }
 
 export function byPriority(a: FeatureEffect, b: FeatureEffect) {
-  return rank(a) - rank(b) || a.feature.start - b.feature.start
+  return (
+    rank(a) - rank(b) ||
+    a.feature.start - b.feature.start ||
+    a.feature.end - b.feature.end
+  )
 }
 
 export function byShareLost(a: FeatureEffect, b: FeatureEffect) {
@@ -385,7 +394,16 @@ export function featureClause(
   const named = effects
     .filter(e => rank(e) >= 0)
     .toSorted(order)
-    .slice(0, NAMED)
+    .reduce<FeatureEffect[]>(
+      (chosen, e) =>
+        chosen.length < NAMED &&
+        (!PRODUCTS.includes(e.feature.type) ||
+          chosen.filter(c => PRODUCTS.includes(c.feature.type)).length <
+            NAMED_PRODUCTS)
+          ? [...chosen, e]
+          : chosen,
+      [],
+    )
   const counted = GROUPS.flatMap(group => {
     const rest = effects.filter(e => e.group === group && !named.includes(e))
     const [one, many] = GROUP_COUNTS[group]
@@ -412,7 +430,8 @@ export function swapHost(runs: Run[], features: Feature[]) {
       f =>
         !isBond(f) &&
         f.type !== 'Topological domain' &&
-        PRIORITY.includes(f.type),
+        f.type !== 'Chain' &&
+        rankOf(f.type) >= 0,
     )
     .map(feature => ({
       feature,
@@ -422,7 +441,7 @@ export function swapHost(runs: Run[], features: Feature[]) {
     .toSorted(
       (a, b) =>
         a.feature.end - a.feature.start - (b.feature.end - b.feature.start) ||
-        PRIORITY.indexOf(a.feature.type) - PRIORITY.indexOf(b.feature.type),
+        rankOf(a.feature.type) - rankOf(b.feature.type),
     )[0]?.feature
 }
 

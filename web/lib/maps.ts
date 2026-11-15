@@ -35,18 +35,34 @@ const CHARACTER_WIDTH = 5.6
 const TICKS: FeatureGroup[] = ['sites', 'modifications']
 
 const REGIONS: FeatureType[] = ['Region', 'Coiled coil']
+const PROCESSING: FeatureType[] = [
+  'Signal',
+  'Transit peptide',
+  'Propeptide',
+  'Chain',
+  'Peptide',
+]
+const PROCESSING_LANES = 3
 
 const FEATURE_ROWS: {
   label: string
   title: string
   ticks: boolean
+  maxLanes?: number
   holds: (feature: Feature) => boolean
 }[] = [
   {
-    label: 'Processing, topology',
-    title: GROUP_LABELS.targeting,
+    label: 'Processing',
+    title: 'Signal and transit peptides, propeptides, chains and peptides',
     ticks: false,
-    holds: f => groupOf(f) === 'targeting',
+    maxLanes: PROCESSING_LANES,
+    holds: f => PROCESSING.includes(f.type),
+  },
+  {
+    label: 'Topology',
+    title: 'Transmembrane and intramembrane segments, topological domains',
+    ticks: false,
+    holds: f => groupOf(f) === 'targeting' && !PROCESSING.includes(f.type),
   },
   {
     label: 'Domains',
@@ -75,7 +91,7 @@ const FEATURE_ROWS: {
 ]
 
 const FEATURE_CLASSES: Record<string, string> = {
-  Chain: 'topo',
+  Chain: 'chain',
   Peptide: 'sig',
   Signal: 'sig',
   'Transit peptide': 'sig',
@@ -242,7 +258,10 @@ export function featureRows(features: Feature[]) {
     const items = features.filter(row.holds)
     const placed = row.ticks
       ? items.map(item => ({ item, lane: 0 }))
-      : lanes(items)
+      : lanes(items).map(({ item, lane }) => ({
+          item,
+          lane: Math.min(lane, (row.maxLanes ?? Infinity) - 1),
+        }))
     return {
       ...row,
       placed,

@@ -29,7 +29,12 @@ import {
 import { EDIT_PREVIEW } from './types.ts'
 import type { Feature, GeneRecord, Isoform } from './types.ts'
 
-const noTranscripts = { ensembl: [], refseq: [], maneSelect: false }
+const noTranscripts = {
+  ensembl: [],
+  refseq: [],
+  refseqProteins: [],
+  maneSelect: false,
+}
 
 function isoform(overrides: Partial<Isoform>): Isoform {
   return {
@@ -60,7 +65,6 @@ function gene(overrides: Partial<GeneRecord>): GeneRecord {
     accession: 'P1',
     protein: 'Protein',
     length: 100,
-    disease: false,
     events: ['Alternative splicing'],
     canonical: {
       accession: 'P1-1',
@@ -73,6 +77,10 @@ function gene(overrides: Partial<GeneRecord>): GeneRecord {
     features: [],
     interfaces: {},
     isoforms: [],
+    ensemblGenes: [],
+    unmapped: { ensembl: [], refseq: [], refseqProteins: [] },
+    explorer: { gene: null, isoforms: null },
+    locus: null,
     ...overrides,
   }
 }
@@ -511,7 +519,12 @@ describe('summaries', () => {
         isoform({
           accession: 'P2-2',
           missing: 21,
-          transcripts: { ensembl: ['ENST2.1'], refseq: [], maneSelect: false },
+          transcripts: {
+            ensembl: ['ENST2.1'],
+            refseq: [],
+            refseqProteins: [],
+            maneSelect: false,
+          },
           features: [[0, 21, 0]],
         }),
       ],
