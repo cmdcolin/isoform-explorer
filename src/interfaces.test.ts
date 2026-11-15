@@ -6,7 +6,6 @@ import {
   confidentComplexes,
   confidentInterfaces,
   interfaceResidues,
-  limiter,
   partnerIdentity,
 } from './interfaces.ts'
 
@@ -137,33 +136,6 @@ test('confident interfaces name partners, keep each partner once and drop low pL
       partner('P3', 'LOW', 0.95, [[1, 69.9]]),
     ]),
   ).toEqual({ ABC: [5], P2: [3, 9] })
-})
-
-test('a limiter runs at most its slots at once, and frees a slot when a task fails', async () => {
-  const limit = limiter(2)
-  let running = 0
-  let most = 0
-  const task = async (fails: boolean) => {
-    running += 1
-    most = Math.max(most, running)
-    await new Promise(resolve => setTimeout(resolve, 5))
-    running -= 1
-    return fails ? Promise.reject(new Error('429')) : 'done'
-  }
-  const results = await Promise.allSettled(
-    [false, true, false, false, true, false].map(fails =>
-      limit(() => task(fails)),
-    ),
-  )
-  expect(most).toBe(2)
-  expect(results.map(r => r.status)).toEqual([
-    'fulfilled',
-    'rejected',
-    'fulfilled',
-    'fulfilled',
-    'rejected',
-    'fulfilled',
-  ])
 })
 
 test('bounded map keeps input order', async () => {

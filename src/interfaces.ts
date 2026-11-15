@@ -1,4 +1,6 @@
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { setTimeout as sleep } from 'node:timers/promises'
 
 import { getJson, getText } from './cache.ts'
 import { withinDistance } from './contacts.ts'
@@ -14,6 +16,8 @@ import {
 } from './proteins.ts'
 import type { Protein } from './proteins.ts'
 import { compareText } from './sequences.ts'
+import { FILE_SERVER_PACE, trickle } from './trickle.ts'
+import type { Download } from './trickle.ts'
 
 const ALPHAFOLD_API = 'https://alphafold.ebi.ac.uk/api'
 const HUMAN = 9606
@@ -22,7 +26,7 @@ const CONFIDENT = 0.6
 const MIN_PLDDT = 70
 const MAX_COMPLEXES = 30
 const WORKERS = 8
-const FILE_SERVER_SLOTS = 2
+const FILE_SERVER_QUIET = 15 * 60_000
 const PROGRESS_EVERY = 250
 
 export interface ChainAtom {
@@ -161,34 +165,13 @@ export function confidentInterfaces(interfaces: PartnerInterface[]) {
   )
 }
 
-export function limiter(slots: number) {
-  let free = slots
-  const waiting: (() => void)[] = []
-  const release = () => {
-    const next = waiting.shift()
-    if (next) {
-      next()
-    } else {
-      free += 1
-    }
-  }
-  return async <T>(task: () => Promise<T>) => {
-    if (free > 0) {
-      free -= 1
-    } else {
-      await new Promise<void>(resolve => waiting.push(resolve))
-    }
-    try {
-      return await task()
-    } finally {
-      release()
-    }
-  }
-}
-
-const fileServer = limiter(FILE_SERVER_SLOTS)
-
-async function complexChains(entity: string, accession: string) {
+async function complexInterface(
+  accession: string,
+  complex: Record<string, unknown>,
+  byChecksum: Map<string, Protein[]>,
+) {
+  const entity =
+    text(complex.modelEntityId) ?? fail("KeyError: 'modelEntityId'")
   const chains = records(
     await getJson(
       `${ALPHAFOLD_API}/prediction/${entity}`,
@@ -197,48 +180,34 @@ async function complexChains(entity: string, accession: string) {
   )
   const own = chains.find(chain => chain.uniprotAccession === accession)
   const partner = chains.find(chain => chain !== own)
-  const cifUrl = text(own?.cifUrl)
+  const url = text(own?.cifUrl)
+  const path = join(DATA, 'cif', `${entity}.cif.gz`)
+  const modelled = own && partner && url
+  const cached = existsSync(path)
   const atoms =
-    own && partner && cifUrl
-      ? atomsByChain(
-          await fileServer(() =>
-            getText(cifUrl, join(DATA, 'cif', `${entity}.cif.gz`)),
-          ),
-        )
+    modelled && cached
+      ? atomsByChain(await getText(url, path))
       : new Map<string, ChainAtom[]>()
-  return {
-    own,
-    partner,
-    ownAtoms: atoms.get(text(own?.chainId) ?? ''),
-    partnerAtoms: atoms.get(text(partner?.chainId) ?? ''),
-  }
-}
-
-async function complexInterface(
-  accession: string,
-  complex: Record<string, unknown>,
-  byChecksum: Map<string, Protein[]>,
-) {
-  const entity =
-    text(complex.modelEntityId) ?? fail("KeyError: 'modelEntityId'")
-  const { own, partner, ownAtoms, partnerAtoms } = await complexChains(
-    entity,
-    accession,
-  )
+  const ownAtoms = atoms.get(text(own?.chainId) ?? '')
+  const partnerAtoms = atoms.get(text(partner?.chainId) ?? '')
   const offset = (number(own?.uniprotStart) || 1) - 1
-  return ownAtoms && partnerAtoms
-    ? [
-        {
-          ...partnerIdentity(partner, byChecksum),
-          ipsae: ipsaeOf(complex),
-          residues: new Map(
-            [...interfaceResidues(ownAtoms, partnerAtoms)].map(
-              ([position, plddt]) => [position + offset, plddt],
-            ),
-          ),
-        } satisfies PartnerInterface,
-      ]
-    : []
+  return {
+    interfaces:
+      ownAtoms && partnerAtoms
+        ? [
+            {
+              ...partnerIdentity(partner, byChecksum),
+              ipsae: ipsaeOf(complex),
+              residues: new Map(
+                [...interfaceResidues(ownAtoms, partnerAtoms)].map(
+                  ([position, plddt]) => [position + offset, plddt],
+                ),
+              ),
+            } satisfies PartnerInterface,
+          ]
+        : [],
+    pending: modelled && !cached ? [{ url, path } satisfies Download] : [],
+  }
 }
 
 async function proteinInterfaces(
@@ -251,14 +220,15 @@ async function proteinInterfaces(
       join(DATA, 'complexes', `${accession}.json`),
     ),
   )
-  const interfaces: PartnerInterface[] = []
+  const measured = []
   for (const complex of confidentComplexes(complexes)) {
-    interfaces.push(...(await complexInterface(accession, complex, byChecksum)))
+    measured.push(await complexInterface(accession, complex, byChecksum))
   }
   return {
     accession,
     complexes: complexes.length,
-    interfaces: confidentInterfaces(interfaces),
+    interfaces: confidentInterfaces(measured.flatMap(m => m.interfaces)),
+    pending: measured.flatMap(m => m.pending),
   }
 }
 
@@ -276,11 +246,13 @@ async function attempt(accession: string, byChecksum: Map<string, Protein[]>) {
   }
 }
 
+type Result = Awaited<ReturnType<typeof attempt>>
+
 export async function boundedMap<T, R>(
   items: T[],
   workers: number,
   work: (item: T) => Promise<R>,
-  onDone: (finished: number) => void,
+  onDone: (finished: number) => void = () => undefined,
 ) {
   const results: R[] = []
   const queue = items.entries()
@@ -319,32 +291,40 @@ async function run(accessions: string[], byChecksum: Map<string, Protein[]>) {
   )
 }
 
-export async function main(only: string[] = []) {
-  const proteins = await reviewedHuman()
-  const byChecksum = Map.groupBy(proteins, checksumOf)
-  const accessions = proteins
-    .filter(hasAlternativeIsoform)
-    .map(accessionOf)
-    .filter(accession => !only.length || only.includes(accession))
-  const first = await run(accessions, byChecksum)
-  const retried = await run(
-    first.flatMap(r => ('error' in r ? [r.accession] : [])),
-    byChecksum,
-  )
-  const retriedByAccession = new Map(retried.map(r => [r.accession, r]))
-  const results = first.map(r => retriedByAccession.get(r.accession) ?? r)
+function replaced(results: Result[], updates: Result[]) {
+  const byAccession = new Map(updates.map(r => [r.accession, r]))
+  return results.map(r => byAccession.get(r.accession) ?? r)
+}
+
+interface FileServer {
+  stage: 'api' | 'trickle' | 'done' | 'stalled'
+  pause?: number
+  throttles?: number
+  missing: Download[]
+  failed: Download[]
+}
+
+function writeOutputs(results: Result[], files: FileServer) {
   const done = results.flatMap(r => ('error' in r ? [] : [r]))
-  const failures = results.flatMap(r => ('error' in r ? [r] : []))
   const confident = done.filter(r => Object.keys(r.interfaces).length > 0)
+  const missing = new Set(files.missing.map(d => d.path))
+  const waiting = done.map(r => r.pending.filter(d => !missing.has(d.path)))
   const summary = {
-    checked: accessions.length,
+    checked: results.length,
     withComplex: done.filter(r => r.complexes > 0).length,
     withConfidentInterface: confident.length,
     partners: confident.reduce(
       (sum, r) => sum + Object.keys(r.interfaces).length,
       0,
     ),
-    failures,
+    pendingProteins: waiting.filter(pending => pending.length > 0).length,
+    pendingCifs: new Set(waiting.flat().map(d => d.path)).size,
+    files: {
+      ...files,
+      missing: files.missing.map(d => d.url),
+      failed: files.failed.map(d => d.url),
+    },
+    failures: results.flatMap(r => ('error' in r ? [r] : [])),
   }
   writeJson(
     join(OUT, 'interfaces.json'),
@@ -352,8 +332,75 @@ export async function main(only: string[] = []) {
   )
   writeJson(join(OUT, 'interfaces_summary.json'), summary, 2)
   console.log(
-    `${summary.checked} proteins checked, ${summary.withComplex} with a complex, ${summary.withConfidentInterface} with a confident interface (${summary.partners} partners), ${failures.length} failed`,
+    `${summary.checked} proteins checked, ${summary.withComplex} with a complex, ${summary.withConfidentInterface} with a confident interface (${summary.partners} partners), ${summary.pendingProteins} waiting on ${summary.pendingCifs} CIFs, ${summary.failures.length} failed`,
   )
+}
+
+export async function main(args: string[] = []) {
+  const started = Date.now()
+  const only = args.filter(arg => !arg.startsWith('--'))
+  const proteins = await reviewedHuman()
+  const byChecksum = Map.groupBy(proteins, checksumOf)
+  const accessions = proteins
+    .filter(hasAlternativeIsoform)
+    .map(accessionOf)
+    .filter(accession => !only.length || only.includes(accession))
+  const first = await run(accessions, byChecksum)
+  let results = replaced(
+    first,
+    await run(
+      first.flatMap(r => ('error' in r ? [r.accession] : [])),
+      byChecksum,
+    ),
+  )
+  writeOutputs(results, { stage: 'api', missing: [], failed: [] })
+  if (!args.includes('--api-only')) {
+    const downloads = [
+      ...new Map(
+        results
+          .flatMap(r => ('error' in r ? [] : r.pending))
+          .map(d => [d.path, d]),
+      ).values(),
+    ]
+    await sleep(Math.max(0, started + FILE_SERVER_QUIET - Date.now()))
+    console.log(`fetching ${downloads.length} CIFs one at a time`)
+    let fetched = 0
+    const outcome = await trickle(
+      downloads,
+      FILE_SERVER_PACE,
+      async (batch, pause) => {
+        const paths = new Set(batch.map(d => d.path))
+        const affected = results.flatMap(r =>
+          !('error' in r) && r.pending.some(d => paths.has(d.path))
+            ? [r.accession]
+            : [],
+        )
+        results = replaced(
+          results,
+          await boundedMap(affected, WORKERS, accession =>
+            attempt(accession, byChecksum),
+          ),
+        )
+        fetched += batch.length
+        console.log(
+          `${fetched}/${downloads.length} CIFs, one every ${pause / 1000} s, ${((Date.now() - started) / 60_000).toFixed(1)} min`,
+        )
+        writeOutputs(results, {
+          stage: 'trickle',
+          pause,
+          missing: [],
+          failed: [],
+        })
+      },
+    )
+    writeOutputs(results, {
+      stage: outcome.stalled ? 'stalled' : 'done',
+      pause: outcome.pause,
+      throttles: outcome.throttles,
+      missing: outcome.missing,
+      failed: outcome.failed,
+    })
+  }
 }
 
 if (import.meta.main) {

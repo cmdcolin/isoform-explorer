@@ -17,7 +17,7 @@ const ATTEMPTS = 9
 const TIMEOUT = 300_000
 const DOWNLOAD_TIMEOUT = 3_600_000
 const HEADERS = { 'user-agent': 'isoform-explorer' }
-const THROTTLED = [403, 429]
+export const THROTTLED = [403, 429]
 const THROTTLE_PAUSE = 60_000
 const MAX_THROTTLE_PAUSE = 300_000
 
@@ -31,16 +31,20 @@ function pauseHost(host: string, attempt: number) {
   )
 }
 
+export function fetchOnce(url: URL | string) {
+  return fetch(url, {
+    headers: HEADERS,
+    signal: AbortSignal.timeout(TIMEOUT),
+  }).catch(() => undefined)
+}
+
 async function request(
   url: URL,
   absentStatuses: number[],
   attempt = 0,
 ): Promise<Uint8Array | undefined> {
   await sleep(Math.max(0, (pausedUntil.get(url.host) ?? 0) - Date.now()))
-  const response = await fetch(url, {
-    headers: HEADERS,
-    signal: AbortSignal.timeout(TIMEOUT),
-  }).catch(() => undefined)
+  const response = await fetchOnce(url)
   const throttled = THROTTLED.includes(response?.status ?? 0)
   if (throttled) {
     pauseHost(url.host, attempt)
