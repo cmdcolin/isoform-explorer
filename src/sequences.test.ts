@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { applyEdits, replacedPositions, sharedEnds } from './sequences.ts'
+import {
+  applyEdits,
+  displayedIsoform,
+  editsByIsoform,
+  ensemblByIsoform,
+  maneIsoform,
+  replacedPositions,
+  sharedEnds,
+  unversioned,
+} from './sequences.ts'
 
 describe('sharedEnds', () => {
   it('counts matching prefix and suffix', () => {
@@ -76,5 +85,74 @@ describe('applyEdits', () => {
         [6, 8, ''],
       ]),
     ).toEqual({ sequence: 'MQBCD', positions: [1, null, 3, 4, 5] })
+  })
+})
+
+describe('transcripts', () => {
+  const entry = {
+    primaryAccession: 'P1',
+    comments: [
+      {
+        commentType: 'ALTERNATIVE PRODUCTS',
+        isoforms: [
+          {
+            name: { value: '1' },
+            isoformIds: ['Q9-1', 'P1-1'],
+            isoformSequenceStatus: 'Displayed',
+          },
+          {
+            name: { value: '2' },
+            synonyms: [{ value: 'Short' }],
+            isoformIds: ['P1-2'],
+            sequenceIds: ['VSP_1'],
+            isoformSequenceStatus: 'Described',
+          },
+        ],
+      },
+    ],
+    uniProtKBCrossReferences: [
+      { database: 'Ensembl', id: 'ENST01.3', isoformId: 'P1-1' },
+      { database: 'Ensembl', id: 'ENST02.1', isoformId: 'P1-2' },
+      {
+        database: 'RefSeq',
+        id: 'NP_2.1',
+        properties: [{ key: 'NucleotideSequenceId', value: 'NM_2.4' }],
+        isoformId: 'P1-2',
+      },
+      {
+        database: 'MANE-Select',
+        id: 'ENST02.2',
+        properties: [{ key: 'RefSeqNucleotideId', value: 'NM_2.4' }],
+      },
+    ],
+  }
+
+  it('takes the isoform id that belongs to the entry', () => {
+    expect(displayedIsoform(entry)).toBe('P1-1')
+    expect([...editsByIsoform(entry).keys()]).toEqual(['P1-1', 'P1-2'])
+  })
+
+  it('keeps isoform synonyms', () => {
+    expect(editsByIsoform(entry).get('P1-2')?.synonyms).toEqual(['Short'])
+  })
+
+  it('groups Ensembl transcripts by isoform', () => {
+    expect([...ensemblByIsoform(entry)]).toEqual([
+      ['P1-1', ['ENST01.3']],
+      ['P1-2', ['ENST02.1']],
+    ])
+  })
+
+  it('finds the isoform MANE Select encodes, whatever the version', () => {
+    expect(maneIsoform(entry)).toBe('P1-2')
+  })
+
+  it('finds no MANE isoform without a MANE Select transcript', () => {
+    expect(maneIsoform({ uniProtKBCrossReferences: [] })).toBeUndefined()
+  })
+
+  it('drops a version suffix', () => {
+    expect(unversioned('ENST00000269305.9')).toBe('ENST00000269305')
+    expect(unversioned('NM_000546')).toBe('NM_000546')
   })
 })

@@ -106,10 +106,37 @@ story. The same standard applies here.
 
 - `site/data/genes/<page>.json`: `GeneRecord`. `page` is the gene symbol, or
   `<gene>_<accession>` when two entries share a symbol.
-- `site/data/index.json`: `IndexRow[]`. `site/data/totals.json`: `Totals`.
+- `site/data/index.json`: `IndexRow[]`. `site/data/totals.json`: `Totals`,
+  counting alternative isoforms (the canonical is never counted) unless a
+  line says proteins:
+  - `proteins`: reviewed human entries with at least one Described isoform;
+    `isoforms`: their Described isoforms.
+  - `withTranscript`: isoforms with at least one ENST or NM cross-reference.
+  - `withModel`: isoforms whose own AlphaFold DB model has exactly the
+    rebuilt isoform sequence; `canonicalModels`: proteins whose canonical has
+    one full-length `-F1-` model of exactly its sequence.
+  - `maneSelectNotCanonical`: proteins whose MANE Select transcript encodes a
+    Described isoform rather than the canonical.
+  - `lacking.<group>`: isoforms missing in full at least one feature of the
+    group: every residue of a range, or either residue of a disulfide bond or
+    cross-link. Missing only; a replaced residue never counts.
+  - `lacking.interface`: isoforms missing at least half of the interface
+    residues of at least one predicted partner.
+  - `lacking.folded`: isoforms missing at least one canonical residue with
+    pLDDT ≥ 70 in the canonical model.
+- `site/data/examples.json`: `Example[]`, the home page's three worked
+  examples. Among isoforms with a transcript, ordered by fewest canonical
+  residues not carried over (then gene, isoform), each rule takes the first
+  isoform of a protein not already used: one missing a signal peptide in full;
+  one missing every transmembrane segment in full; one missing more than half
+  of a domain and, in full, an active site inside it.
 - `site/data/search/`: lookups from gene, accession, ENST and NM (versions
   dropped) to `<page>#<isoform accession>`. Split so the browser loads the
-  transcript maps only when the query looks like a transcript.
+  transcript maps only when the query looks like a transcript: `genes.json`
+  (upper-case symbol → pages), `accessions.json` (entry accession → page,
+  isoform accession → `page#isoform`), `ensembl.json` and `refseq.json`. Each
+  value is a list, since a symbol or transcript can name more than one target
+  (`SEARCH` and `Lookup` in `src/types.ts`).
 - `out/interfaces.json`: per accession, partner → confident interface residues.
   Written by `src/interfaces.ts`, read by `src/isoforms.ts`, absent partners
   simply give no interface rows.

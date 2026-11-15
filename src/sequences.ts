@@ -5,6 +5,7 @@ export type Edit = [start: number, end: number, replacement: string]
 
 export interface IsoformEdits {
   name: string
+  synonyms: string[]
   displayed: boolean
   edits: Edit[]
 }
@@ -17,8 +18,9 @@ export function compareEdits(a: Edit, b: Edit) {
   return a[0] - b[0] || a[1] - b[1] || compareText(a[2], b[2])
 }
 
-function isoformId(isoform: Record<string, unknown>) {
-  return text(list(isoform.isoformIds)[0]) ?? ''
+function isoformId(isoform: Record<string, unknown>, accession: string) {
+  const ids = list(isoform.isoformIds).flatMap(id => text(id) ?? [])
+  return ids.find(id => id.startsWith(`${accession}-`)) ?? ids[0] ?? ''
 }
 
 function status(isoform: Record<string, unknown>) {
@@ -36,7 +38,9 @@ export function displayedIsoform(entry: UniProtEntry) {
   const isoform = alternativeProducts(entry).find(
     i => status(i) === 'Displayed',
   )
-  return isoform ? isoformId(isoform) : undefined
+  return isoform
+    ? isoformId(isoform, text(entry.primaryAccession) ?? '')
+    : undefined
 }
 
 function alternativeSequence(feature: Record<string, unknown>): Edit {
@@ -59,9 +63,10 @@ export function editsByIsoform(entry: UniProtEntry) {
     alternativeProducts(entry)
       .filter(i => status(i) === 'Displayed' || status(i) === 'Described')
       .map(isoform => [
-        isoformId(isoform),
+        isoformId(isoform, text(entry.primaryAccession) ?? ''),
         {
           name: text(record(isoform.name).value) ?? '',
+          synonyms: records(isoform.synonyms).flatMap(s => text(s.value) ?? []),
           displayed: status(isoform) === 'Displayed',
           edits: list(isoform.sequenceIds)
             .flatMap(v => {
@@ -158,8 +163,50 @@ export function refseqByIsoform(entry: UniProtEntry) {
   return byIsoform
 }
 
+export function ensemblByIsoform(entry: UniProtEntry) {
+  const byIsoform = new Map<string | undefined, string[]>()
+  for (const xref of xrefs(entry, 'Ensembl')) {
+    const transcript = text(xref.id) ?? ''
+    if (transcript.startsWith('ENST')) {
+      const isoform = text(xref.isoformId)
+      byIsoform.set(isoform, [...(byIsoform.get(isoform) ?? []), transcript])
+    }
+  }
+  return byIsoform
+}
+
 export function maneTranscript(entry: UniProtEntry) {
   return xrefs(entry, 'MANE-Select').flatMap(x =>
     propertyValues(x, 'RefSeqNucleotideId'),
   )[0]
+}
+
+export function unversioned(id: string) {
+  return id.replace(/\.\d+$/, '')
+}
+
+export function maneTranscripts(entry: UniProtEntry) {
+  const mane = xrefs(entry, 'MANE-Select')[0]
+  return new Set(
+    mane
+      ? [text(mane.id) ?? '', ...propertyValues(mane, 'RefSeqNucleotideId')]
+          .filter(id => id !== '')
+          .map(unversioned)
+      : [],
+  )
+}
+
+export function maneIsoform(entry: UniProtEntry) {
+  const mane = maneTranscripts(entry)
+  const viaEnsembl = xrefs(entry, 'Ensembl').find(
+    x => x.isoformId && mane.has(unversioned(text(x.id) ?? '')),
+  )
+  const viaRefseq = xrefs(entry, 'RefSeq').find(
+    x =>
+      x.isoformId &&
+      propertyValues(x, 'NucleotideSequenceId').some(nucleotide =>
+        mane.has(unversioned(nucleotide)),
+      ),
+  )
+  return text(viaEnsembl?.isoformId) ?? text(viaRefseq?.isoformId)
 }

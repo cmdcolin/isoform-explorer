@@ -41,6 +41,7 @@ export function fetchOnce(url: URL | string) {
 async function request(
   url: URL,
   absentStatuses: number[],
+  attempts = ATTEMPTS,
   attempt = 0,
 ): Promise<Uint8Array | undefined> {
   await sleep(Math.max(0, (pausedUntil.get(url.host) ?? 0) - Date.now()))
@@ -53,9 +54,9 @@ async function request(
     ? new Uint8Array(await response.arrayBuffer())
     : response && absentStatuses.includes(response.status)
       ? undefined
-      : attempt + 1 < ATTEMPTS
+      : attempt + 1 < attempts
         ? sleep(throttled ? 0 : 1000 * 2 ** attempt).then(() =>
-            request(url, absentStatuses, attempt + 1),
+            request(url, absentStatuses, attempts, attempt + 1),
           )
         : Promise.reject(
             new Error(
@@ -77,9 +78,10 @@ export async function getJson(
   path: string,
   params: Record<string, string> = {},
   keep = (data: unknown) => data,
+  attempts = ATTEMPTS,
 ) {
   if (!existsSync(path)) {
-    const body = await request(withParams(url, params), [400, 404])
+    const body = await request(withParams(url, params), [400, 404], attempts)
     const kept = body ? keep(parseJson(new TextDecoder().decode(body))) : null
     writeAtomically(path, JSON.stringify(kept))
   }

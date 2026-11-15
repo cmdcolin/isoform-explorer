@@ -12,6 +12,8 @@
     "preview": "astro preview",
     "interfaces": "node src/interfaces.ts",
     "isoforms": "node src/isoforms.ts",
+    "proteome": "bash src/proteome.sh && node src/proteome.ts",
+    "plddt": "node src/plddt.ts",
     "all": "pnpm interfaces && pnpm isoforms",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && astro check --tsconfig web/tsconfig.json",
