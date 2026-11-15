@@ -1,0 +1,17 @@
+{
+  "proteins": 10587,
+  "isoforms": 22131,
+  "withTranscript": 16142,
+  "withModel": 21820,
+  "canonicalModels": 10396,
+  "modelsPending": 13517,
+  "maneSelectNotCanonical": 1005,
+  "lacking": {
+    "targeting": 2271,
+    "domains": 4910,
+    "sites": 2296,
+    "modifications": 6682,
+    "interface": 571,
+    "folded": 12392
+  }
+}

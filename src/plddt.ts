@@ -19,16 +19,23 @@ const AFTER_FAILURE = 300_000
 const FAILURES_TO_STOP = 3
 
 function pendingModels(entry: UniProtEntry) {
+  const accession = accessionOf(entry)
   const sequence = sequenceOf(entry)
-  const isoforms = [...editsByIsoform(entry)].filter(
-    ([, info]) => !info.displayed,
-  )
-  const path = monomerPath(accessionOf(entry))
+  const path = monomerPath(accession)
   const models = modelsIn(existsSync(path) ? readJson(path) : null)
-  return isoforms.flatMap(([isoform, info]) => {
-    const model = models.get(isoform)
+  const wanted: [string, string][] = [
+    [accession, sequence],
+    ...[...editsByIsoform(entry)]
+      .filter(([, info]) => !info.displayed)
+      .map(([isoform, info]): [string, string] => [
+        isoform,
+        applyEdits(sequence, info.edits).sequence,
+      ]),
+  ]
+  return wanted.flatMap(([id, built]) => {
+    const model = models.get(id)
     return model &&
-      model.sequence === applyEdits(sequence, info.edits).sequence &&
+      model.sequence === built &&
       !existsSync(plddtPath(model.entryId))
       ? [model]
       : []
@@ -39,7 +46,7 @@ async function main() {
   const pending = (await isoformEntries())
     .filter(hasAlternative)
     .flatMap(pendingModels)
-  console.log(`${pending.length} isoform models without cached pLDDT`)
+  console.log(`${pending.length} models without cached pLDDT`)
   let failures = 0
   let fetched = 0
   for (const model of pending) {
