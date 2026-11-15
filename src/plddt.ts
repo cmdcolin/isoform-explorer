@@ -14,7 +14,7 @@ import { applyEdits, editsByIsoform } from './sequences.ts'
 import { accessionOf, isoformEntries, sequenceOf } from './uniprot.ts'
 import type { UniProtEntry } from './uniprot.ts'
 
-const PAUSE = 20_000
+const DEFAULT_PAUSE_SECONDS = '20'
 const AFTER_FAILURE = 300_000
 const FAILURES_TO_STOP = 3
 
@@ -42,7 +42,8 @@ function pendingModels(entry: UniProtEntry) {
   })
 }
 
-async function main() {
+async function main(pauseSeconds = DEFAULT_PAUSE_SECONDS) {
+  const pause = Number(pauseSeconds) * 1000
   const pending = (await isoformEntries())
     .filter(hasAlternative)
     .flatMap(pendingModels)
@@ -66,7 +67,7 @@ async function main() {
       )
       failures = ok ? 0 : failures + 1
       fetched += ok ? 1 : 0
-      await sleep(ok ? PAUSE : AFTER_FAILURE)
+      await sleep(ok ? pause : AFTER_FAILURE)
     }
   }
   console.log(
@@ -77,5 +78,5 @@ async function main() {
 }
 
 if (import.meta.main) {
-  await main()
+  await main(...process.argv.slice(2))
 }
