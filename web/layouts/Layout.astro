@@ -1,5 +1,6 @@
 ---
 import '../styles/site.css'
+import Search from '../components/Search.astro'
 import { INTERFACE_EXPLORER, href } from '../lib/site.ts'
 
 interface Props {
@@ -42,6 +43,7 @@ const links = [
         <img class="brand-logo" src={href('logo.svg')} alt="" />
         Isoform explorer
       </a>
+      {nav !== 'home' && <Search compact />}
       <nav>
         {
           links.map(([key, label, path]) => (

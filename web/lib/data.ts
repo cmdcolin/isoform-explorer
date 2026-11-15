@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import type { GeneRecord, IndexRow, Totals } from '../../src/types.ts'
+import type { Example, GeneRecord, IndexRow, Totals } from '../../src/types.ts'
 
 const DATA = join(process.cwd(), 'site', 'data')
 
@@ -19,4 +19,5 @@ function once<T>(path: string) {
 
 export const indexRows = once<IndexRow[]>('index.json')
 export const totals = once<Totals>('totals.json')
+export const examples = once<Example[]>('examples.json')
 export const gene = (page: string) => read<GeneRecord>(`genes/${page}.json`)

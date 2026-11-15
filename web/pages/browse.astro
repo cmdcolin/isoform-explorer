@@ -1,0 +1,53 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { COLUMNS } from '../lib/browse.ts'
+import { totals } from '../lib/data.ts'
+import { COLUMN_TITLES, SHORT_MISSING } from '../lib/labels.ts'
+import { href } from '../lib/site.ts'
+
+const t = totals()
+---
+
+<Layout title="Browse" nav="browse" description="Every protein with a described alternative isoform, with what its isoforms lack from the canonical sequence.">
+  <h1>Browse</h1>
+  <p class="lede">
+    One row for each of the {t.proteins.toLocaleString()} proteins. Counts are of alternative isoforms, each measured
+    against the canonical sequence, and residues replaced by other sequence never count as missing. Hover a column
+    heading for its definition, or see <a href={href('about/')}>About</a>.
+  </p>
+  <form class="toolbar browse-toolbar" role="search" action="" data-index={href('data/index.json')}>
+    <input type="search" name="q" placeholder="Filter by gene, accession or protein" aria-label="Filter by gene, accession or protein" autocomplete="off" />
+    <label>
+      Show
+      <select name="has">
+        <option value="">all proteins</option>
+        {Object.entries(SHORT_MISSING).map(([key, text]) => <option value={key}>proteins with an isoform missing {text}</option>)}
+      </select>
+    </label>
+    <span class="muted" data-count aria-live="polite">Loading {t.proteins.toLocaleString()} proteins…</span>
+  </form>
+  <div class="table-wrap">
+    <table class="browse" id="browse">
+      <thead>
+        <tr>
+          {
+            COLUMNS.map(c => (
+              <th class={c.num ? 'num' : undefined} title={COLUMN_TITLES[c.key]} data-key={c.key}>
+                <button type="button">{c.label}</button>
+              </th>
+            ))
+          }
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p class="browse-more">
+    <button type="button" class="button" hidden>Show more</button>
+  </p>
+  <noscript><p class="note">The table is drawn by JavaScript from <a href={href('data/index.json')}>index.json</a>.</p></noscript>
+</Layout>
+
+<script>
+  import '../scripts/browse.ts'
+</script>

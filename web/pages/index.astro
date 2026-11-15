@@ -1,19 +1,90 @@
 ---
+import Search from '../components/Search.astro'
 import Layout from '../layouts/Layout.astro'
-import { href } from '../lib/site.ts'
+import { browseQuery } from '../lib/browse.ts'
+import { examples, gene, totals } from '../lib/data.ts'
+import { exampleSentence } from '../lib/examples.ts'
+import { GROUPS } from '../lib/features.ts'
+import { FOLDED, MISSING } from '../lib/labels.ts'
+import { geneHref, href } from '../lib/site.ts'
+
+const t = totals()
+const browse = (view: Parameters<typeof browseQuery>[0]) => href(`browse/${browseQuery(view)}`)
+const scope = [
+  [t.proteins, 'reviewed human proteins with a described alternative isoform', browse({})],
+  [t.isoforms, 'alternative isoforms, each compared with its canonical sequence', browse({ sort: 'isoforms' })],
+  [t.withTranscript, 'of those isoforms with an Ensembl or RefSeq transcript', browse({ sort: 'transcripts' })],
+] as const
+const lacking = [
+  ...GROUPS.map(group => [t.lacking[group], `missing ${MISSING[group]}`, browse({ has: group })] as const),
+  [t.lacking.interface, `missing ${MISSING.interface}`, browse({ has: 'interface' })],
+  [t.lacking.folded, `missing ${FOLDED}`, browse({ sort: 'folded' })],
+] as const
+const worked = examples().map(example => ({ example, sentence: exampleSentence(example, gene(example.page)) }))
+const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']
 ---
 
 <Layout nav="home">
   <section class="hero">
     <h1>If this transcript is the one being made, what does the protein lose?</h1>
     <p class="lede">
-      For each alternative isoform UniProt describes, the residues, features, folded structure and predicted partner
-      interfaces of the canonical protein that its sequence lacks.
+      Enter a gene, a UniProt accession, or an Ensembl or RefSeq transcript. Isoform explorer compares each isoform UniProt
+      describes with the canonical sequence and lists the residues, features, confidently modelled structure and predicted
+      partner interfaces it lacks. It says nothing about whether, where or how much a transcript is expressed.
     </p>
-    <p class="note">
-      Placeholder start page: the search box, counts and worked examples come next. Meanwhile, <a href={href('about/')}
-        >About</a
-      > says what the site counts and what it does not claim.
+    <Search />
+    <p class="search-tries muted">
+      Try {tries.map((value, index) => (
+        <>
+          <button type="button" class="link-button" data-search-example="search">{value}</button>{index < tries.length - 1 ? ', ' : ''}
+        </>
+      ))}
     </p>
+  </section>
+
+  <section>
+    <h2>What you can explore</h2>
+    <div class="tiles wide">
+      {
+        scope.map(([value, label, link]) => (
+          <a class="tile" href={link}>
+            <div class="value">{value.toLocaleString()}</div>
+            <div class="label">{label}</div>
+          </a>
+        ))
+      }
+    </div>
+    <h3>Alternative isoforms…</h3>
+    <div class="tiles wide">
+      {
+        lacking.map(([value, label, link]) => (
+          <a class="tile" href={link}>
+            <div class="value">{value.toLocaleString()}</div>
+            <div class="label">{label}</div>
+          </a>
+        ))
+      }
+    </div>
+    <p class="muted">
+      Missing means canonical residues with nothing in their place. A stretch replaced by other sequence is shown on each
+      gene page but not counted here. Each tile opens the protein table filtered or sorted to match.
+    </p>
+  </section>
+
+  <section>
+    <h2>Three examples</h2>
+    {
+      worked.map(({ example, sentence }) => (
+        <div class="case">
+          <h3>
+            {example.gene} <span class="muted">{example.protein}</span>
+          </h3>
+          <p>{sentence}</p>
+          <a href={geneHref(example.page, example.isoform)}>
+            Open isoform {example.name} on the {example.gene} page
+          </a>
+        </div>
+      ))
+    }
   </section>
 </Layout>

@@ -526,3 +526,147 @@ details.more summary {
   font-size: 13px;
   text-align: center;
 }
+
+/* Search, browse table and home */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.search {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 640px;
+  margin: 20px 0 8px;
+}
+
+.search input[type="search"] {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.search .button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 4px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
+}
+
+.search-results:empty {
+  display: none;
+}
+
+.search-results p {
+  margin: 8px 0;
+}
+
+.search-results ul {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.search-results li {
+  padding: 3px 0;
+}
+
+.search-results a:focus {
+  outline: 2px solid var(--interface);
+  outline-offset: 2px;
+}
+
+.search.compact {
+  flex: 0 1 340px;
+  flex-wrap: nowrap;
+  margin: 0;
+  gap: 6px;
+}
+
+.search.compact input[type="search"] {
+  flex: 1 1 auto;
+  font-size: 14px;
+  padding: 6px 10px;
+}
+
+.search.compact .button {
+  padding: 5px 10px;
+}
+
+.search.compact .search-results {
+  min-width: min(360px, calc(100vw - 32px));
+}
+
+@media (max-width: 720px) {
+  .search.compact {
+    display: none;
+  }
+}
+
+.tiles.wide {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+}
+
+.search-tries {
+  font-size: 14px;
+}
+
+.link-button {
+  font: inherit;
+  color: var(--link);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.browse-toolbar select {
+  font: inherit;
+  max-width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.browse-toolbar label {
+  max-width: 100%;
+}
+
+th[aria-sort="descending"] button::after {
+  content: " ↓";
+}
+
+th[aria-sort="ascending"] button::after {
+  content: " ↑";
+}
+
+table.browse th {
+  vertical-align: bottom;
+}
+
+table.browse th[title] button {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
