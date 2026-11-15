@@ -1,0 +1,138 @@
+---
+name: design
+description: "What Isoform explorer is for, what each page says, where every number comes from, and what the site refuses to claim. Read before adding a page, a column or a sentence."
+---
+
+# Isoform explorer: design
+
+A sibling of Interface explorer (`~/src/interface-atlas`, deployed at
+`cmdcolin.github.io/interface-explorer`). That site covers isoforms only for
+proteins with a disease annotation, about a third of those that have any. This
+one covers every reviewed human UniProt entry with a described alternative
+isoform: 10,649 proteins and 22,131 alternative isoforms on 2026-11-15.
+
+## The one question
+
+**If this transcript is the one being made, what does the protein lose?**
+
+- The visitor arrives with a transcript (ENST or NM), a gene or a UniProt
+  accession, from RNA-seq, a long-read isoform or a variant report.
+- The answer is a list of what the canonical protein has that this isoform's
+  sequence does not, each item from a named source.
+- "If" is deliberate. The site says nothing about whether, where or how much a
+  transcript is expressed.
+
+## What counts as a loss
+
+Everything is computed from UniProt's `Alternative sequence` edits, placed on
+the canonical (UniProt "displayed") sequence. No structure is needed for the
+first three, so they cover every described isoform, not only the modelled ones.
+
+- **Residues:** canonical residues with nothing in their place (`missing`),
+  canonical residues in a stretch that has other sequence in its place
+  (`replaced`), and isoform residues the canonical lacks (`novel`).
+- **UniProt features of the canonical protein that overlap those residues,** in
+  four groups (`FEATURE_GROUPS` in `src/types.ts`):
+  - targeting and topology: signal and transit peptides, propeptides,
+    transmembrane and intramembrane segments, topological domains;
+  - domains and regions: domains, repeats, zinc fingers, DNA-binding regions,
+    coiled coils, regions, motifs. Regions described only as "Disordered" and
+    compositional-bias features are left out;
+  - sites: active, binding and other sites;
+  - modifications: modified residues, lipidation, glycosylation, disulfide
+    bonds, cross-links. A disulfide is two positions, not a range, and is lost
+    when either cysteine is.
+- **UniProt's own note on the isoform** (inactive, dominant negative, a
+  premature stop that may trigger decay), quoted as UniProt's.
+- **Folded residues:** canonical residues with pLDDT ≥ 70 in the AlphaFold DB
+  monomer that the isoform lacks. `null` when the canonical has no full-length
+  model.
+- **Predicted partner interfaces:** for each AlphaFold DB complex with
+  ipSAE ≥ 0.6, the interface residues (within 5 Å of the partner, pLDDT ≥ 70)
+  the isoform lacks. Same rules as Interface explorer.
+- **The isoform's own model**, when AlphaFold DB has one: its pLDDT, and how
+  many shared residues fall from ≥ 70 on the canonical to < 50 on the isoform.
+
+## What the site does not claim
+
+Interface explorer withheld a 3D distance from pathogenic sites to interfaces
+because the sites sat in pLDDT < 50 regions and the number invited a proximity
+story. The same standard applies here.
+
+- **No consequence.** The site lists what the sequence lacks. It never says an
+  isoform is non-functional, mislocalised, secreted, soluble, degraded or
+  dominant negative, except by quoting UniProt's note.
+- **Replaced is not lost.** A stretch swapped for other sequence (mutually
+  exclusive exons, an alternative terminus) is "replaced by N different
+  residues". The lost-feature counts on the home page and browse table use
+  `missing` only.
+- **Structure only where the model is confident.** Folded counts use
+  pLDDT ≥ 70. Where the absent residues are mostly below pLDDT 50 in the
+  canonical model, say the model shows no fold there; do not count it as fold
+  lost.
+- **A kept interface is not binding.** No isoform was modelled with a partner.
+  A full circle means the residues are present, nothing more.
+- **Losing confidence is a model's opinion.** pLDDT is the prediction's
+  confidence, not a measurement of folding. Say so beside the number.
+- **Not expression.** No GTEx, no tissue claims, no "major isoform". The MANE
+  Select transcript is marked because it is a fact about annotation; when it
+  encodes a non-canonical isoform, the page says so, since "loses" is measured
+  against UniProt's canonical.
+- **Not novel transcripts.** Only isoforms UniProt describes. A transcript not
+  mapped to one is not on the site; About says so.
+
+## Pages
+
+- **Home:** the question as the headline, one search box (gene, UniProt
+  accession, ENST, NM), tiles of explorable counts from `totals.json`, three
+  worked examples chosen by the pipeline's own numbers. The search box is the
+  primary action here, unlike Interface explorer's hero, because the question
+  starts from a transcript.
+- **Browse:** one sortable, filterable row per protein from `index.json`.
+- **Gene page (`/gene/<page>/`):** one per protein, one anchored section per
+  isoform (`#P04637-2`), so a transcript search lands on its isoform.
+  - A map: canonical feature rows, pLDDT band and partner-interface rows above
+    one row per isoform drawn on canonical coordinates.
+  - Per isoform, the answer first as a sentence, then the losses grouped under
+    the edit that causes them, then transcripts, UniProt's note and links
+    (UniProt, Ensembl, RefSeq, AlphaFold DB, isoform superposed on canonical in
+    JBrowse, transcripts on the genome).
+  - A link to Interface explorer for proteins with a disease annotation
+    (`https://cmdcolin.github.io/interface-explorer/genes/?q=<gene>`), which is
+    where ClinVar variants live. This site does not show variants.
+- **About:** scope, sources, each rule above, and what is left out.
+
+## Data
+
+- `site/data/genes/<page>.json`: `GeneRecord`. `page` is the gene symbol, or
+  `<gene>_<accession>` when two entries share a symbol.
+- `site/data/index.json`: `IndexRow[]`. `site/data/totals.json`: `Totals`.
+- `site/data/search/`: lookups from gene, accession, ENST and NM (versions
+  dropped) to `<page>#<isoform accession>`. Split so the browser loads the
+  transcript maps only when the query looks like a transcript.
+- `out/interfaces.json`: per accession, partner → confident interface residues.
+  Written by `src/interfaces.ts`, read by `src/isoforms.ts`, absent partners
+  simply give no interface rows.
+- `src/types.ts` is the contract between pipeline and site. The pipeline owns
+  it; pages import types from it and never restate them.
+
+## House rules
+
+- **The bar:** add something only if it makes the answer to the one question
+  clearer to a biologist, a curator or someone with a transcript in hand.
+  Before adding a feature, get a skeptical subagent review that sees the site,
+  not your conclusion, and may answer "none".
+- **Numbers in prose come from the pipeline,** never typed by hand.
+- **Plain browsing.** No headline findings; statistics are there to say what
+  can be explored.
+- Code is copied from Interface explorer where it fits, never imported across
+  repos. `data/` is a download cache; seed it with hardlinks from the sibling
+  (`cp -al ../interface-atlas/data/{monomers,plddt,complexes,models,cif} data/`)
+  to skip re-downloading.
+- Worktree branch under `.claude/worktrees/`, fast-forward onto main. Commit;
+  don't push. The owner opens PRs and creates the GitHub repository.
+- Run only the tests for the files you touched while iterating; run the full
+  suite and typecheck once at the end. Repeat this rule in any subagent brief.
+- Self-explanatory code with minimal or no comments; no `any` or type casts,
+  inferred return types; nested ifs or ternaries instead of early returns;
+  bullet lists, not numbered ones, in markdown and tests.

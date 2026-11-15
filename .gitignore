@@ -1,0 +1,8 @@
+/data/
+/out/
+/dist/
+/.astro/
+*.log
+/_site/
+node_modules/
+.claude/

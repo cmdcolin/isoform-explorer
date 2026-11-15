@@ -1,0 +1,37 @@
+{
+  "name": "isoform-explorer",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.16.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "interfaces": "node src/interfaces.ts",
+    "isoforms": "node src/isoforms.ts",
+    "all": "pnpm interfaces && pnpm isoforms",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit && astro check --tsconfig web/tsconfig.json",
+    "format": "prettier --write src",
+    "check-links": "node src/checkLinks.ts dist"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@types/node": "^24.0.0",
+    "astro": "^7.4.10",
+    "playwright-core": "^1.65.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "arrowParens": "avoid",
+    "proseWrap": "always"
+  }
+}
