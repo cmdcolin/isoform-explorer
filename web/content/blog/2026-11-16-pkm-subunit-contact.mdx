@@ -17,6 +17,7 @@ heroAlt:
 ---
 
 import Html from '../../components/Html.astro'
+import { gene } from '../../lib/data.ts'
 import { FIGURE_TISSUES } from '../../lib/expression-figure.ts'
 import {
   expressionOf,
@@ -24,6 +25,7 @@ import {
   shareTable,
   tissueShare,
 } from '../../lib/expression.ts'
+import { sashimiFigure } from '../../lib/sashimi-figure.ts'
 import { story } from '../../lib/stories.ts'
 
 export const s = story('PKM', 'P14618-2')
@@ -71,8 +73,35 @@ the swapped stretch.
 
 ## Where M1's exon is included
 
-M1's and M2's exons are both joined to the same exon downstream, so the reads
-across each junction can be compared. In GTEx v8, the reads from M1's exon make up{' '}
+In the gene's full exon numbering, M1's exon is exon 9 and M2's is exon 10. Each
+is joined to exon 8 upstream and exon 11 downstream, so a read across any of
+those four junctions shows which exon its molecule carried. The sashimi plot
+draws all four, with M2's above the exons and M1's below, in five GTEx tissues
+and a chronic myeloid leukemia cell line.
+
+<Html
+  html={sashimiFigure(gene('PKM'), e, {
+    title: 'Reads across PKM exons 8 to 11 in GTEx v8',
+    names: { canonical: 'M2 (canonical)', isoform: 'M1' },
+    exons: [8, 11],
+    notes: { 9: 'M1 exon', 10: 'M2 exon' },
+    tissues: new Map([
+      ['Muscle - Skeletal', 'Skeletal muscle'],
+      ['Brain - Cerebellar Hemisphere', 'Cerebellar hemisphere'],
+      ['Heart - Left Ventricle', 'Heart left ventricle'],
+      ['Liver', 'Liver'],
+      ['Cells - Leukemia cell line (CML)', 'Leukemia cell line (CML)'],
+    ]),
+  })}
+/>
+
+In skeletal muscle the M1 arcs carry 1.6 and 2.1 million reads and the M2 arcs
+under 100,000 each; in liver and the leukemia cell line it is the other way
+round. The reads into M2's exon and out of it agree within 10% in every row,
+while M1's arc out of its exon has a fifth to a half fewer reads than its arc
+in, which we have not looked into.
+
+Counting only the junctions into exon 11, the reads from M1's exon make up{' '}
 {tissueShare(e, 'Muscle - Skeletal')} of those in skeletal muscle,{' '}
 {tissueShare(e, 'Brain - Cerebellar Hemisphere')} in cerebellar hemisphere and{' '}
 {tissueShare(e, 'Heart - Left Ventricle')} in heart left ventricle, against{' '}

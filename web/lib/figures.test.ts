@@ -67,11 +67,11 @@ test('the APP sashimi plot joins exon 6 to exon 7 for APP770 and to exon 9 for A
     absent: ['absent from APP695'],
     tissues: new Map([['Liver', 'Liver']]),
   })
-  expect(svg).toContain('APP770 junction, exon 6 → exon 7')
-  expect(svg).toContain('APP695 junction, exon 6 → exon 9')
+  expect(svg).toContain('APP770: exon 6 → exon 7 → exon 8 → exon 9')
+  expect(svg).toContain('APP695: exon 6 → exon 9')
   expect(svg).toContain('27,078 reads')
   expect(svg).toContain('384 reads')
-  expect(svg.match(/class="absent"/g)).toHaveLength(4)
+  expect(svg.match(/class="absent"/g)).toHaveLength(5)
 })
 
 test('the NDUFC2 sashimi plot lands isoform 4 69 bases into exon 2, skipping only coding bases', () => {
@@ -82,9 +82,9 @@ test('the NDUFC2 sashimi plot lands isoform 4 69 bases into exon 2, skipping onl
     absent: ['absent from isoform 4'],
     tissues: new Map([['Liver', 'Liver']]),
   })
-  expect(svg).toContain('Isoform 4 junction, exon 1 → 69 bases into exon 2')
+  expect(svg).toContain('Isoform 4: exon 1 → 69 bases into exon 2')
   expect(svg).toContain('1 read<')
-  expect(svg.match(/class="absent"/g)).toHaveLength(2)
+  expect(svg.match(/class="absent"/g)).toHaveLength(3)
 })
 
 test('the ZDHHC16 sashimi plot hatches exon 6 and the first 88 bases of exon 7', () => {
@@ -95,6 +95,19 @@ test('the ZDHHC16 sashimi plot hatches exon 6 and the first 88 bases of exon 7',
     absent: ['absent from isoform 3'],
     tissues: new Map([['Muscle - Skeletal', 'Skeletal muscle']]),
   })
-  expect(svg).toContain('Isoform 3 junction, exon 5 → 88 bases into exon 7')
-  expect(svg.match(/class="absent"/g)).toHaveLength(4)
+  expect(svg).toContain('Isoform 3: exon 5 → 88 bases into exon 7')
+  expect(svg.match(/class="absent"/g)).toHaveLength(5)
+})
+
+test('the PKM sashimi plot draws all four junctions of the mutually exclusive exons', () => {
+  const svg = sashimiFigure(gene('PKM'), expressionOf('P14618-2'), {
+    title: 'PKM',
+    names: { canonical: 'M2', isoform: 'M1' },
+    exons: [8, 11],
+    tissues: new Map([['Muscle - Skeletal', 'Skeletal muscle']]),
+  })
+  expect(svg).toContain('M2: exon 8 → exon 10 → exon 11')
+  expect(svg).toContain('M1: exon 8 → exon 9 → exon 11')
+  expect(svg).toContain('2,057,669 reads')
+  expect(svg.match(/class="exon only"/g)).toHaveLength(3)
 })

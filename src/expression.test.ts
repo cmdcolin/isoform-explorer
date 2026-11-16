@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { definingJunctions, readsBySample, tissueKey } from './expression.ts'
+import {
+  definingJunctions,
+  differingIntrons,
+  readsBySample,
+  tissueKey,
+} from './expression.ts'
 import type { Structure } from './types.ts'
 
 function structure(strand: number, exons: [number, number][]): Structure {
@@ -82,4 +87,29 @@ it('parses Snaptron sample counts and matches GTEx tissue names', () => {
   expect(tissueKey('Cells - EBV-transformed lymphocytes')).toBe(
     tissueKey('Cells_EBV-transformed_lymphocytes'),
   )
+})
+
+describe('differingIntrons', () => {
+  it('gives all four junctions of a pair of mutually exclusive exons', () => {
+    const canonical = structure(1, [
+      [100, 200],
+      [500, 600],
+      [700, 800],
+    ])
+    const swapped = structure(1, [
+      [100, 200],
+      [300, 400],
+      [700, 800],
+    ])
+    expect(differingIntrons(gene(canonical, swapped), 'P1-2')).toEqual({
+      isoform: [
+        [201, 299],
+        [401, 699],
+      ],
+      canonical: [
+        [201, 499],
+        [601, 699],
+      ],
+    })
+  })
 })

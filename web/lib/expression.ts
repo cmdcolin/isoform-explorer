@@ -10,12 +10,17 @@ export interface ExpressionCase {
   gene: string
   isoform: string
   junctions: Junctions
+  differing: Record<'isoform' | 'canonical', [number, number][]>
   transcriptsInGtex: string[]
   isoformReads: number
   canonicalReads: number
   isoformSamples: number
   samples: number
-  tissues: (TissueShare & { samples: number; isoformSamples: number })[]
+  tissues: (TissueShare & {
+    samples: number
+    isoformSamples: number
+    junctionReads: Record<string, number>
+  })[]
 }
 
 interface Expression {

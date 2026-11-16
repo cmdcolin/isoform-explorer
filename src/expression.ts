@@ -43,6 +43,29 @@ function introns(exons: [number, number][]) {
     .map(([start], index): Intron => [(sorted[index]?.[1] ?? 0) + 1, start - 1])
 }
 
+export function intronKey([start, end]: Intron) {
+  return `${start}-${end}`
+}
+
+export function differingIntrons(
+  gene: Pick<GeneRecord, 'structures'> & {
+    canonical: Pick<Isoform, 'accession'>
+  },
+  accession: string,
+) {
+  const canonical = introns(
+    gene.structures[gene.canonical.accession]?.exons ?? [],
+  )
+  const isoform = introns(gene.structures[accession]?.exons ?? [])
+  const keys = (list: Intron[]) => new Set(list.map(intronKey))
+  const inCanonical = keys(canonical)
+  const inIsoform = keys(isoform)
+  return {
+    isoform: isoform.filter(intron => !inCanonical.has(intronKey(intron))),
+    canonical: canonical.filter(intron => !inIsoform.has(intronKey(intron))),
+  }
+}
+
 export function definingJunctions(
   gene: Pick<GeneRecord, 'structures' | 'locus'> & {
     canonical: Pick<Isoform, 'accession'>
@@ -179,6 +202,16 @@ async function expressionCase(
     junctions.chromosome,
     junctions.canonical,
   )
+  const differing = differingIntrons(gene, isoform)
+  const differingReads = await Promise.all(
+    [...differing.isoform, ...differing.canonical].map(
+      async intron =>
+        [
+          intronKey(intron),
+          await junctionReads(junctions.chromosome, intron),
+        ] as const,
+    ),
+  )
   const tpm = await medianTpm(gene.gene)
   const ids = new Set(
     [
@@ -195,6 +228,7 @@ async function expressionCase(
     gene: gene.gene,
     isoform,
     junctions,
+    differing,
     transcriptsInGtex: [
       ...new Set(tpm.filter(t => ids.has(t.transcript)).map(t => t.transcript)),
     ],
@@ -218,6 +252,12 @@ async function expressionCase(
           ([, reads]) => reads,
         ),
         isoformSamples: inTissue(isoformReads, name).length,
+        junctionReads: Object.fromEntries(
+          differingReads.map(([key, reads]) => [
+            key,
+            sumBy(inTissue(reads, name), ([, count]) => count),
+          ]),
+        ),
         tpmShare: rows.length && total > 0 ? own / total : null,
       }
     }),
