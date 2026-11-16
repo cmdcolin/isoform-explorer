@@ -115,14 +115,14 @@ story. The same standard applies here.
   sentence saying what the site shows, and a simple diagram (a canonical
   protein, and an isoform with its domain missing), then a screenshot of a
   gene page's map (`site/preview.png`, ZDHHC16 with its DHHC domain hovered),
-  linked to that page and hidden on phones. The search box (gene,
-  UniProt accession, ENST, NM) comes next in its own section, not in the hero:
-  the owner found a search box front and center discouraging to visitors who
-  first want to know what the site is about; for the same reason the site
-  header has no search box. Then tiles of explorable counts
-  from `totals.json`, a card per blog post with its hero, and a closing note that the site compares sequences and points to
-  the expression post rather than straight to GTEx, whose per-transcript
-  numbers that post shows can mislead.
+  linked to that page and hidden on phones. Search (gene, UniProt accession,
+  ENST, NM) has its own page, linked from the header: the owner found a search
+  box front and center discouraging to visitors who first want to know what
+  the site is about. Then a card per blog post with its hero, and a closing
+  note that the site compares sequences and points to the expression post
+  rather than straight to GTEx, whose per-transcript numbers that post shows
+  can mislead. The home page has no tiles of counts: the owner found them
+  noisy and visitors prefer pictures; About and Browse keep the totals.
 - **Browse:** one sortable, filterable row per protein from `index.json`.
 - **Gene page (`/gene/<page>/`):** one per protein, one anchored section per
   isoform (`#P04637-2`), so a transcript search lands on its isoform.

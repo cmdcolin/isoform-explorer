@@ -56,7 +56,7 @@ test('a plain visit lists proteins by gene symbol, A to Z', () => {
   ])
 })
 
-test('a tile link keeps proteins with such an isoform, sorted by that count', () => {
+test('a has= link keeps proteins with such an isoform, sorted by that count', () => {
   const view = viewFrom(new URLSearchParams('has=targeting'))
   expect(view.sort).toBe('targeting')
   const kept = rowsFor(rows, texts, view)
@@ -69,7 +69,7 @@ test('a tile link keeps proteins with such an isoform, sorted by that count', ()
   expect(modelled.map(r => r.gene)).toEqual(['BBB', 'CCC'])
 })
 
-test('the count line restates the number the tile showed', () => {
+test('the count line restates the total for a has= filter', () => {
   const phrases = {
     targeting: 'missing a whole thing',
     modelled: 'missing modelled residues',

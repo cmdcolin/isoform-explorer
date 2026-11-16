@@ -2,30 +2,10 @@
 import { Image } from 'astro:assets'
 
 import Layout from '../layouts/Layout.astro'
-import { browseQuery } from '../lib/browse.ts'
-import { totals } from '../lib/data.ts'
-import { GROUPS } from '../lib/features.ts'
 import { isoformDiagram } from '../lib/isoform-diagram.ts'
-import { INTERFACE_MISSING, MODELLED_MISSING, groupMissing } from '../lib/labels.ts'
 import { posts } from '../lib/posts.ts'
 import { geneHref, href } from '../lib/site.ts'
 
-const t = totals()
-const browse = (view: Parameters<typeof browseQuery>[0]) => href(`browse/${browseQuery(view)}`)
-const scope = [
-  [t.proteins, 'reviewed human proteins with a described alternative isoform', browse({})],
-  [t.isoforms, 'alternative isoforms, each compared with its canonical sequence', browse({ sort: 'isoforms' })],
-  [t.withTranscript, 'of those isoforms with an Ensembl or RefSeq transcript', browse({ sort: 'transcripts' })],
-] as const
-const lacking = [
-  ...GROUPS.map(group => [t.lacking[group], groupMissing(group), browse({ has: group })] as const),
-  [
-    t.lacking.interface,
-    `${INTERFACE_MISSING}, among the ${t.interfaceProteins.toLocaleString()} proteins that have one`,
-    browse({ has: 'interface' }),
-  ],
-  [t.lacking.folded, MODELLED_MISSING, browse({ has: 'modelled' })],
-] as const
 const all = await posts()
 ---
 
@@ -55,35 +35,6 @@ const all = await posts()
         <a href={geneHref('ZDHHC16')}>Open the ZDHHC16 page</a>
       </figcaption>
     </figure>
-  </section>
-
-  <section>
-    <h2>What you can explore</h2>
-    <div class="tiles wide">
-      {
-        scope.map(([value, label, link]) => (
-          <a class="tile" href={link}>
-            <div class="value">{value.toLocaleString()}</div>
-            <div class="label">{label}</div>
-          </a>
-        ))
-      }
-    </div>
-    <h3>Alternative isoforms…</h3>
-    <div class="tiles wide">
-      {
-        lacking.map(([value, label, link]) => (
-          <a class="tile" href={link}>
-            <div class="value">{value.toLocaleString()}</div>
-            <div class="label">{label}</div>
-          </a>
-        ))
-      }
-    </div>
-    <p class="muted">
-      Missing means canonical residues with nothing in their place. A stretch replaced by other sequence is shown on each
-      gene page but not counted here. Each tile opens the protein table filtered or sorted to match.
-    </p>
   </section>
 
   <section>
