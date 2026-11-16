@@ -9,6 +9,8 @@ export interface SashimiOptions {
   exons: [first: number, last: number]
   notes?: Record<number, string>
   absent?: string[]
+  longest?: number
+  starts?: Record<Kind, string>
   tissues: Map<string, string>
 }
 
@@ -20,13 +22,16 @@ const TRACK_X = 205
 const TRACK_END = 740
 const INTRON = 44
 const BOX = 22
-const HEADER = 150
 const ROW = 196
 const MAX_STROKE = 14
 const TONE: Record<Kind, string> = { canonical: 'text-2', isoform: 'interface' }
 
 function overlaps([low, high]: Intron, [otherLow, otherHigh]: Intron) {
   return high >= otherLow && low <= otherHigh
+}
+
+function capital(text: string) {
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)}`
 }
 
 function reads(count: number) {
@@ -61,9 +66,24 @@ export function sashimiFigure(
       high,
       only,
     }))
-  const shown = ordered.filter(
-    e => e.number >= options.exons[0] && e.number <= options.exons[1],
-  )
+  const longestDrawn = options.longest ?? Infinity
+  const shown = ordered
+    .filter(e => e.number >= options.exons[0] && e.number <= options.exons[1])
+    .map((e, index) => {
+      const length = e.high - e.low + 1
+      const keepThree = index === 0
+      const keepLow = strand < 0 ? keepThree : !keepThree
+      return length > longestDrawn
+        ? {
+            ...e,
+            low: keepLow ? e.low : e.high - longestDrawn + 1,
+            high: keepLow ? e.low + longestDrawn - 1 : e.high,
+            length,
+            cut: keepThree ? ('left' as const) : ('right' as const),
+          }
+        : { ...e, length, cut: null }
+    })
+  const header = options.starts ? 178 : 150
   const bases = shown.reduce((sum, e) => sum + e.high - e.low + 1, 0)
   const scale =
     (TRACK_END - TRACK_X - INTRON * (shown.length - 1)) / Math.max(bases, 1)
@@ -125,15 +145,15 @@ export function sashimiFigure(
   const rise = (a: (typeof arcs)[number]) =>
     28 + 30 * ((a.to - a.from) / longest)
 
-  const [codingLow, codingHigh] = canonical.coding
+  const lows = canonical.exons.map(([low]) => low)
+  const highs = canonical.exons.map(([, high]) => high)
+  const transcriptEnds = [Math.min(...lows), Math.max(...highs)]
   const absent = placed
     .filter(e => !e.only)
     .flatMap(e => {
-      const kept = [
-        ...isoform.exons,
-        [e.low, codingLow - 1] satisfies Intron,
-        [codingHigh + 1, e.high] satisfies Intron,
-      ].filter(range => overlaps(range, [e.low, e.high]))
+      const kept = isoform.exons.filter(range =>
+        overlaps(range, [e.low, e.high]),
+      )
       const missing = kept.reduce<Intron[]>(
         (gaps, [low, high]) =>
           gaps.flatMap(([gl, gh]): Intron[] =>
@@ -144,10 +164,15 @@ export function sashimiFigure(
           ),
         [[e.low, e.high]],
       )
-      return missing.map(([low, high]) => {
-        const xs = [before(low), after(low), before(high), after(high)]
-        return { x0: Math.min(...xs), x1: Math.max(...xs) }
-      })
+      return missing
+        .filter(
+          ([low, high]) =>
+            !transcriptEnds.some(end => end >= low && end <= high),
+        )
+        .map(([low, high]) => {
+          const xs = [before(low), after(low), before(high), after(high)]
+          return { x0: Math.min(...xs), x1: Math.max(...xs) }
+        })
     })
 
   const exonBoxes = (cy: number, named: boolean) =>
@@ -164,8 +189,17 @@ export function sashimiFigure(
     placed
       .map(e => {
         const width = (e.high - e.low + 1) * scale
-        const note = options.notes?.[e.number]
-        return `<rect x="${e.x}" y="${cy - BOX / 2}" width="${width}" height="${BOX}" rx="3" class="exon${e.only ? ' only' : ''}" />${named ? `<text x="${e.x + width / 2}" y="${cy - BOX / 2 - 8}" class="exon-name">exon ${e.number}</text>${note ? `<text x="${e.x + width / 2}" y="${cy + BOX / 2 + 18}" class="note">${esc(note)}</text>` : ''}` : ''}`
+        const note =
+          options.notes?.[e.number] ??
+          (e.cut
+            ? `${e.cut === 'right' ? 'first' : 'last'} ${e.high - e.low + 1} of ${e.length.toLocaleString()} bases`
+            : undefined)
+        const at = e.cut === 'left' ? e.x + 14 : e.x + width - 14
+        const [bottom, top] = [cy + BOX / 2 + 5, cy - BOX / 2 - 5]
+        const cut = e.cut
+          ? `<path d="M${at - 7} ${bottom} L${at - 1} ${top} H${at + 5} L${at - 1} ${bottom} Z" class="cut-gap" /><path d="M${at - 7} ${bottom} L${at - 1} ${top} M${at - 1} ${bottom} L${at + 5} ${top}" class="cut" />`
+          : ''
+        return `<rect x="${e.x}" y="${cy - BOX / 2}" width="${width}" height="${BOX}" rx="3" class="exon${e.only ? ' only' : ''}" />${cut}${named ? `<text x="${e.x + width / 2}" y="${cy - BOX / 2 - 8}" class="exon-name">exon ${e.number}</text>${note ? `<text x="${e.x + width / 2}" y="${cy + BOX / 2 + 18}" class="note">${esc(note)}</text>` : ''}` : ''}`
       })
       .join('') +
     absent
@@ -180,15 +214,15 @@ export function sashimiFigure(
   const absentLines = options.absent ?? []
   const absentNote =
     absent.length && absentLines.length
-      ? `<path d="M${absentFrom} ${HEADER + 38} v8 H${absentTo} v-8" class="bracket" />${absentLines
+      ? `<path d="M${absentFrom} ${header + 38} v8 H${absentTo} v-8" class="bracket" />${absentLines
           .map(
             (line, index) =>
-              `<text x="${(absentFrom + absentTo) / 2}" y="${HEADER + 66 + index * 17}" class="absent-note">${esc(line)}</text>`,
+              `<text x="${(absentFrom + absentTo) / 2}" y="${header + 66 + index * 17}" class="absent-note">${esc(line)}</text>`,
           )
           .join('')}`
       : ''
   const rowsTop =
-    HEADER + 50 + 17 * absentLines.length + (absentLines.length ? 30 : 0)
+    header + 50 + 17 * absentLines.length + (absentLines.length ? 30 : 0)
 
   const rowData = [...options.tissues].flatMap(([name, label]) =>
     expression.tissues
@@ -217,13 +251,13 @@ export function sashimiFigure(
           return `<path d="M${a.from} ${y} C ${a.from} ${peak}, ${a.to} ${peak}, ${a.to} ${y}" fill="none" stroke="var(--${TONE[a.kind]})" stroke-width="${stroke}" stroke-linecap="round" /><text x="${(a.from + a.to) / 2}" y="${labelY}" class="reads">${reads(count)}</text>`
         })
         .join('')
-      return `<g><line x1="0" y1="${top}" x2="${WIDTH}" y2="${top}" class="rule" /><text x="0" y="${cy - 22}" class="tissue">${esc(row.label)}</text><text x="0" y="${cy - 4}" class="samples">${row.samples.toLocaleString()} samples</text><text x="0" y="${cy + 16}" class="share by-reads">${esc(options.names.isoform)} by reads: ${total ? percent(row.isoformReads / total) : '–'}</text><text x="0" y="${cy + 34}" class="share by-tpm">${esc(options.names.isoform)} by TPM: ${row.tpmShare === null ? 'not in GTEx' : percent(row.tpmShare)}</text>${exonBoxes(cy, false)}${drawn}</g>`
+      return `<g><line x1="0" y1="${top}" x2="${WIDTH}" y2="${top}" class="rule" /><text x="0" y="${cy - 22}" class="tissue">${esc(row.label)}</text><text x="0" y="${cy - 4}" class="samples">${row.samples.toLocaleString()} samples</text><text x="0" y="${cy + 16}" class="share by-reads">${esc(capital(options.names.isoform))} by reads: ${total ? percent(row.isoformReads / total) : '–'}</text><text x="0" y="${cy + 34}" class="share by-tpm">${esc(capital(options.names.isoform))} by TPM: ${row.tpmShare === null ? 'not in GTEx' : percent(row.tpmShare)}</text>${exonBoxes(cy, false)}${drawn}</g>`
     })
     .join('')
 
   const height = rowsTop + rowData.length * ROW + 4
   const legend = (y: number, kind: Kind) =>
-    `<line x1="0" y1="${y - 5}" x2="28" y2="${y - 5}" stroke="var(--${TONE[kind]})" stroke-width="5" stroke-linecap="round" /><text x="38" y="${y}" class="legend">${esc(`${options.names[kind]}: ${path(kind)}`)}</text>`
+    `<line x1="0" y1="${y - 5}" x2="28" y2="${y - 5}" stroke="var(--${TONE[kind]})" stroke-width="5" stroke-linecap="round" /><text x="38" y="${y}" class="legend">${esc(`${capital(options.names[kind])}: ${path(kind)}`)}</text>`
   const swatches = [
     ...(absent.length
       ? [
@@ -247,7 +281,24 @@ export function sashimiFigure(
         `<rect x="500" y="${58 + 22 * index}" width="28" height="16" rx="2" ${fill} /><text x="538" y="${72 + 22 * index}" class="legend">${esc(text)}</text>`,
     )
     .join('')
-  const label = `${options.title}. Arcs join the exons each junction connects, ${options.names.canonical}'s above and ${options.names.isoform}'s below, labelled with GTEx v8 read counts. ${rowData.map(r => `${r.label}: ${arcs.map(a => `${a.kind === 'canonical' ? options.names.canonical : options.names.isoform} ${a.donor} → ${a.acceptor}, ${reads(r.junctionReads[a.key] ?? 0)}`).join('; ')}`).join('. ')}.`
+  const startOf = (layout: { coding: [number, number] }) =>
+    strand < 0 ? layout.coding[1] : layout.coding[0]
+  const marks = (
+    options.starts
+      ? [
+          { at: startOf(canonical), label: options.starts.canonical },
+          { at: startOf(isoform), label: options.starts.isoform },
+        ]
+      : []
+  )
+    .map(m => ({ ...m, x: (before(m.at) + after(m.at)) / 2 }))
+    .toSorted((a, b) => a.x - b.x)
+    .map(({ x, label }, index) => {
+      const anchor = index === 0 ? 'end' : 'start'
+      return `<path d="M${x} ${header - BOX / 2 - 34} V${header + BOX / 2}" class="mark" /><path d="M${x - 5} ${header - BOX / 2 - 9} h10 l-5 7 z" class="mark-head" /><text x="${anchor === 'end' ? x - 4 : x + 4}" y="${header - BOX / 2 - 40}" class="mark-label" text-anchor="${anchor}">${esc(label)}</text>`
+    })
+    .join('')
+  const label = `${options.title}. Arcs join the exons each junction connects, ${capital(options.names.canonical)}'s above and ${options.names.isoform}'s below, labelled with GTEx v8 read counts. ${rowData.map(r => `${r.label}: ${arcs.map(a => `${a.kind === 'canonical' ? options.names.canonical : options.names.isoform} ${a.donor} → ${a.acceptor}, ${reads(r.junctionReads[a.key] ?? 0)}`).join('; ')}`).join('. ')}.`
   return `<div class="table-wrap sashimi-wrap"><svg class="sashimi" viewBox="0 0 ${WIDTH} ${height}" role="img" aria-label="${esc(label)}"><style>
 .sashimi { display: block; width: 100%; max-width: 760px; min-width: 560px; height: auto; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
 .sashimi text { fill: var(--text); }
@@ -268,5 +319,10 @@ export function sashimiFigure(
 .sashimi .by-tpm { fill: var(--caution); }
 .sashimi .reads { font-size: 12.5px; font-weight: 600; text-anchor: middle; }
 .sashimi .rule { stroke: var(--border); stroke-width: 1; }
-</style><defs><pattern id="${hatch}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--surface)" /><line x1="0" y1="0" x2="0" y2="6" stroke="var(--text-2)" stroke-width="2" /></pattern></defs><text x="0" y="20" class="title">${esc(options.title)}</text><text x="0" y="42" class="subtitle">Read 5′ to 3′ along the transcript; introns shortened. Line width is proportional to reads within each row.</text>${legend(72, 'canonical')}${legend(94, 'isoform')}${swatches}${exonBoxes(HEADER, true)}${absentNote}${rows}</svg></div>`
+.sashimi .cut-gap { fill: var(--surface); }
+.sashimi .cut { fill: none; stroke: var(--text-2); stroke-width: 1.5; }
+.sashimi .mark { stroke: var(--text); stroke-width: 1.5; }
+.sashimi .mark-head { fill: var(--text); }
+.sashimi .mark-label { font-size: 13px; font-weight: 600; }
+</style><defs><pattern id="${hatch}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--surface)" /><line x1="0" y1="0" x2="0" y2="6" stroke="var(--text-2)" stroke-width="2" /></pattern></defs><text x="0" y="20" class="title">${esc(options.title)}</text><text x="0" y="42" class="subtitle">Read 5′ to 3′ along the transcript; introns shortened. Line width is proportional to reads within each row.</text>${legend(72, 'canonical')}${legend(94, 'isoform')}${swatches}${exonBoxes(header, true)}${marks}${absentNote}${rows}</svg></div>`
 }

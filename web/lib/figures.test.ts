@@ -77,7 +77,7 @@ test('the APP sashimi plot joins exon 6 to exon 7 for APP770 and to exon 9 for A
 test('the NDUFC2 sashimi plot lands isoform 4 69 bases into exon 2, skipping only coding bases', () => {
   const svg = sashimiFigure(gene('NDUFC2'), expressionOf('O95298-2'), {
     title: 'NDUFC2',
-    names: { canonical: 'Canonical', isoform: 'Isoform 4' },
+    names: { canonical: 'canonical', isoform: 'isoform 4' },
     exons: [1, 2],
     absent: ['absent from isoform 4'],
     tissues: new Map([['Liver', 'Liver']]),
@@ -90,7 +90,7 @@ test('the NDUFC2 sashimi plot lands isoform 4 69 bases into exon 2, skipping onl
 test('the ZDHHC16 sashimi plot hatches exon 6 and the first 88 bases of exon 7', () => {
   const svg = sashimiFigure(gene('ZDHHC16'), expressionOf('Q969W1-3'), {
     title: 'ZDHHC16',
-    names: { canonical: 'Canonical', isoform: 'Isoform 3' },
+    names: { canonical: 'canonical', isoform: 'isoform 3' },
     exons: [5, 8],
     absent: ['absent from isoform 3'],
     tissues: new Map([['Muscle - Skeletal', 'Skeletal muscle']]),
@@ -110,4 +110,22 @@ test('the PKM sashimi plot draws all four junctions of the mutually exclusive ex
   expect(svg).toContain('M1: exon 8 → exon 9 → exon 11')
   expect(svg).toContain('2,057,669 reads')
   expect(svg.match(/class="exon only"/g)).toHaveLength(3)
+})
+
+test('the F2RL2 sashimi plot marks both start codons and draws exon 2 in part', () => {
+  const svg = sashimiFigure(gene('F2RL2'), expressionOf('O00254-2'), {
+    title: 'F2RL2',
+    names: { canonical: 'canonical', isoform: 'isoform 2' },
+    exons: [1, 2],
+    longest: 320,
+    starts: { canonical: 'M1', isoform: 'M23' },
+    tissues: new Map([['Nerve - Tibial', 'Tibial nerve']]),
+  })
+  expect(svg).toContain(
+    'Isoform 2: 130 bases before the end of exon 1 → exon 2',
+  )
+  expect(svg).toContain('first 320 of 3,161 bases')
+  expect(svg).toContain('text-anchor="end">M1<')
+  expect(svg).toContain('text-anchor="start">M23<')
+  expect(svg.match(/class="absent"/g)).toHaveLength(3)
 })

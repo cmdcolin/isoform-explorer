@@ -15,8 +15,11 @@ heroAlt:
   orange outline and its chain starts at residue 23.'
 ---
 
+import Html from '../../components/Html.astro'
 import Shot from '../../components/Shot.astro'
+import { gene } from '../../lib/data.ts'
 import { expressionOf, share, tissueShare } from '../../lib/expression.ts'
+import { sashimiFigure } from '../../lib/sashimi-figure.ts'
 import { story } from '../../lib/stories.ts'
 import genome from './figures/f2rl2-genome.jpg'
 
@@ -72,5 +75,32 @@ from {tissueShare(e, 'Heart - Left Ventricle')} in heart left ventricle to{' '}
 {tissueShare(e, 'Nerve - Tibial')} in tibial nerve, with no tissue standing out.
 [Exploring tissue-specific splicing](../2026-11-16-where-isoforms-are-made/) explains the
 count.
+
+The sashimi plot below draws both junctions into exon 2 in three tissues: the
+canonical one above the exons, from the end of exon 1, and isoform 2's below,
+from 130 bases earlier. The 130 bases isoform 2 leaves out hold the canonical
+start codon and the signal peptide, so its first start codon is in exon 2.
+
+<Html
+  html={sashimiFigure(gene('F2RL2'), e, {
+    title: 'Reads across F2RL2 exons 1 and 2 in GTEx v8',
+    names: { canonical: 'canonical', isoform: 'isoform 2' },
+    exons: [1, 2],
+    longest: 320,
+    starts: {
+      canonical: 'canonical start, M1',
+      isoform: 'isoform 2 start, M23',
+    },
+    absent: [
+      'absent from isoform 2: 130 bases, with the canonical',
+      'start codon and the signal peptide, residues 1–21',
+    ],
+    tissues: new Map([
+      ['Esophagus - Muscularis', 'Esophagus muscularis'],
+      ['Heart - Left Ventricle', 'Heart left ventricle'],
+      ['Nerve - Tibial', 'Tibial nerve'],
+    ]),
+  })}
+/>
 
 <a href={s.href}>Open isoform 2 on the F2RL2 page</a>.
