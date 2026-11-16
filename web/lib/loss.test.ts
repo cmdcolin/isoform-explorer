@@ -294,7 +294,7 @@ describe('the answer sentence', () => {
       novel: 14,
     })
     expect(answer(r, i)).toBe(
-      'Swaps 24 residues of the Ig-like 3 domain (77–100) for 14 different ones; nothing else is missing; in a replaced stretch: 1 modification.',
+      'Has 14 different residues in place of 24 residues of the Ig-like 3 domain (77–100); nothing else is missing; in a replaced stretch: 1 modification.',
     )
   })
 
@@ -310,7 +310,7 @@ describe('the answer sentence', () => {
     )
   })
 
-  test('an isoform with only an insertion carries every canonical residue', () => {
+  test('an isoform with only an insertion has every canonical residue', () => {
     const i = isoform({
       segments: [
         [1, 1, 50],
@@ -320,7 +320,7 @@ describe('the answer sentence', () => {
       novel: 4,
     })
     expect(answer(record({}), i)).toBe(
-      'Carries every canonical residue and inserts 4 residues the canonical lacks, at 50.',
+      'Has every canonical residue and 4 residues the canonical lacks, at 50.',
     )
   })
 })

@@ -1,5 +1,5 @@
 ---
-title: 'Where is an isoform made? Count the reads across its splice junction'
+title: 'Exploring tissue-specific splicing'
 date: '2026-11-16'
 order: 0
 description:
@@ -26,6 +26,7 @@ import {
   shareTable,
   tissueShare,
 } from '../../lib/expression.ts'
+import { diseaseHref, diseasesOfPage } from '../../lib/diseases.ts'
 import { geneHref } from '../../lib/site.ts'
 
 export const app = expressionOf('P05067-4')
@@ -33,6 +34,7 @@ export const ndufc2 = expressionOf('O95298-2')
 export const zdhhc16 = expressionOf('Q969W1-3')
 export const f2rl2 = expressionOf('O00254-2')
 export const pkm = expressionOf('P14618-2')
+export const alzheimer = diseasesOfPage('APP').find(d => d.acronym === 'AD1')
 
 Isoform explorer compares an isoform's sequence with the canonical protein's and
 computes nothing about where either is made. To answer that, you need RNA or
@@ -63,7 +65,10 @@ TPM share.
 ## APP695: highest in brain by TPM and by junction reads
 
 APP770, the canonical amyloid precursor protein, has a Kunitz protease inhibitor
-domain encoded by exon 7 and an OX-2 motif encoded by exon 8.
+domain encoded by exon 7 and an OX-2 motif encoded by exon 8. Variants in APP
+cause an inherited form of Alzheimer disease
+(<a href={alzheimer ? diseaseHref(alzheimer) : geneHref('APP')}>{alzheimer?.name}</a>
+in UniProt).
 
 <a href={geneHref('APP', 'P05067-4')}>APP695 skips both</a>. The junction share
 of APP695 is {tissueShare(app, 'Brain - Cerebellar Hemisphere')} in cerebellar

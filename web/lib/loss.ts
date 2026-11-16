@@ -462,7 +462,7 @@ function swapPhrase(effects: EditEffect[], features: Feature[]) {
   const [start, end] = envelope(runs)
   const host = swapHost(runs, features)
   const of = host ? ` of ${hostName(host)}` : ''
-  return `swaps ${removed === 1 ? `residue ${span(start, end)}${of}` : `${count(removed)} residues${of} (${span(start, end)})`} for ${added === 1 ? 'a different one' : `${count(added)} different ones`}`
+  return `has ${added === 1 ? 'a different residue' : `${count(added)} different residues`} in place of ${removed === 1 ? `residue ${span(start, end)}${of}` : `${count(removed)} residues${of} (${span(start, end)})`}`
 }
 
 export function residueClause(
@@ -487,16 +487,17 @@ export function residueClause(
           ),
         )
       : [
-          `swaps ${count(swaps.reduce((sum, c) => sum + c.replaced, 0))} residues in ${swaps.length} stretches for ${count(swaps.reduce((sum, c) => sum + c.swappedIn, 0))} different ones`,
+          `has ${count(swaps.reduce((sum, c) => sum + c.swappedIn, 0))} different residues in place of ${count(swaps.reduce((sum, c) => sum + c.replaced, 0))} residues in ${swaps.length} stretches`,
         ]
   const inserted = inserts.reduce((sum, e) => sum + e.novel, 0)
-  const insertPhrase = inserts.length
-    ? `inserts ${plural(inserted, 'residue')} the canonical lacks, at ${
+  const insertNoun = inserts.length
+    ? `${plural(inserted, 'residue')} the canonical lacks, at ${
         inserts.length === 1 && inserts[0]
           ? span(inserts[0].edit.start, inserts[0].edit.end)
           : `${inserts.length} places`
       }`
     : ''
+  const insertPhrase = insertNoun ? `has ${insertNoun}` : ''
   const tailPhrase = !tails.length
     ? ''
     : tails.length === 1 && missingRuns.length === 1
@@ -517,8 +518,8 @@ export function residueClause(
           'nothing else is missing',
         ].join('; ')
       : inserts.length
-        ? `carries every canonical residue and ${insertPhrase}`
-        : 'carries every canonical residue'
+        ? `has every canonical residue and ${insertNoun}`
+        : 'has every canonical residue'
 }
 
 export function answer(record: GeneRecord, isoform: Isoform) {

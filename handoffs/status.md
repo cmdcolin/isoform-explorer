@@ -1,9 +1,9 @@
 ---
 name: status
 description:
-  'Where Isoform explorer stands after its first build on 2026-11-15: what is
-  done, what is still filling in, what the owner must do to deploy, and what was
-  reviewed out. Read before picking up work or proposing a feature.'
+  'Where Isoform explorer stands on 2026-11-16: what is done, what the owner
+  must do to deploy, what is open and what was reviewed out. Read before
+  picking up work or proposing a feature.'
 ---
 
 # Status after the first build (2026-11-15)
@@ -18,8 +18,9 @@ file says where the work stands.
   losses on canonical coordinates, the index, totals and search lookups). A
   rerun with full caches needs no network, takes seconds, and leaves
   `git status` clean.
-- Site: home with search, browse, one gene page per protein with an anchored
-  section per isoform, About. A full build is about 10,600 pages and 400 MB.
+- Site: home, search, browse, one gene page per protein with an anchored
+  section per isoform, diseases, blog, About. A full build is about 10,600
+  gene pages and 4,451 disease pages.
 - One outside review of the built site (a reader told nothing of the design,
   then eight isoforms checked against UniProt's REST API, then the site checked
   against its own rules). UniProt-derived statements all matched. Its findings
@@ -35,6 +36,36 @@ file says where the work stands.
   their chains. Before committing `site/data`, check that `totals.json`'s
   `interfaceProteins` is not 0 and that `git diff` touches only what the change
   should.
+
+## Added on 2026-11-16
+
+- **Home** lost its tiles of counts; the owner found them noisy. It is the
+  hero, the post cards and a closing note.
+- **Blog:** six posts (PAR3, NDUFC2, ZDHHC16, PKM, CEBPB, and the junction
+  post, retitled "Exploring tissue-specific splicing"), each with a hero of a
+  different kind drawn by code; see `handoffs/design.md`. Titles lead with the
+  biology, and titles, descriptions and headings avoid giving things agency
+  (the claudish anti-ai-writing-tropes checklist).
+- **Diseases:** `pnpm diseases` writes `site/data/diseases.json` from
+  UniProt's disease comments (4,451 diseases over 3,154 proteins); `/diseases/`
+  lists them with a filter, and each `/disease/<slug>/` page draws the linked
+  genes' maps with each isoform's answer sentence. This reverses the earlier
+  "drop the disease fetch" cleanup, which removed an unused download.
+- **Generated sentences** use "has" in place of "swaps … for", "inserts" and
+  "carries": "Has 45 different residues in place of 45 residues of …".
+- **Prettier** ignores `*.mdx`; it splits `{' '}` across lines and breaks the
+  build.
+
+## Open from 2026-11-16
+
+- Run a full build and `pnpm check-links` before pushing; every build on
+  2026-11-16 was partial (`PAGES=`).
+- Home post cards fit each hero into 7:4, so the wide drawings (NDUFC2,
+  ZDHHC16, CEBPB, about 2.6:1) show small. Either relayout them nearer 7:4 or
+  add a per-post crop.
+- Candidate posts with a new kind of hero: LEF1 isoform 7 (lacks every
+  predicted β-catenin contact; a Wnt pathway cartoon) and NDUFV3 (MANE encodes
+  473 residues against UniProt's 108; a ruler drawn to scale).
 
 ## Deployment
 

@@ -122,7 +122,7 @@ function wire(form: HTMLFormElement) {
             result.kind === 'choose'
               ? `<p>${esc(result.intro)}</p>${listHtml(result.choices, names)}`
               : result.kind === 'miss'
-                ? `<p>${esc(result.reason)} <a href="${esc(about)}">About</a> says what is covered.</p>${
+                ? `<p>${esc(result.reason)} <a href="${esc(about)}">About</a> lists what is covered.</p>${
                     nearby.length
                       ? `<p class="muted">Gene symbols starting ${esc(query.kind === 'gene' ? query.key : '')}</p>${listHtml(nearby, names)}`
                       : ''

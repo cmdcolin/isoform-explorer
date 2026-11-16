@@ -180,7 +180,7 @@ export function structureMap(
           return `<g class="iso"><title>${esc(structure ? `${row.title}; exons of ${structure.transcript}` : row.title)}</title>${rowLabel(row, index === 0, top)}${
             structure
               ? transcriptSvg(place, structure, residuesOf, top)
-              : `<text class="none" x="${LEFT}" y="${top + 10}">No GENCODE transcript encodes this isoform's length</text>`
+              : `<text class="none" x="${LEFT}" y="${top + 10}">No GENCODE transcript has a coding length that fits this isoform</text>`
           }</g>`
         })
         .join('')}${projection(place, canonical, record.length, rowsBottom)}</svg>`
