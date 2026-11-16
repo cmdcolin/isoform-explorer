@@ -1,0 +1,18 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { gene } from '../../lib/data.ts'
+import { topologyFigure } from '../../lib/topology.ts'
+
+const record = gene('F2RL2')
+const isoform = record.isoforms.find(i => i.accession === 'O00254-2')
+const figure = isoform
+  ? topologyFigure(record, isoform, [
+      { start: 1, end: 21, name: 'signal peptide', tone: 'caution' },
+      { start: 22, end: 38, name: 'propeptide', tone: 'interface' },
+    ])
+  : ''
+---
+
+<Layout title="F2RL2 across the membrane" indexed={false}>
+  <div class="hero-figure"><Fragment set:html={figure} /></div>
+</Layout>

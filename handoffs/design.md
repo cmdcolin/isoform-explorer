@@ -120,8 +120,7 @@ story. The same standard applies here.
   the owner found a search box front and center discouraging to visitors who
   first want to know what the site is about; for the same reason the site
   header has no search box. Then tiles of explorable counts
-  from `totals.json`, three worked examples chosen by the pipeline's own
-  numbers, and a closing note that the site compares sequences and points to
+  from `totals.json`, a card per blog post with its hero, and a closing note that the site compares sequences and points to
   GTEx for expression.
 - **Browse:** one sortable, filterable row per protein from `index.json`.
 - **Gene page (`/gene/<page>/`):** one per protein, one anchored section per
@@ -140,6 +139,20 @@ story. The same standard applies here.
   - A link to Interface explorer for proteins with a disease annotation
     (`https://cmdcolin.github.io/interface-explorer/genes/?q=<gene>`), which is
     where ClinVar variants live. This site does not show variants.
+- **Blog (`/blog/<id>/`):** worked examples, one isoform per post, written in
+  MDX in `web/content/blog/`. Numbers and the quoted answer sentence come from
+  the gene record through `web/lib/stories.ts`, so they follow the data. Each
+  post has a hero of a different kind, retaken by `pnpm heroes`: a topology
+  drawing generated from UniProt features (`web/lib/topology.ts`, rendered on a
+  `figures/` page), the gene page's Gene + protein view with a feature
+  hovered, JBrowse's protein view loaded from the live site, and a chart of
+  GTEx data. A post may cite literature and public expression data to say
+  where an isoform is made, attributed to its source; the rules above still
+  hold for every sentence the site generates. GTEx transcript TPM is never
+  quoted alone: `pnpm expression` also counts reads across the isoform's own
+  splice junction, because the two can disagree completely (NDUFC2 isoform 4:
+  about 39% of the gene by TPM, 49 junction reads in all of GTEx). The
+  junction tallies are our count of public data, and posts say so.
 - **About:** scope, sources, each rule above, and what is left out.
 
 ## Data
@@ -186,12 +199,6 @@ story. The same standard applies here.
     residues of at least one predicted partner.
   - `lacking.folded`: isoforms missing at least one canonical residue with
     pLDDT ≥ 70 in the canonical model.
-- `site/data/examples.json`: `Example[]`, the home page's three worked
-  examples. Among isoforms with a transcript, ordered by fewest canonical
-  residues not carried over (then gene, isoform), each rule takes the first
-  isoform of a protein not already used: one missing a signal peptide in full;
-  one missing every transmembrane segment in full; one missing more than half
-  of a domain and, in full, an active site inside it.
 - `site/data/search/`: lookups from gene, accession, ENST and NM (versions
   dropped) to `<page>#<isoform accession>`. Split so the browser loads the
   transcript maps only when the query looks like a transcript: `genes.json`

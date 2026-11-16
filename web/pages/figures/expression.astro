@@ -1,0 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { expressionFigure } from '../../lib/expression-figure.ts'
+---
+
+<Layout title="Isoform share in GTEx, two ways" indexed={false}>
+  <div class="hero-figure"><Fragment set:html={expressionFigure()} /></div>
+</Layout>

@@ -1,0 +1,76 @@
+---
+title: 'PAR3 isoform 2 begins after the signal peptide'
+date: '2026-11-16'
+order: 1
+description:
+  "A shorter first exon moves PAR3's start codon to residue 23, past the signal
+  peptide. The isoform keeps the thrombin site and all seven transmembrane
+  helices."
+hero: './heroes/signal-peptide.jpg'
+heroAlt:
+  'Two drawings of PAR3 (F2RL2) crossing the membrane seven times. On the left,
+  the canonical protein’s tail outside the cell starts with the signal peptide,
+  residues 1–21, in orange, then the propeptide, 22–38, in blue. On the right,
+  isoform 2 has the same seven helices and loops, but residues 1–22 are a dashed
+  orange outline and its chain starts at residue 23.'
+---
+
+import Shot from '../../components/Shot.astro'
+import { expressionOf, share, tissueShare } from '../../lib/expression.ts'
+import { story } from '../../lib/stories.ts'
+import genome from './figures/f2rl2-genome.jpg'
+
+export const s = story('F2RL2', 'O00254-2')
+export const e = expressionOf('O00254-2')
+
+PAR3, encoded by _F2RL2_, is a protease-activated receptor. Thrombin cuts its
+tail outside the cell between residues 38 and 39, and UniProt annotates residues
+22–38 as a propeptide removed for receptor activation. Ahead of the propeptide,
+residues 1–21 are a signal peptide.
+
+The drawing above lays PAR3 across the membrane from UniProt's topology
+features, once for the canonical protein and once for isoform 2. The gene page
+sums up isoform {s.isoform.accession} in one sentence:
+
+> {s.answer}
+
+## Where isoform 2 starts
+
+_F2RL2_ has two exons, and the canonical start codon lies near the end of the
+first. Isoform 2's transcript ({s.isoform.transcripts.ensembl.join(', ')},
+{s.isoform.transcripts.refseq.join(', ')}) leaves exon 1 at an earlier splice
+site, upstream of that start codon, so its exon 1 is untranslated. The first
+start codon in the transcript is then the one for methionine 23, two bases into
+exon 2, and the protein runs from there to the canonical end:{' '}
+{s.isoform.length} residues against the canonical's {s.record.length}.
+
+<Shot
+  src={genome}
+  alt="JBrowse showing F2RL2 on chromosome 5 in the RefSeq and GENCODE tracks. In each track the upper F2RL2 transcript has a short yellow coding block in its first exon at the right; the lower one, isoform 2's, has only an untranslated first exon there."
+  href={s.genome}
+  open="Open the F2RL2 transcripts in JBrowse"
+>
+  _F2RL2_ on GRCh38 chromosome 5, on the minus strand, so it reads from right to
+  left. In both tracks the upper transcript is the canonical one, with a short
+  coding stretch (yellow) in exon 1 at the right. The lower is isoform 2's,
+  whose exon 1 is shorter and untranslated.
+</Shot>
+
+Isoform 2 keeps everything after residue 22: the rest of the propeptide, the
+thrombin site and all seven transmembrane helices.
+
+## How often the shorter first exon is used
+
+No paper we found studies isoform 2. Its RefSeq transcript comes from a cDNA of
+mesangial cells ([AK298585.1](https://www.ncbi.nlm.nih.gov/nuccore/AK298585.1)),
+and no peptide unique to it has been reported.
+
+GTEx v8's transcript TPM gives {s.isoform.transcripts.ensembl[0]} a median of 0
+in every tissue. The junction from the isoform's earlier splice site into exon 2
+is there all the same: it has {share(e)} of the reads into exon 2 across GTEx,
+from {tissueShare(e, 'Heart - Left Ventricle')} in heart left ventricle to{' '}
+{tissueShare(e, 'Nerve - Tibial')} in tibial nerve, with no tissue standing out.
+[Where is an isoform made?](../2026-11-16-where-isoforms-are-made/) explains the
+count.
+
+<a href={s.href}>Open isoform 2 on the F2RL2 page</a>.

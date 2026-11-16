@@ -1,22 +1,28 @@
 ---
+import type { ImageMetadata } from 'astro'
+import { getImage } from 'astro:assets'
+
 import '../styles/site.css'
 import { INTERFACE_EXPLORER, REPOSITORY, href } from '../lib/site.ts'
 
 interface Props {
   title?: string
   description?: string
-  nav?: 'browse' | 'search' | 'about'
+  nav?: 'browse' | 'search' | 'blog' | 'about'
   indexed?: boolean
+  image?: ImageMetadata
 }
 
 const DEFAULT_DESCRIPTION =
   'Explore every described human protein isoform beside its canonical protein, in residues, UniProt features, AlphaFold model confidence and predicted partner interfaces.'
-const { title, description = DEFAULT_DESCRIPTION, nav, indexed = true } = Astro.props
+const { title, description = DEFAULT_DESCRIPTION, nav, indexed = true, image } = Astro.props
+const preview = image ? (await getImage({ src: image, width: 1400, format: 'jpg' })).src : href('preview.png')
 const fullTitle = title ? `${title} · Isoform explorer` : 'Isoform explorer'
 const canonical = new URL(Astro.url.pathname, Astro.site)
 const links = [
   ['browse', 'Browse', 'browse/'],
   ['search', 'Search', 'search/'],
+  ['blog', 'Blog', 'blog/'],
   ['about', 'About', 'about/'],
 ] as const
 ---
@@ -33,6 +39,8 @@ const links = [
     <meta property="og:title" content={title ?? 'Isoform explorer: human protein isoforms'} />
     <meta property="og:description" content={description} />
     {indexed && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={new URL(preview, Astro.site)} />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href={href('logo.svg')} type="image/svg+xml" />
     <link rel="apple-touch-icon" href={href('apple-touch-icon.png')} />
   </head>

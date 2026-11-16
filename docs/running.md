@@ -30,8 +30,8 @@ committed). `pnpm all` runs the first two in order.
   `data/gencode_exons.json`, and their GENCODE transcript types into
   `data/gencode_types.json`), so a rerun needs no network. The canonical's
   exons number the map's Exons row; one transcript per isoform, the one
-  closest to the canonical's, is drawn in the gene view. Writes `site/data/genes/`, `index.json`, `totals.json`,
-  `examples.json` and the search maps in `site/data/search/`. With accessions it
+  closest to the canonical's, is drawn in the gene view. Writes `site/data/genes/`, `index.json`, `totals.json`
+  and the search maps in `site/data/search/`. With accessions it
   rewrites only those gene files, not the totals. It ends by saying how many
   proteins' model lists and how many models' pLDDT are still pending.
 - `pnpm proteome`: downloads AlphaFold DB's human proteome archive (a single
@@ -68,6 +68,17 @@ static files), with the base path `/isoform-explorer/`.
 - `pnpm dev`: development server at <http://localhost:4321/isoform-explorer/>.
 - `pnpm build`: writes the static site to `dist/`, one page per protein.
 - `pnpm preview`: serves `dist/` as it will be deployed.
+- `pnpm expression`: for each isoform in `CASES` in `src/expression.ts`, finds
+  the splice junction its GENCODE transcript has and the canonical's lacks,
+  counts reads across it and across the canonical junction from the same splice
+  site in every GTEx v8 sample (Snaptron's `gtexv2`), and fetches GTEx's median
+  transcript TPM. Writes `web/content/blog/data/expression.json`, which the
+  blog posts read; responses are cached in `data/expression/`.
+- `pnpm heroes [name ...]`: after a build, retakes the blog's hero and figure
+  screenshots in `web/content/blog/` with headless Chrome (`CHROME` overrides
+  `/usr/bin/google-chrome`). The JBrowse shots load the deployed site's
+  `jbrowse/config.json` and need the network. `PAGES=F2RL2,NDUFC2,ZDHHC16 pnpm
+  build` builds just the gene pages the shots use.
 - `pnpm check-links`: after a build, checks that every internal link in `dist/`
   points at a file that exists.
 - `pnpm test` and `pnpm typecheck`: unit tests (Vitest) and type checks of the

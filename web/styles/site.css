@@ -220,16 +220,102 @@ a.tile:hover {
   font-size: 13px;
 }
 
-.case {
-  margin: 0 0 16px;
-  padding: 4px 16px 12px;
+.post-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.post-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.post-card:hover {
+  border-color: var(--link);
+}
+
+.post-thumb img,
+.post-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 7 / 4;
+  object-fit: contain;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.posts {
+  list-style: none;
+  padding: 0;
+}
+
+.posts li {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+  align-items: start;
+  margin: 0 0 20px;
+}
+
+.posts a {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.posts time,
+.post > time {
+  display: block;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.post > p,
+.post > ul {
+  max-width: 760px;
+}
+
+.post-hero {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 16px 0 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
 }
 
-.case p {
-  max-width: 760px;
+.shot {
+  margin: 16px 0;
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.shot figcaption {
   color: var(--text-2);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .posts li {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }
 
 .note {
@@ -826,4 +912,16 @@ table.browse .protein {
   .terms dd {
     margin-bottom: 8px;
   }
+}
+
+.share-table caption {
+  text-align: left;
+  color: var(--text-2);
+  font-size: 14px;
+  padding-bottom: 6px;
+}
+
+.share-table td:not(:first-child),
+.share-table th:not(:first-child) {
+  text-align: right;
 }

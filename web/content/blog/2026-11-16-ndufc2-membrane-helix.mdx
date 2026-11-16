@@ -1,0 +1,70 @@
+---
+title: 'NDUFC2 isoform 4: a later splice site removes the only membrane helix'
+date: '2026-11-16'
+order: 2
+description:
+  'Exon 2 of the isoform 4 transcript starts 69 bases late, so the protein lacks
+  residues 56–78, including its single transmembrane helix, and keeps the rest
+  in frame.'
+hero: './heroes/alternative-acceptor.jpg'
+heroAlt:
+  'The NDUFC2 gene page in its Gene + protein view, with the transmembrane
+  helix, residues 56–75, highlighted. At the top, the exons of three
+  transcripts, where exon 2 of isoform 4’s begins later than the canonical’s.
+  Below, the same isoforms on the canonical’s 119 residues, with isoform 4’s bar
+  broken from residue 56 to 78.'
+---
+
+import { expressionOf } from '../../lib/expression.ts'
+import { story } from '../../lib/stories.ts'
+
+export const s = story('NDUFC2', 'O95298-2')
+export const canonical = s.record.canonical.transcripts.ensembl[0]
+export const e = expressionOf('O95298-2')
+
+NDUFC2 is a {s.record.length}-residue subunit of complex I, the first enzyme of
+the mitochondrial respiratory chain. UniProt annotates one transmembrane helix
+in it, residues 56–75. The gene page sums up isoform {s.isoform.accession}
+(UniProt's isoform {s.isoform.name}) in one sentence:
+
+> {s.answer}
+
+## Exon 2 without its first 69 bases
+
+The picture above is the gene page's Gene + protein view, with the helix
+highlighted. Its top half draws one GENCODE transcript per isoform. The
+canonical transcript, {canonical}, and isoform 4's,{' '}
+{s.isoform.transcripts.ensembl[0]}, both have three exons, but exon 2 of isoform
+4's begins 69 bases later, at a second splice acceptor inside the canonical
+exon.
+
+Since 69 bases are 23 codons, the reading frame holds. The protein lacks
+residues 56–78 and continues from residue 79 to the canonical end. On the
+protein map alone the gap could pass for a skipped exon; the gene view shows
+that all three exons are there and the second one is shorter.
+
+The view's lower half is the protein map. Exon 1 encodes residues 1 to 55, so
+the gap starts where exon 1 ends, and it covers the helix from end to end. The
+other alternative isoform, O95298-3, keeps the helix and differs from residue 77
+on.
+
+Without the helix, isoform 4 has no annotated segment that spans a membrane.
+Whether it is made as a protein or joins complex I is outside what the
+annotation shows.
+
+## How often isoform 4 is made
+
+Rarely, if at all, by the evidence we found. No paper studies it, and its RefSeq
+transcript rests on one EST from an ovarian adenocarcinoma cell line
+([BE740715.1](https://www.ncbi.nlm.nih.gov/nuccore/BE740715.1)). In GTEx v8, the
+junction that defines it has {e.isoformReads} reads in {e.isoformSamples} of{' '}
+{e.samples.toLocaleString()} samples, against{' '}
+{e.canonicalReads.toLocaleString()} for the canonical junction from the same
+splice site. No peptide unique to it has been reported.
+
+GTEx's transcript TPM says the opposite, crediting isoform 4 with over a third
+of the gene in every tissue.
+[Where is an isoform made? Check its splice junction first](../2026-11-16-where-isoforms-are-made/)
+compares the two measures.
+
+<a href={s.href}>Open isoform 4 on the NDUFC2 page</a>.

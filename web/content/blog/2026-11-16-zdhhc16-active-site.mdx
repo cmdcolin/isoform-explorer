@@ -1,0 +1,80 @@
+---
+title: 'ZDHHC16 isoform 3 lacks the catalytic cysteine'
+date: '2026-11-16'
+order: 3
+description:
+  'Two splice changes remove 39 residues from the palmitoyltransferase ZDHHC16,
+  among them the DHHC motif and the cysteine UniProt marks as its active site.'
+hero: './heroes/active-site.jpg'
+heroAlt:
+  'JBrowse with ZDHHC16 on chromosome 10 at the left, in RefSeq and GENCODE
+  tracks, and at the right the protein view of NM_198044.3: the AlphaFold DB
+  models of isoform 3 and of the canonical protein drawn as ribbons in two
+  colours and superposed, under an alignment of the genome-translated and model
+  sequences.'
+---
+
+import { expressionOf, share, tissueShare } from '../../lib/expression.ts'
+import { story } from '../../lib/stories.ts'
+
+export const s = story('ZDHHC16', 'Q969W1-3')
+export const e = expressionOf('Q969W1-3')
+
+ZDHHC16 is one of the human palmitoyltransferases named for their DHHC motif
+(aspartate, histidine, histidine, cysteine). UniProt annotates the DHHC domain
+at residues 155–205 and marks the motif's cysteine, C185, as the active site, an
+S-palmitoyl cysteine intermediate. The gene page sums up isoform{' '}
+{s.isoform.accession} in one sentence:
+
+> {s.answer}
+
+The removed stretch, residues 176–214, includes the whole motif, D182 to C185.
+
+## Two splice changes, 117 bases
+
+The gene page draws isoform 3 with GENCODE transcript{' '}
+{s.record.structures[s.isoform.accession]?.transcript}. Against the canonical
+transcript, it skips exon 6, which is 29 bases, and starts exon 7 88 bases late.
+Together that is 117 bases, or 39 codons, so the frame holds and the protein
+continues from residue 215 to the canonical end. UniProt maps isoform 3 to{' '}
+{s.isoform.transcripts.ensembl[0]} and{' '}
+{s.isoform.transcripts.refseq.join(', ')}.
+
+## The models in 3D
+
+The picture above is JBrowse's protein view, which the isoform 3 section of the
+gene page opens. It loads AlphaFold DB's model of isoform 3 and the canonical
+model, superposes them, and aligns each residue to the genome, so a residue
+picked in 3D can be found on the transcripts at the left. Each model is a
+prediction, and its pLDDT is the predictor's confidence.
+
+Isoform 3 also lacks the first 16 of the 21 residues of the fourth transmembrane
+helix (199–219).
+
+## Where isoform 3 is made
+
+No paper we found studies isoform 3. Its sequence comes from a cDNA of tonsil B
+cells ([BC033157.1](https://www.ncbi.nlm.nih.gov/nuccore/BC033157.1)), and no
+peptide unique to it has been reported by mass spectrometry, so the evidence is
+RNA only.
+
+The RNA evidence is plentiful. In our tally of GTEx v8 junction reads (see
+[the expression post](../2026-11-16-where-isoforms-are-made/) for the method),
+the isoform's junction, which skips exon 6 and enters exon 7 late, is in{' '}
+{e.isoformSamples.toLocaleString()} of {e.samples.toLocaleString()} samples and
+has {share(e)} of the reads at its splice site overall. The share varies by
+tissue:
+
+- {tissueShare(e, 'Muscle - Skeletal')} in skeletal muscle
+- {tissueShare(e, 'Heart - Left Ventricle')} in heart left ventricle
+- {tissueShare(e, 'Brain - Frontal Cortex (BA9)')} in frontal cortex
+- {tissueShare(e, 'Cells - Cultured fibroblasts')} in cultured fibroblasts and{' '}
+  {tissueShare(e, 'Esophagus - Mucosa')} in esophageal mucosa
+
+GTEx's transcript TPM for {s.isoform.transcripts.ensembl[0]} gives a similar
+pattern. Mice lacking ZDHHC16 develop cardiomyopathy
+([Zhou et al., 2015](https://pmc.ncbi.nlm.nih.gov/articles/PMC4697436/)), a
+finding about the gene. We found no study of what the isoform without the
+catalytic cysteine does in muscle or heart.
+
+<a href={s.href}>Open isoform 3 on the ZDHHC16 page</a>.

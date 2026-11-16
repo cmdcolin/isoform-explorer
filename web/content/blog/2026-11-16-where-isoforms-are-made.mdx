@@ -1,0 +1,143 @@
+---
+title: 'Where is an isoform made? Check its splice junction first'
+date: '2026-11-16'
+order: 0
+description:
+  "GTEx's transcript estimates put APP695 in brain, matching decades of work.
+  They also credit NDUFC2 isoform 4 with over a third of the gene, though its
+  splice junction is almost never seen."
+hero: './heroes/expression.jpg'
+heroAlt:
+  'Two dot plots of an isoform’s share of its gene across twelve GTEx tissues,
+  each measured two ways: blue circles for the share of reads at a shared splice
+  site that use the isoform’s junction, orange diamonds for its share of median
+  transcript TPM. For APP695 the two agree, at 50–79% in the three brain regions
+  and under 6% elsewhere. For NDUFC2 isoform 4 the diamonds sit near 40% in
+  every tissue while the circles sit at 0%.'
+---
+
+import Html from '../../components/Html.astro'
+import { FIGURE_TISSUES } from '../../lib/expression-figure.ts'
+import {
+  FETCHED,
+  expressionOf,
+  share,
+  shareTable,
+  tissueShare,
+} from '../../lib/expression.ts'
+import { geneHref } from '../../lib/site.ts'
+
+export const app = expressionOf('P05067-4')
+export const ndufc2 = expressionOf('O95298-2')
+export const zdhhc16 = expressionOf('Q969W1-3')
+export const f2rl2 = expressionOf('O00254-2')
+
+Isoform explorer compares an isoform's sequence with the canonical protein's and
+computes nothing about where either is made. To answer that, you need RNA or
+protein data from somewhere else, and the easiest numbers to find, GTEx's
+per-transcript expression, can mislead. This post compares them with a more
+direct count on two isoforms, then lists the public sources that measure
+isoforms rather than genes.
+
+## Two ways to measure an isoform's share
+
+GTEx v8 sequenced bulk RNA from 54 adult tissues. For each GENCODE transcript it
+reports TPM, which RSEM estimates by assigning each short read to the
+transcripts it could have come from. When the only sequence unique to an isoform
+is one splice junction, RSEM has little to go on.
+
+The direct count is the reads that cross that junction. For each isoform below,
+we took the splice junction its transcript has and the canonical's lacks, and
+the canonical junction that starts or ends at the same splice site. The junction
+share is the isoform's reads as a fraction of both. We counted reads in
+recount's realignment of the GTEx v8 samples through
+[Snaptron](https://snaptron.cs.jhu.edu/), grouped by tissue: our tally of public
+data on {FETCHED}, not a published result. `pnpm expression` in the repository
+reproduces it.
+
+In the chart above, blue circles are the junction share and orange diamonds the
+TPM share.
+
+## APP695: both measures put it in brain
+
+APP770, the canonical amyloid precursor protein, has a Kunitz protease inhibitor
+domain encoded by exon 7 and an OX-2 motif encoded by exon 8.
+
+<a href={geneHref('APP', 'P05067-4')}>APP695 skips both</a>. The junction share
+of APP695 is {tissueShare(app, 'Brain - Cerebellar Hemisphere')} in cerebellar
+hemisphere and {tissueShare(app, 'Brain - Frontal Cortex (BA9)')} in frontal
+cortex, against {tissueShare(app, 'Liver')} in liver, and the TPM share follows
+it.
+
+That matches what was measured long before RNA-seq. In 1988 the Kunitz exon was
+found in cDNAs from tissues outside the brain
+([Tanzi et al.](https://doi.org/10.1038/331528a0)). Ribonuclease protection in
+human tissues then put APP695 mRNA ahead of the Kunitz forms in cerebral cortex
+([Tanaka et al., 1989](<https://doi.org/10.1016/0006-291x(89)92760-5>)), and PCR
+found it predominant in brain and minor elsewhere, in rat and human
+([Kang and Müller-Hill, 1990](<https://doi.org/10.1016/0006-291x(90)90992-v>)).
+In rat brain cell cultures, APP695 mRNA was highest in neurons, and astrocytes
+had about three times more Kunitz-containing APP protein
+([Rohan de Silva et al., 1997](<https://doi.org/10.1016/s0169-328x(97)00045-4>)).
+
+<Html html={shareTable(app, FIGURE_TISSUES)} />
+
+## NDUFC2 isoform 4: the measures disagree
+
+<a href={geneHref('NDUFC2', 'O95298-2')}>NDUFC2 isoform 4</a> lacks the
+protein's only transmembrane helix, through a splice acceptor 69 bases inside
+exon 2. GTEx transcript TPM gives it over a third of the gene in every tissue,
+more than the canonical transcript. Reads tell a different story: the isoform's
+junction has {ndufc2.isoformReads} reads in {ndufc2.isoformSamples} of
+{ndufc2.samples.toLocaleString()} samples, and the canonical junction from the
+same splice site has {ndufc2.canonicalReads.toLocaleString()}. One ENCODE
+long-read sample, embryonic kidney
+([ENCFF529HGR](https://www.encodeproject.org/files/ENCFF529HGR/)), has 405
+full-length reads of the canonical transcript and none of isoform 4's.
+
+We have not traced why RSEM credits the isoform so heavily. Its transcript
+differs from the canonical in that one junction and in a shorter 3′ end, so
+reads in the coding exons fit both, and the shorter transcript may absorb them.
+Whatever the cause, a TPM table alone would have made a rarely seen isoform look
+like the major form.
+
+<Html html={shareTable(ndufc2, FIGURE_TISSUES)} />
+
+## The worked examples
+
+The three earlier posts each get the same check:
+
+- [ZDHHC16 isoform 3](../2026-11-16-zdhhc16-active-site/), which lacks the
+  catalytic cysteine, has {share(zdhhc16)} of junction reads overall and{' '}
+  {tissueShare(zdhhc16, 'Muscle - Skeletal')} in skeletal muscle, and TPM
+  agrees.
+- [PAR3 isoform 2](../2026-11-16-par3-signal-peptide/), which starts after the
+  signal peptide, has {share(f2rl2)} of junction reads, though RSEM gives it 0
+  TPM in every tissue.
+- [NDUFC2 isoform 4](../2026-11-16-ndufc2-membrane-helix/) is the case above.
+
+## Public sources that measure isoforms
+
+- **Transcript expression by tissue:** [GTEx](https://gtexportal.org/) has an
+  API (`medianTranscriptExpression`) and bulk files, under its own terms of use.
+  The [Human Protein Atlas](https://www.proteinatlas.org/) shows RNA by isoform
+  on each gene's Isoform tab and offers a transcript download under CC BY 4.0.
+- **Whether a splice is made at all:** [Snaptron](https://snaptron.cs.jhu.edu/)
+  and [recount3](https://rna.recount.bio/) give junction counts for GTEx, TCGA
+  and public SRA samples.
+- **Exon inclusion by tissue:** [VastDB](https://vastdb.crg.eu/) and
+  [ASCOT](http://ascot.cs.jhu.edu/) report percent spliced in for exons and
+  splice sites across tissues and cell types.
+- **Full-length molecules:** [ENCODE](https://www.encodeproject.org/) long-read
+  RNA-seq quantifies transcripts in over 300 samples with no reuse restrictions;
+  GTEx's long-read set
+  ([Glinos et al., 2022](https://pubmed.ncbi.nlm.nih.gov/35922509/)) covers 88
+  samples.
+- **Single cells:** isoform-level single-cell data are mostly brain studies. A
+  long-read single-cell atlas across 26 tissues
+  ([Mantri et al., 2026](https://pmc.ncbi.nlm.nih.gov/articles/PMC13596200/)) is
+  a preprint, with data under CC BY 4.0.
+- **Protein:** [PeptideAtlas](https://peptideatlas.org/) maps peptides to
+  UniProt isoform accessions. A peptide found in only one isoform is evidence
+  for that isoform, and you have to filter for those yourself. None of the three
+  worked examples has one.

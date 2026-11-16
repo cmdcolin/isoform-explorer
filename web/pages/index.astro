@@ -1,11 +1,13 @@
 ---
+import { Image } from 'astro:assets'
+
 import Layout from '../layouts/Layout.astro'
 import { browseQuery } from '../lib/browse.ts'
-import { examples, gene, totals } from '../lib/data.ts'
-import { exampleSentence } from '../lib/examples.ts'
+import { totals } from '../lib/data.ts'
 import { GROUPS } from '../lib/features.ts'
 import { isoformDiagram } from '../lib/isoform-diagram.ts'
 import { INTERFACE_MISSING, MODELLED_MISSING, groupMissing } from '../lib/labels.ts'
+import { posts } from '../lib/posts.ts'
 import { geneHref, href } from '../lib/site.ts'
 
 const t = totals()
@@ -24,7 +26,7 @@ const lacking = [
   ],
   [t.lacking.folded, MODELLED_MISSING, browse({ has: 'modelled' })],
 ] as const
-const worked = examples().map(example => ({ example, sentence: exampleSentence(example, gene(example.page)) }))
+const all = await posts()
 ---
 
 <Layout>
@@ -85,20 +87,18 @@ const worked = examples().map(example => ({ example, sentence: exampleSentence(e
   </section>
 
   <section>
-    <h2>Three examples</h2>
-    {
-      worked.map(({ example, sentence }) => (
-        <div class="case">
-          <h3>
-            {example.gene} <span class="muted">{example.protein}</span>
-          </h3>
-          <p>{sentence}</p>
-          <a href={geneHref(example.page, example.isoform)}>
-            Open isoform {example.name} on the {example.gene} page
+    <h2>Worked examples</h2>
+    <div class="post-cards">
+      {
+        all.map(post => (
+          <a class="post-card" href={href(`blog/${post.id}/`)}>
+            <Image src={post.data.hero} alt="" widths={[360, 720]} sizes="(max-width: 640px) calc(100vw - 32px), 360px" />
+            <strong>{post.data.title}</strong>
+            <span class="muted">{post.data.description}</span>
           </a>
-        </div>
-      ))
-    }
+        ))
+      }
+    </div>
   </section>
   <p class="note">
     Isoform explorer compares sequences. For where and how much each transcript is expressed, see{' '}

@@ -1,0 +1,34 @@
+---
+import { Image } from 'astro:assets'
+
+import Layout from '../../layouts/Layout.astro'
+import { posts } from '../../lib/posts.ts'
+import { href } from '../../lib/site.ts'
+
+const all = await posts()
+---
+
+<Layout
+  title="Blog"
+  description="Worked examples of what an alternative isoform lacks, one protein at a time."
+  nav="blog"
+>
+  <h1>Blog</h1>
+  <p class="lede">Worked examples of what an alternative isoform lacks, one protein at a time.</p>
+  <ul class="posts">
+    {
+      all.map(post => (
+        <li>
+          <a class="post-thumb" href={href(`blog/${post.id}/`)} tabindex="-1" aria-hidden="true">
+            <Image src={post.data.hero} alt="" widths={[240, 480]} sizes="240px" />
+          </a>
+          <div>
+            <a href={href(`blog/${post.id}/`)}>{post.data.title}</a>
+            <time datetime={post.data.date}>{post.data.date}</time>
+            <p class="muted">{post.data.description}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+</Layout>

@@ -211,19 +211,6 @@ export interface Totals {
   lacking: Record<FeatureGroup | 'interface' | 'folded', number>
 }
 
-export interface Example {
-  kind: 'signal' | 'transmembrane' | 'activeSite'
-  page: string
-  gene: string
-  protein: string
-  isoform: string
-  name: string
-  transcript: string
-  feature: Feature
-  missing: number
-  replaced: number
-}
-
 /**
  * Upper-case gene symbols, accessions and versionless ENST, ENSG, NM and NP ids
  * to `page#isoform`, or to `page` for ids not tied to an isoform.

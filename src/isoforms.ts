@@ -40,7 +40,6 @@ import {
 import type { Edit as SequenceEdit, IsoformEdits } from './sequences.ts'
 import { EDIT_PREVIEW, FEATURE_GROUPS, SEARCH } from './types.ts'
 import type {
-  Example,
   Feature,
   FeatureGroup,
   FeatureLoss,
@@ -73,7 +72,6 @@ export const UNFOLDED_PLDDT = 50
 export const INTERFACE_LOST_SHARE = 0.5
 export const SWAP_SHARE = 0.5
 const BANDS = [90, FOLDED_PLDDT, UNFOLDED_PLDDT, 0]
-const MOST = 0.5
 
 type Fate = 'kept' | 'missing' | 'replaced'
 
@@ -778,93 +776,6 @@ export function lookups(genes: GeneRecord[]) {
   } satisfies Record<keyof typeof SEARCH, Lookup>
 }
 
-function lackedOfType(gene: GeneRecord, isoform: Isoform, type: string) {
-  return isoform.features.filter(loss => {
-    const feature = gene.features[loss[0]]
-    return feature?.type === type && lacksInFull(feature, loss)
-  })
-}
-
-function signalLacked(gene: GeneRecord, isoform: Isoform) {
-  return lackedOfType(gene, isoform, 'Signal')[0]?.[0]
-}
-
-function everyTransmembraneLacked(gene: GeneRecord, isoform: Isoform) {
-  const segments = gene.features.filter(f => f.type === 'Transmembrane')
-  const lacked = lackedOfType(gene, isoform, 'Transmembrane')
-  return segments.length > 0 && lacked.length === segments.length
-    ? lacked[0]?.[0]
-    : undefined
-}
-
-function domainWithActiveSiteLacked(gene: GeneRecord, isoform: Isoform) {
-  const activeSites = lackedOfType(gene, isoform, 'Active site').flatMap(
-    ([index]) => gene.features[index] ?? [],
-  )
-  return isoform.features.find(([index, missing]) => {
-    const domain = gene.features[index]
-    return domain?.type === 'Domain' &&
-      missing > MOST * (domain.end - domain.start + 1)
-      ? activeSites.some(
-          site => site.start >= domain.start && site.end <= domain.end,
-        )
-      : false
-  })?.[0]
-}
-
-const EXAMPLE_RULES = {
-  signal: signalLacked,
-  transmembrane: everyTransmembraneLacked,
-  activeSite: domainWithActiveSiteLacked,
-} satisfies Record<
-  Example['kind'],
-  (gene: GeneRecord, isoform: Isoform) => number | undefined
->
-
-export function examples(genes: GeneRecord[]) {
-  const candidates = genes
-    .flatMap(gene => gene.isoforms.map(isoform => ({ gene, isoform })))
-    .filter(({ isoform }) => hasTranscript(isoform))
-    .sort(
-      (a, b) =>
-        a.isoform.missing +
-          a.isoform.replaced -
-          (b.isoform.missing + b.isoform.replaced) ||
-        compareText(a.gene.gene, b.gene.gene) ||
-        compareText(a.isoform.accession, b.isoform.accession),
-    )
-  const used = new Set<string>()
-  const chosen: Example[] = []
-  for (const kind of ['signal', 'transmembrane', 'activeSite'] as const) {
-    const match = candidates
-      .filter(({ gene }) => !used.has(gene.page))
-      .flatMap(({ gene, isoform }) => {
-        const index = EXAMPLE_RULES[kind](gene, isoform)
-        const feature = index === undefined ? undefined : gene.features[index]
-        return feature ? [{ gene, isoform, feature }] : []
-      })[0]
-    if (match) {
-      used.add(match.gene.page)
-      chosen.push({
-        kind,
-        page: match.gene.page,
-        gene: match.gene.gene,
-        protein: match.gene.protein,
-        isoform: match.isoform.accession,
-        name: match.isoform.name,
-        transcript:
-          match.isoform.transcripts.ensembl[0] ??
-          match.isoform.transcripts.refseq[0] ??
-          '',
-        feature: match.feature,
-        missing: match.isoform.missing,
-        replaced: match.isoform.replaced,
-      })
-    }
-  }
-  return chosen
-}
-
 export function pageNames(entries: UniProtEntry[]) {
   const symbol = (entry: UniProtEntry) =>
     (geneOf(entry) || accessionOf(entry)).replace(/[^\w.-]/g, '-')
@@ -947,7 +858,6 @@ async function main(workers = '8', ...accessions: string[]) {
       genes.map(indexRow).sort((a, b) => compareText(a.page, b.page)),
     )
     writeJson(join(SITE_DATA, 'totals.json'), summary, 2)
-    writeJson(join(SITE_DATA, 'examples.json'), examples(genes), 2)
     const found = lookups(genes)
     for (const kind of ['genes', 'accessions', 'ensembl', 'refseq'] as const) {
       writeJson(join(SITE_DATA, SEARCH[kind]), found[kind])

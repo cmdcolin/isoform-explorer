@@ -8,7 +8,6 @@ import {
   alphaFoldDb,
   bandRuns,
   decayOf,
-  examples,
   fates,
   featureLosses,
   featurePositions,
@@ -515,35 +514,6 @@ describe('summaries', () => {
       NP_1: ['G1#P1-2'],
       NP_9: ['G1'],
     })
-  })
-
-  it('picks worked examples by rule, smallest change first', () => {
-    const tm = gene({
-      page: 'TM',
-      gene: 'TM',
-      features: [transmembrane],
-      isoforms: [
-        isoform({
-          accession: 'P2-2',
-          missing: 21,
-          transcripts: {
-            ensembl: ['ENST2.1'],
-            refseq: [],
-            refseqProteins: [],
-            maneSelect: false,
-            decay: [],
-            onlyDecay: false,
-          },
-          features: [[0, 21, 0]],
-        }),
-      ],
-    })
-    expect(
-      examples([record, tm]).map(e => [e.kind, e.page, e.feature.type]),
-    ).toEqual([
-      ['signal', 'G1', 'Signal'],
-      ['transmembrane', 'TM', 'Transmembrane'],
-    ])
   })
 })
 

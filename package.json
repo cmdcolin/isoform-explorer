@@ -18,10 +18,13 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit && astro check --tsconfig web/tsconfig.json",
     "format": "prettier --write src",
-    "check-links": "node src/checkLinks.ts dist"
+    "check-links": "node src/checkLinks.ts dist",
+    "heroes": "node src/heroes.ts",
+    "expression": "node src/expression.ts"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
+    "@astrojs/mdx": "^8.1.6",
     "@types/node": "^24.0.0",
     "astro": "^7.4.10",
     "playwright-core": "^1.65.0",
