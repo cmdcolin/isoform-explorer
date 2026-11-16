@@ -1,5 +1,4 @@
 ---
-import Search from '../components/Search.astro'
 import Layout from '../layouts/Layout.astro'
 import { browseQuery } from '../lib/browse.ts'
 import { examples, gene, totals } from '../lib/data.ts'
@@ -26,7 +25,6 @@ const lacking = [
   [t.lacking.folded, MODELLED_MISSING, browse({ has: 'modelled' })],
 ] as const
 const worked = examples().map(example => ({ example, sentence: exampleSentence(example, gene(example.page)) }))
-const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']
 ---
 
 <Layout>
@@ -55,19 +53,6 @@ const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']
         <a href={geneHref('ZDHHC16')}>Open the ZDHHC16 page</a>
       </figcaption>
     </figure>
-  </section>
-
-  <section>
-    <h2>Look up a gene or transcript</h2>
-    <p>A gene, a UniProt accession, or an Ensembl or RefSeq transcript opens the protein's page at that isoform.</p>
-    <Search />
-    <p class="search-tries muted">
-      Try {tries.map((value, index) => (
-        <>
-          <button type="button" class="link-button" data-search-example="search">{value}</button>{index < tries.length - 1 ? ', ' : ''}
-        </>
-      ))}
-    </p>
   </section>
 
   <section>
