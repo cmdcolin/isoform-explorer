@@ -776,3 +776,50 @@ table.browse .protein {
     margin-bottom: 6px;
   }
 }
+
+.architecture {
+  margin: 20px 0 8px;
+}
+
+.architecture-scroll {
+  overflow-x: auto;
+}
+
+.architecture svg {
+  display: block;
+  width: 100%;
+  min-width: 760px;
+  height: auto;
+  border-radius: 8px;
+}
+
+.architecture figcaption {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.terms {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+}
+
+.terms dt {
+  font-weight: 600;
+}
+
+.terms dd {
+  margin: 0;
+}
+
+@media (max-width: 520px) {
+  .terms {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .terms dd {
+    margin-bottom: 8px;
+  }
+}

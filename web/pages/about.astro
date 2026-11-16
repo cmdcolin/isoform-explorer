@@ -1,21 +1,26 @@
 ---
 import { CONFIDENT, CONTACT, MIN_PLDDT } from '../../src/interfaces.ts'
-import { FOLDED_PLDDT, INTERFACE_LOST_SHARE, SWAP_SHARE, UNFOLDED_PLDDT } from '../../src/isoforms.ts'
-import { FEATURE_GROUPS } from '../../src/types.ts'
+import { FOLDED_PLDDT, INTERFACE_LOST_SHARE, SWAP_SHARE } from '../../src/isoforms.ts'
 import Layout from '../layouts/Layout.astro'
+import { architectureSvg } from '../lib/architecture.ts'
 import { totals } from '../lib/data.ts'
-import { GROUPS, GROUP_LABELS } from '../lib/features.ts'
 import { share } from '../lib/labels.ts'
-import { INTERFACE_EXPLORER, JBROWSE } from '../lib/site.ts'
+import { INTERFACE_EXPLORER, JBROWSE, REPOSITORY } from '../lib/site.ts'
 
 const t = totals()
 const n = (value: number) => value.toLocaleString()
 
-const groups = GROUPS.map(group => ({
-  group,
-  label: GROUP_LABELS[group],
-  types: FEATURE_GROUPS[group].join(', '),
-}))
+const svg = architectureSvg({ proteins: t.proteins, isoforms: t.isoforms, ipsae: CONFIDENT, contact: CONTACT })
+
+const terms = [
+  ['Missing', 'canonical residues with nothing in their place'],
+  ['Replaced', `canonical residues swapped for other sequence at least ${share(SWAP_SHARE)} as long`],
+  ['Novel', 'isoform residues absent from the canonical protein'],
+  ['Feature lost', 'a UniProt feature of the canonical protein that overlaps missing residues'],
+  ['Confidently modelled', `pLDDT ≥ ${FOLDED_PLDDT} in the canonical AlphaFold DB monomer`],
+  ['Interface residue', `within ${CONTACT} Å of the partner, pLDDT ≥ ${MIN_PLDDT}, in a complex with ipSAE ≥ ${CONFIDENT}`],
+  ['Interface lost', `at least ${share(INTERFACE_LOST_SHARE)} of one partner's interface residues missing`],
+] as const
 
 const references = [
   ['The UniProt Consortium 2025. UniProt: the Universal Protein Knowledgebase in 2025. Nucleic Acids Res.', 'https://doi.org/10.1093/nar/gkae1010'],
@@ -28,171 +33,34 @@ const references = [
 ---
 
 <Layout title="About" nav="about">
+  <h1>About</h1>
+  <p class="lede">
+    Isoform explorer draws each alternative isoform of the {n(t.proteins)} reviewed human UniProt entries that describe
+    one on its canonical protein's sequence, and compares the two by residue, feature, model confidence and predicted
+    partner interface.
+    {t.modelsPending > 0 && <> Confidence for {n(t.modelsPending)} AlphaFold DB models is still being fetched.</>}
+  </p>
+
+  <figure class="architecture">
+    <div class="architecture-scroll" role="img" aria-label="Pipeline diagram. UniProt entries, AlphaFold DB complexes and monomers, Ensembl transcript places and GENCODE 49 exons feed one step that compares each isoform with its canonical protein and writes one JSON file per protein. The Astro site reads those files and links to JBrowse 2, which shows GENCODE and RefSeq transcripts on hg38.">
+      <Fragment set:html={svg} />
+    </div>
+    <figcaption>
+      <span><a href={`${REPOSITORY}/blob/main/docs/running.md`}>Running the pipeline</a> lists each step's command.</span>
+    </figcaption>
+  </figure>
+
   <div class="prose">
-    <h1>About</h1>
-    <p class="lede">
-      Isoform explorer draws each alternative isoform UniProt describes on its canonical protein's sequence, and lists
-      where the two differ in residues, features, confidently modelled structure and predicted partner interfaces, each
-      item from a named source.
-    </p>
+    <h2>Terms</h2>
+    <dl class="terms">
+      {terms.map(([term, rule]) => (<><dt>{term}</dt><dd>{rule}</dd></>))}
+    </dl>
 
-    <h2>Scope</h2>
+    <h2>Related data</h2>
     <ul>
-      <li>
-        Every reviewed human UniProt entry that describes at least one alternative isoform: {n(t.proteins)} proteins
-        and {n(t.isoforms)} alternative isoforms. The canonical isoform of each is the reference, never counted among
-        them.
-      </li>
-      <li>
-        Of the alternative isoforms, {n(t.withTranscript)} have at least one Ensembl or RefSeq transcript that UniProt
-        maps to them; the rest are reachable by gene or accession only.
-      </li>
-      <li>
-        AlphaFold DB has a model of exactly the sequence for {n(t.withModel)} alternative isoforms, and a full-length
-        model of the canonical sequence for {n(t.canonicalModels)} proteins. For {n(t.modelsPending)} of these models
-        the confidence (pLDDT) is not fetched yet, so their counts of confidently modelled residues are blank for now.
-      </li>
-      <li>
-        For {n(t.maneSelectNotCanonical)} proteins the MANE Select transcript encodes an alternative isoform rather than
-        UniProt's canonical one. Their pages say so, since every loss here is measured against the canonical.
-      </li>
-      <li>
-        One page per protein and one section per isoform. A gene symbol, UniProt accession, Ensembl transcript (ENST) or
-        RefSeq transcript (NM) leads to the isoform it encodes.
-      </li>
-      <li>
-        "If" is deliberate. The site says nothing about whether, where or how much a transcript is expressed.
-      </li>
-    </ul>
-
-    <h2>Sources</h2>
-    <ul>
-      <li>
-        <strong><a href="https://www.uniprot.org/">UniProt</a>:</strong> the canonical sequence (UniProt's "displayed"
-        isoform), the alternative-sequence edits that define every other isoform, the canonical protein's sequence
-        features, and UniProt's note on each isoform.
-      </li>
-      <li>
-        <strong>Transcripts:</strong> Ensembl and RefSeq transcripts come from UniProt's cross-references, which name the isoform each transcript encodes
-        or list it under the entry without naming one; a search for such a transcript says so. The MANE Select transcript is marked from the same cross-references.
-      </li>
-      <li>
-        <strong>Exons:</strong> the map's Exons row and the junction cuts through each isoform bar come from the
-        <a href="https://www.gencodegenes.org/human/release_49.html">GENCODE 49</a> exons and coding sequence of an
-        Ensembl transcript UniProt maps to the canonical isoform, used only when its coding length matches the canonical
-        sequence. Exons are numbered along that transcript.
-      </li>
-      <li>
-        <strong><a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> monomers:</strong> per-residue confidence (pLDDT)
-        of the canonical protein's model, and the isoform's own model where AlphaFold DB has one.
-      </li>
-      <li>
-        <strong>AlphaFold DB complexes:</strong> heterodimer and homodimer predictions of the canonical protein with its
-        partners, the same set <a href={INTERFACE_EXPLORER}>Interface explorer</a> uses.
-      </li>
-      <li>
-        <strong><a href={JBROWSE}>JBrowse 2</a>:</strong> transcripts on the hg38 genome, from NCBI RefSeq (curated) and
-        GENCODE (comprehensive), and an isoform's model superposed on the canonical one.
-      </li>
-    </ul>
-
-    <h2>What counts as a loss</h2>
-    <p>
-      Everything starts from UniProt's alternative-sequence edits, placed on the canonical sequence. Residues, features and
-      notes need no structure, so they cover every described isoform, not only the modelled ones.
-    </p>
-    <ul>
-      <li>
-        <strong>Residues.</strong> <em>Missing</em>: canonical residues with nothing in their place. <em>Replaced</em>:
-        canonical residues in a stretch that has other sequence in its place, at least {share(SWAP_SHARE)} as many residues as it
-        removes; with less than that, the canonical residues count as missing and the added ones as novel. <em>Novel</em>:
-        isoform residues the canonical protein lacks. Edits of one isoform that abut each other are joined into one before
-        replaced and missing are told apart.
-      </li>
-      <li>
-        <strong>UniProt features of the canonical protein</strong> that overlap those residues, in four groups, by UniProt
-        feature type:
-        <ul>
-          {
-            groups.map(g => (
-              <li>
-                {g.label}: {g.types}.
-                {g.group === 'targeting' && <> A chain is listed only when the entry has more than one chain or peptide and it is not the longest of them, so the whole mature protein never is.</>}
-                {g.group === 'domains' && <> Regions described only as "Disordered" and compositional-bias features are left out.</>}
-                {g.group === 'modifications' && <> A disulfide bond is two positions, not a range, and is lost when either cysteine is.</>}
-              </li>
-            ))
-          }
-        </ul>
-      </li>
-      <li>
-        <strong>UniProt's note on the isoform</strong>, such as "inactive", "dominant negative" or a premature stop that may
-        trigger nonsense-mediated decay, quoted as UniProt's.
-      </li>
-      <li>
-        <strong>Confidently modelled residues:</strong> canonical residues with pLDDT ≥ {FOLDED_PLDDT} in the AlphaFold DB
-        monomer that the isoform lacks. Not given when the canonical protein has no full-length model.
-      </li>
-      <li>
-        <strong>Predicted partner interfaces:</strong> for each AlphaFold DB complex with ipSAE ≥ {CONFIDENT}, the interface residues
-        (within {CONTACT} Å of the partner, pLDDT ≥ {MIN_PLDDT}) that the isoform lacks. Counts of isoforms that lose an
-        interface take those missing at least {share(INTERFACE_LOST_SHARE)} of one partner's interface residues. The rules are Interface explorer's.
-      </li>
-      <li>
-        <strong>The isoform's own model</strong>, when AlphaFold DB has one: its pLDDT, and how many of the residues it shares
-        with the canonical protein fall from pLDDT ≥ {FOLDED_PLDDT} in the canonical model to below {UNFOLDED_PLDDT} in the isoform's.
-      </li>
-    </ul>
-
-    <h2>What the site does not claim</h2>
-    <ul>
-      <li>
-        <strong>No consequence.</strong> The site lists what the sequence lacks. It never says an isoform is non-functional,
-        mislocalised, secreted, soluble, degraded or dominant negative, except by quoting UniProt's note.
-      </li>
-      <li>
-        <strong>Replaced is not lost.</strong> A stretch swapped for other sequence, such as a mutually exclusive exon or an
-        alternative terminus, is "replaced by N different residues". Counts of lost features use missing residues only.
-      </li>
-      <li>
-        <strong>Structure only where the model is confident.</strong> Counts of confidently modelled residues use pLDDT ≥
-        {FOLDED_PLDDT}. Where most absent residues are below pLDDT {UNFOLDED_PLDDT} in the canonical model, the page gives
-        that count instead. Every pLDDT statement is a count of residues by the model's confidence; the site never says a
-        region is unfolded.
-      </li>
-      <li>
-        <strong>A kept interface is not binding.</strong> No isoform was modelled with a partner. A full circle means the
-        interface residues are present, nothing more.
-      </li>
-      <li>
-        <strong>Losing confidence is a model's opinion.</strong> pLDDT is the prediction's confidence, not a measurement of
-        folding.
-      </li>
-      <li>
-        <strong>Not expression.</strong> No tissue data and no "major isoform". The MANE Select transcript is marked because
-        that is a fact about annotation. When it encodes an isoform other than UniProt's canonical, the page says so, since
-        every loss is measured against the canonical.
-      </li>
-      <li>
-        <strong>Not novel transcripts.</strong> Only isoforms UniProt describes. A transcript UniProt does not map to one of
-        them is not on the site.
-      </li>
-    </ul>
-
-    <h2>What is left out</h2>
-    <ul>
-      <li>
-        Transcripts without a described UniProt isoform: novel long-read isoforms, most non-coding transcripts, and those
-        UniProt has not mapped.
-      </li>
-      <li>Unreviewed UniProt entries, including the computationally mapped potential isoforms listed beside a reviewed one.</li>
-      <li>
-        Variants. ClinVar variants on predicted interfaces are on <a href={INTERFACE_EXPLORER}>Interface explorer</a>, which
-        each protein with a disease annotation links to.
-      </li>
-      <li>Expression, from GTEx or elsewhere.</li>
-      <li>Disordered regions and compositional bias among UniProt's features.</li>
-      <li>Complexes predicted with the isoform itself: AlphaFold DB models the canonical protein only.</li>
+      <li>Expression by tissue: <a href="https://gtexportal.org/">GTEx</a>.</li>
+      <li>ClinVar variants on predicted interfaces: <a href={INTERFACE_EXPLORER}>Interface explorer</a>.</li>
+      <li>Transcripts without a UniProt isoform: the GENCODE and RefSeq tracks in <a href={JBROWSE}>JBrowse 2</a>.</li>
     </ul>
 
     <h2>References</h2>
