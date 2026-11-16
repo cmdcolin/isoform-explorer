@@ -11,9 +11,18 @@ import { pipeline } from 'node:stream/promises'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { createGunzip } from 'node:zlib'
 
-import { number, readJson, record, records, text, writeJson } from './json.ts'
+import {
+  list,
+  number,
+  readJson,
+  record,
+  records,
+  text,
+  writeJson,
+} from './json.ts'
 import { DATA } from './paths.ts'
 import { unversioned } from './sequences.ts'
+import type { Structure } from './types.ts'
 
 const LOOKUP = 'https://rest.ensembl.org/lookup/id'
 const BATCH = 1000
@@ -81,10 +90,19 @@ export function placeOf(value: unknown): Place | null {
     : null
 }
 
+export function cachedPlace(value: unknown) {
+  const [chromosome, start, end] = list(value)
+  return text(chromosome) &&
+    number(start) !== undefined &&
+    number(end) !== undefined
+    ? placeOf({ seq_region_name: chromosome, start, end })
+    : placeOf(value)
+}
+
 function cachedPlaces() {
   return new Map(
     Object.entries(record(existsSync(PATH) ? readJson(PATH) : {})).map(
-      ([id, value]) => [id, placeOf(value)],
+      ([id, value]) => [id, cachedPlace(value)],
     ),
   )
 }
@@ -160,6 +178,50 @@ export function canonicalExons(
         return edges && { transcript, ...edges }
       })
       .find(exons => exons !== null) ?? null
+  )
+}
+
+function sharedBases(a: Structure['exons'], b: Structure['exons']) {
+  return a.reduce(
+    (sum, [start, end]) =>
+      sum +
+      b.reduce(
+        (inner, [from, to]) =>
+          inner + Math.max(0, Math.min(end, to) - Math.max(start, from) + 1),
+        0,
+      ),
+    0,
+  )
+}
+
+export function structureOf(
+  transcripts: string[],
+  layouts: Map<string, Layout | null>,
+  length: number,
+  like: Structure | null,
+) {
+  const fitting = transcripts.flatMap(transcript => {
+    const layout = layouts.get(unversioned(transcript))
+    return layout && junctionsOf(layout, length)
+      ? [
+          {
+            transcript,
+            strand: layout.strand,
+            coding: layout.coding,
+            exons: layout.exons.toSorted((a, b) => a[0] - b[0]),
+          },
+        ]
+      : []
+  })
+  const bases = (exons: Structure['exons']) => sharedBases(exons, exons)
+  const score = (structure: Structure) =>
+    like
+      ? 2 * sharedBases(structure.exons, like.exons) - bases(structure.exons)
+      : 0
+  return fitting.reduce<Structure | null>(
+    (best, structure) =>
+      best && score(best) >= score(structure) ? best : structure,
+    null,
   )
 }
 

@@ -29,6 +29,7 @@ import {
 } from '../../lib/loss.ts'
 import { blocks, isoformMap, isoformStrip, spanData } from '../../lib/maps.ts'
 import { INTERFACE_EXPLORER, JBROWSE } from '../../lib/site.ts'
+import { structureMap } from '../../lib/structures.ts'
 
 export function getStaticPaths() {
   const only = (process.env.PAGES ?? '').split(',').filter(Boolean)
@@ -141,6 +142,7 @@ const sections = record.isoforms.map(i => {
   }
 })
 const canonicalLinks = transcriptLinks(canonical.transcripts)
+const structures = structureMap(record, mane?.accession)
 const description = `What ${others === 1 ? 'the one alternative isoform' : `each of the ${others} alternative isoforms`} of ${record.gene} (${record.protein}) lacks relative to the canonical protein: residues, UniProt features, model confidence${partners ? ' and predicted partner interfaces' : ''}.`
 ---
 
@@ -209,8 +211,29 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
     section.
   </p>
   <div class="gene-map">
+    {
+      structures && (
+        <fieldset class="view-toggle">
+          <legend class="visually-hidden">Map view</legend>
+          <label><input type="radio" name="map-view" value="protein" checked /> Protein</label>
+          <label><input type="radio" name="map-view" value="gene" /> Gene + protein</label>
+        </fieldset>
+      )
+    }
     <p class="scroll-hint">Scroll the map sideways to see all {count(record.length)} residues →</p>
-    <Fragment set:html={isoformMap(record, mane?.accession)} />
+    <div class="map-wrap">
+      <Fragment set:html={structures} />
+      <Fragment set:html={isoformMap(record, mane?.accession)} />
+    </div>
+    {
+      structures && record.structures[canonical.accession] && (
+        <p class="structure-note muted small">
+          Exons of one GENCODE 49 transcript per isoform{record.locus && <>, {record.locus}</>}, drawn in the direction of
+          transcription. Introns are cut to a fixed width; thick boxes are coding, thin ones untranslated. The band joins the
+          canonical's coding exons to the residues they encode.
+        </p>
+      )
+    }
   </div>
   <div class="legend">
     <span><span class="swatch kept"></span>carried over</span>

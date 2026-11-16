@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  cachedPlace,
   canonicalExons,
   junctionsOf,
   layoutOf,
   locusOf,
   placeOf,
+  structureOf,
 } from './ensembl.ts'
 
 describe('placeOf', () => {
@@ -17,6 +19,26 @@ describe('placeOf', () => {
 
   it('gives nothing for an id Ensembl does not know', () => {
     expect(placeOf(null)).toBeNull()
+  })
+})
+
+describe('cachedPlace', () => {
+  it('reads a place as the cache writes it', () => {
+    expect(cachedPlace(['1', 97446142, 97457370])).toEqual([
+      '1',
+      97446142,
+      97457370,
+    ])
+  })
+
+  it('still reads a raw lookup result', () => {
+    expect(
+      cachedPlace({ seq_region_name: '17', start: 7668421, end: 7687490 }),
+    ).toEqual(['17', 7668421, 7687490])
+  })
+
+  it('gives nothing for an id cached as unknown', () => {
+    expect(cachedPlace(null)).toBeNull()
   })
 })
 
@@ -117,5 +139,51 @@ describe('canonicalExons', () => {
       canonicalExons(['ENST3.1', 'ENST1.4', 'ENST2.6'], layouts, 377)
         ?.transcript,
     ).toBe('ENST2.6')
+  })
+})
+
+describe('structureOf', () => {
+  const canonical = layoutOf(ZDHHC16)
+  const withoutExon2 = canonical && {
+    ...canonical,
+    exons: canonical.exons.filter(([start]) => start !== 97450357),
+  }
+  const short: [number, number] = [97451676, 97456000]
+  const layouts = new Map([
+    ['ENST1', withoutExon2],
+    ['ENST2', canonical],
+    ['ENST3', canonical && { ...canonical, coding: short }],
+  ])
+
+  it('takes the first fitting transcript when there is nothing to resemble', () => {
+    expect(
+      structureOf(['ENST3.1', 'ENST1.1', 'ENST2.1'], layouts, 377, null)
+        ?.transcript,
+    ).toBe('ENST1.1')
+  })
+
+  it('prefers the fitting transcript sharing most bases with the canonical one', () => {
+    const like = structureOf(['ENST2.1'], layouts, 377, null)
+    expect(
+      structureOf(['ENST3.1', 'ENST1.1', 'ENST2.1'], layouts, 377, like)
+        ?.transcript,
+    ).toBe('ENST2.1')
+  })
+
+  it('orders exons by start whatever the strand', () => {
+    const minus = {
+      strand: -1,
+      coding: [100, 290] satisfies [number, number],
+      exons: [
+        [201, 300],
+        [90, 129],
+      ] satisfies [number, number][],
+    }
+    expect(
+      structureOf(['ENST4.1'], new Map([['ENST4', minus]]), 39, null)?.exons,
+    ).toEqual([
+      [90, 129],
+      [201, 300],
+    ])
   })
 })

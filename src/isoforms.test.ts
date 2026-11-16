@@ -82,6 +82,7 @@ function gene(overrides: Partial<GeneRecord>): GeneRecord {
     explorer: { gene: null, isoforms: null },
     locus: null,
     exons: null,
+    structures: {},
     ...overrides,
   }
 }

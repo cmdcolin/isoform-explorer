@@ -14,6 +14,7 @@ import {
 import {
   canonicalExons,
   locusOf,
+  structureOf,
   transcriptLayouts,
   transcriptPlaces,
 } from './ensembl.ts'
@@ -492,6 +493,27 @@ export async function geneRecord(
   const canonicalAccession = canonicalAccessionOf(entry)
   const canonicalTranscripts = transcripts.of(canonicalAccession)
   const shown = [canonicalTranscripts, ...built.map(i => i.transcripts)]
+  const canonicalStructure = structureOf(
+    canonicalTranscripts.ensembl,
+    layouts,
+    sequence.length,
+    null,
+  )
+  const structures: GeneRecord['structures'] = {}
+  if (canonicalStructure) {
+    structures[canonicalAccession] = canonicalStructure
+  }
+  for (const i of built) {
+    const structure = structureOf(
+      i.transcripts.ensembl,
+      layouts,
+      i.length,
+      canonicalStructure,
+    )
+    if (structure) {
+      structures[i.accession] = structure
+    }
+  }
   return {
     page,
     gene: geneOf(entry) || accession,
@@ -523,6 +545,7 @@ export async function geneRecord(
       layouts,
       sequence.length,
     ),
+    structures,
   } satisfies GeneRecord
 }
 
@@ -850,12 +873,7 @@ async function main(workers = '8', ...accessions: string[]) {
     ),
   )
   const places = await transcriptPlaces(mapped)
-  const canonicalIds = wanted.flatMap(entry =>
-    (ensemblByIsoform(entry).get(canonicalAccessionOf(entry)) ?? []).map(
-      unversioned,
-    ),
-  )
-  const layouts = await transcriptLayouts(canonicalIds)
+  const layouts = await transcriptLayouts(mapped)
   const sources = {
     interfaces,
     alphaFold,
@@ -912,7 +930,7 @@ async function main(workers = '8', ...accessions: string[]) {
     `Ensembl transcript places pending (rerun): ${new Set(mapped.filter(id => !places.has(id))).size}`,
   )
   console.log(
-    `Ensembl exon layouts pending (rerun): ${new Set(canonicalIds.filter(id => !layouts.has(id))).size}; ${genes.filter(gene => gene.exons).length} of ${genes.length} proteins have exons`,
+    `Ensembl exon layouts pending (rerun): ${new Set(mapped.filter(id => !layouts.has(id))).size}; ${genes.filter(gene => gene.exons).length} of ${genes.length} proteins have exons, ${genes.filter(gene => Object.keys(gene.structures).length > 1).length} have gene structures for two or more isoforms`,
   )
 }
 

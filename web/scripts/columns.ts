@@ -17,7 +17,7 @@ function draw(spans: string) {
     for (const old of document.querySelectorAll('.track .column')) {
       old.remove()
     }
-    for (const svg of document.querySelectorAll<SVGSVGElement>('svg.track')) {
+    for (const svg of document.querySelectorAll<SVGSVGElement>('svg.track[data-step]')) {
       const left = number(svg, 'left')
       const step = number(svg, 'step')
       const top = number(svg, 'top')

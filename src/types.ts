@@ -145,6 +145,19 @@ export interface GeneRecord {
    * exon along the transcript.
    */
   exons: Exons | null
+  /** By isoform accession, canonical included; isoforms without one are absent. */
+  structures: Record<string, Structure>
+}
+
+/**
+ * A GENCODE transcript encoding the isoform, in GRCh38 coordinates; `exons`
+ * ascending, whatever the strand.
+ */
+export interface Structure {
+  transcript: string
+  strand: number
+  coding: [start: number, end: number]
+  exons: [start: number, end: number][]
 }
 
 export interface Exons {

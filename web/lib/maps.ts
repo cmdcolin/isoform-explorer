@@ -22,9 +22,9 @@ import {
   span,
 } from './loss.ts'
 
-const WIDTH = 1000
-const LEFT = 156
-const RIGHT = 12
+export const WIDTH = 1000
+export const LEFT = 156
+export const RIGHT = 12
 const LANE = 12
 const ROW = 18
 const TRACK = 14
@@ -289,7 +289,7 @@ function pie(x: number, y: number, radius: number, share: number) {
       : ''
 }
 
-interface Row {
+export interface Row {
   accession: string
   label: string
   name: string
@@ -351,6 +351,54 @@ function isoformBar(s: Scale, row: Row, y: number, length: number) {
     .join('')}`
 }
 
+function headerHeightOf(tracks: { label: string }[]) {
+  return tracks.length
+    ? Math.max(...tracks.map(t => t.label.length)) * 4.4 + 10
+    : 0
+}
+
+export function mapWidth(record: Pick<GeneRecord, 'gene' | 'interfaces'>) {
+  const tracks = partnerTracks(record)
+  return (
+    WIDTH +
+    (tracks.length
+      ? 10 + tracks.length * COLUMN + headerHeightOf(tracks) * 0.7
+      : 0)
+  )
+}
+
+export function minWidth(width: number) {
+  return Math.round(width * 0.76)
+}
+
+export function mapRows(
+  record: GeneRecord,
+  maneAccession: string | undefined,
+): Row[] {
+  return [
+    {
+      accession: record.canonical.accession,
+      label: record.canonical.accession,
+      name: shortName(record.canonical),
+      title: `Canonical isoform ${record.canonical.name}, ${record.length} residues`,
+      tag: maneAccession === record.canonical.accession ? 'MANE' : '',
+      isoform: { edits: [], segments: [[1, 1, record.length]] },
+    },
+    ...record.isoforms.map(i => ({
+      accession: i.accession,
+      label: i.accession,
+      name: shortName(i),
+      title: `Isoform ${i.name}${i.synonyms.length ? ` (${i.synonyms.join(', ')})` : ''}, ${i.length} residues`,
+      tag: i.accession === maneAccession ? 'MANE' : '',
+      isoform: i,
+    })),
+  ]
+}
+
+export function rowLabel(row: Row, canonical: boolean, top: number) {
+  return `<text class="label${canonical ? ' canon' : ''}" x="0" y="${top + 10}">${esc(row.label)}${row.name ? `<tspan class="name" dx="4">${esc(row.name)}</tspan>` : ''}${row.tag ? `<tspan class="tag" dx="4">${row.tag}</tspan>` : ''}</text>`
+}
+
 export function isoformMap(
   record: GeneRecord,
   maneAccession: string | undefined,
@@ -398,31 +446,9 @@ export function isoformMap(
       return `<g class="partner" data-span="${spanData(runs)}"><rect class="hit" x="0" y="${top - 1}" width="${WIDTH}" height="${TRACK}"/><text class="label" x="0" y="${top + 9}">${esc(track.label)}<title>${esc(track.names.join(', '))}</title></text>${runs.map(run => rect(s, run, top + 1, 9, ' class="if"')).join('')}</g>`
     })
     .join('')
-  const headerHeight = tracks.length
-    ? Math.max(...tracks.map(t => t.label.length)) * 4.4 + 10
-    : 0
-  const rowsTop = Math.max(y + 8, headerHeight)
-  const width =
-    WIDTH +
-    (tracks.length ? 10 + tracks.length * COLUMN + headerHeight * 0.7 : 0)
-  const isoformRows: Row[] = [
-    {
-      accession: record.canonical.accession,
-      label: record.canonical.accession,
-      name: shortName(record.canonical),
-      title: `Canonical isoform ${record.canonical.name}, ${record.length} residues`,
-      tag: maneAccession === record.canonical.accession ? 'MANE' : '',
-      isoform: { edits: [], segments: [[1, 1, record.length]] },
-    },
-    ...record.isoforms.map(i => ({
-      accession: i.accession,
-      label: i.accession,
-      name: shortName(i),
-      title: `Isoform ${i.name}${i.synonyms.length ? ` (${i.synonyms.join(', ')})` : ''}, ${i.length} residues`,
-      tag: i.accession === maneAccession ? 'MANE' : '',
-      isoform: i,
-    })),
-  ]
+  const rowsTop = Math.max(y + 8, headerHeightOf(tracks))
+  const width = mapWidth(record)
+  const isoformRows = mapRows(record, maneAccession)
   const headers = tracks
     .map((track, index) => {
       const x = WIDTH + 10 + index * COLUMN + COLUMN / 2
@@ -440,13 +466,13 @@ export function isoformMap(
           return `<g class="dot"><title>${esc(`${row.label} has ${Math.round(share * track.residues.length)} of ${track.residues.length} interface residues of ${track.names.join(', ')}`)}</title><circle class="ring" cx="${x}" cy="${top + 6}" r="6.5"/>${pie(x, top + 6, 6.5, share)}</g>`
         })
         .join('')
-      return `<a href="#${esc(row.accession)}"><g class="iso" data-isoform="${esc(row.accession)}"><title>${esc(row.title)}</title><rect class="hit" x="0" y="${top - 3}" width="${width}" height="${ROW}"/><text class="label${index === 0 ? ' canon' : ''}" x="0" y="${top + 10}">${esc(row.label)}${row.name ? `<tspan class="name" dx="4">${esc(row.name)}</tspan>` : ''}${row.tag ? `<tspan class="tag" dx="4">${row.tag}</tspan>` : ''}</text>${isoformBar(s, row, top, record.length)}${dots}</g></a>`
+      return `<a href="#${esc(row.accession)}"><g class="iso" data-isoform="${esc(row.accession)}"><title>${esc(row.title)}</title><rect class="hit" x="0" y="${top - 3}" width="${width}" height="${ROW}"/>${rowLabel(row, index === 0, top)}${isoformBar(s, row, top, record.length)}${dots}</g></a>`
     })
     .join('')
   const rowsBottom = rowsTop + isoformRows.length * ROW
   const axisY = rowsBottom + 2
   const height = axisY + 18
-  return `<div class="map-wrap"><svg class="map track" viewBox="0 0 ${width} ${height}" style="min-width:${Math.round(width * 0.76)}px" data-left="${LEFT}" data-step="${Number(s.step.toFixed(5))}" data-top="${rowsTop - 4}" data-bottom="${rowsBottom}" role="img" aria-label="${esc(`${record.gene}: features of the canonical protein above ${isoformRows.length} isoforms drawn on its ${record.length} residues`)}">${featureSvg}${plddtSvg}${exonSvg}${trackSvg}${headers}${isoformSvg}${junctionCuts(s, record.exons, rowsTop - 3, rowsBottom - 3)}${axis(s, record.length, axisY)}</svg></div>`
+  return `<svg class="map track" viewBox="0 0 ${width} ${height}" style="min-width:${minWidth(width)}px" data-left="${LEFT}" data-step="${Number(s.step.toFixed(5))}" data-top="${rowsTop - 4}" data-bottom="${rowsBottom}" role="img" aria-label="${esc(`${record.gene}: features of the canonical protein above ${isoformRows.length} isoforms drawn on its ${record.length} residues`)}">${featureSvg}${plddtSvg}${exonSvg}${trackSvg}${headers}${isoformSvg}${junctionCuts(s, record.exons, rowsTop - 3, rowsBottom - 3)}${axis(s, record.length, axisY)}</svg>`
 }
 
 function axis(
