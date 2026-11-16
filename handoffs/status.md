@@ -60,9 +60,6 @@ file says where the work stands.
 
 - Run a full build and `pnpm check-links` before pushing; every build on
   2026-11-16 was partial (`PAGES=`).
-- Home post cards fit each hero into 7:4, so the wide drawings (NDUFC2,
-  ZDHHC16, CEBPB, about 2.6:1) show small. Either relayout them nearer 7:4 or
-  add a per-post crop.
 - Candidate posts with a new kind of hero: LEF1 isoform 7 (lacks every
   predicted β-catenin contact; a Wnt pathway cartoon) and NDUFV3 (MANE encodes
   473 residues against UniProt's 108; a ruler drawn to scale).

@@ -2,11 +2,30 @@
 import { Image } from 'astro:assets'
 
 import Layout from '../layouts/Layout.astro'
+import { diseases } from '../lib/data.ts'
+import { diseaseHref } from '../lib/diseases.ts'
 import { isoformDiagram } from '../lib/isoform-diagram.ts'
 import { posts } from '../lib/posts.ts'
 import { geneHref, href } from '../lib/site.ts'
 
 const all = await posts()
+const FAMILIAR = [
+  'Cystic fibrosis',
+  'Duchenne muscular dystrophy',
+  'Alzheimer disease 1',
+  'Breast-ovarian cancer, familial, 1',
+  'Parkinson disease',
+  'Hemophilia A',
+  'Fragile X syndrome',
+  'Rett syndrome',
+]
+const familiar = FAMILIAR.map(name => {
+  const found = diseases().find(d => d.name === name)
+  if (!found) {
+    throw new Error(`no disease named ${name} in diseases.json`)
+  }
+  return found
+})
 ---
 
 <Layout>
@@ -24,8 +43,8 @@ const all = await posts()
     <figure class="hero-shot">
       <img
         src={href('preview.png')}
-        width="2200"
-        height="568"
+        width="2152"
+        height="540"
         fetchpriority="high"
         alt="The ZDHHC16 gene page's map: topology, domains, sites, canonical pLDDT and numbered exons above four isoforms drawn on the canonical sequence, each bar cut at the exon junctions, with the DHHC domain highlighted down the rows"
       />
@@ -38,12 +57,31 @@ const all = await posts()
   </section>
 
   <section>
+    <h2>Start from a disease</h2>
+    <p class="lede">
+      UniProt links many of these proteins to inherited diseases. On each disease page, the isoforms of the genes involved
+      are drawn on the canonical sequence.
+    </p>
+    <ul class="disease-chips">
+      {
+        familiar.map(disease => (
+          <li>
+            <a href={diseaseHref(disease)}>{disease.name}</a>
+            <span class="muted"> · {disease.genes.map(g => g.gene).join(', ')}</span>
+          </li>
+        ))
+      }
+      <li><a href={href('diseases/')}>All diseases →</a></li>
+    </ul>
+  </section>
+
+  <section>
     <h2>Worked examples</h2>
     <div class="post-cards">
       {
         all.map(post => (
           <a class="post-card" href={href(`blog/${post.id}/`)}>
-            <Image src={post.data.hero} alt="" widths={[360, 720]} sizes="(max-width: 640px) calc(100vw - 32px), 360px" />
+            <Image src={post.data.hero} alt="" widths={[360, 720]} sizes="(max-width: 640px) calc(100vw - 32px), 360px" style={`object-position: ${post.data.heroPosition}`} />
             <strong>{post.data.title}</strong>
             <span class="muted">{post.data.description}</span>
           </a>

@@ -12,6 +12,7 @@ const blog = defineCollection({
       order: z.number().optional(),
       hero: image(),
       heroAlt: z.string(),
+      heroPosition: z.enum(['left', 'center']).default('center'),
     }),
 })
 

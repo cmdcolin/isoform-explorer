@@ -217,7 +217,7 @@ section {
   width: 100%;
   height: auto;
   aspect-ratio: 7 / 4;
-  object-fit: contain;
+  object-fit: cover;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -928,4 +928,19 @@ table.browse .protein {
 .disease-list li {
   break-inside: avoid;
   margin-bottom: 4px;
+}
+
+.disease-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.disease-chips li {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
 }

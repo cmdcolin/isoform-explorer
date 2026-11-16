@@ -20,7 +20,7 @@ const all = await posts()
       all.map(post => (
         <li>
           <a class="post-thumb" href={href(`blog/${post.id}/`)} tabindex="-1" aria-hidden="true">
-            <Image src={post.data.hero} alt="" widths={[240, 480]} sizes="240px" />
+            <Image src={post.data.hero} alt="" widths={[240, 480]} sizes="240px" style={`object-position: ${post.data.heroPosition}`} />
           </a>
           <div>
             <a href={href(`blog/${post.id}/`)}>{post.data.title}</a>

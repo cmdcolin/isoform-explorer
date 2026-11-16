@@ -118,7 +118,11 @@ story. The same standard applies here.
   linked to that page and hidden on phones. Search (gene, UniProt accession,
   ENST, NM) has its own page, linked from the header: the owner found a search
   box front and center discouraging to visitors who first want to know what
-  the site is about. Then a card per blog post with its hero, and a closing
+  the site is about. Then "Start from a disease": eight familiar disease
+  names (`FAMILIAR` in `web/pages/index.astro`, checked against
+  `diseases.json` at build) and a link to the full list. Then a card per blog
+  post with its hero, cropped to 7:4 (`heroPosition: 'left'` in a post's
+  frontmatter keeps a wide drawing's title in the crop), and a closing
   note that the site compares sequences and points to the expression post
   rather than straight to GTEx, whose per-transcript numbers that post shows
   can mislead. The home page has no tiles of counts: the owner found them
