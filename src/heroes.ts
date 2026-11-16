@@ -2,8 +2,9 @@ import { readFile } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import { extname, join, normalize } from 'node:path'
 
-import { type Page, chromium } from 'playwright-core'
+import { type Locator, type Page, chromium } from 'playwright-core'
 
+import { jbrowseUrl, REFSEQ_TRACK, sessionUrl } from './links.ts'
 import { ROOT } from './paths.ts'
 
 const BASE = '/isoform-explorer/'
@@ -28,6 +29,7 @@ interface Shot {
   follow?: string
   click?: string
   hover?: string
+  prepare?: (page: Page) => Promise<void>
   clip?: string[]
   width?: number
   height: number
@@ -103,12 +105,28 @@ const SHOTS: Shot[] = [
     wait: 1,
   },
   {
-    name: 'zdhhc16-protein-view',
+    name: 'zdhhc16-splice-changes',
     dir: 'figures',
-    path: 'gene/ZDHHC16/',
-    follow: '#Q969W1-3 a.button[href*="ProteinView"]',
+    path: sessionUrl(
+      {
+        views: [
+          {
+            type: 'LinearGenomeView',
+            assembly: 'hg38',
+            loc: 'chr10:97452350-97453900',
+            tracks: [REFSEQ_TRACK],
+            highlight: ['chr10:97452895-97452923', 'chr10:97453530-97453617'],
+          },
+        ],
+      },
+      jbrowseUrl(
+        'https://cmdcolin.github.io/isoform-explorer/jbrowse/config.json',
+      ),
+    ),
+    prepare: annotateZdhhc16,
+    clip: ['[data-testid^="linear-genome-view-"]'],
     height: 800,
-    wait: 45,
+    wait: 3,
   },
   {
     name: 'f2rl2-genome',
@@ -119,6 +137,81 @@ const SHOTS: Shot[] = [
     wait: 30,
   },
 ]
+
+async function pickFromTrackMenu(page: Page, submenu: string, item: string) {
+  await page.locator('[data-testid="track_menu_icon"]').first().click()
+  await page.getByText(submenu, { exact: true }).click()
+  await page.getByText(item, { exact: true }).click()
+  await closeMenus(page)
+}
+
+async function closeMenus(page: Page) {
+  for (const _ of [1, 2]) {
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(300)
+  }
+}
+
+async function annotateZdhhc16(page: Page) {
+  await page.getByTestId('app-ready-marker').waitFor({ state: 'attached' })
+  await page.waitForTimeout(10_000)
+  await pickFromTrackMenu(page, 'Subfeature labels', 'Below')
+  await page.getByText('Isoforms trimmed').click()
+  await page.getByText('All transcripts', { exact: true }).click()
+  await closeMenus(page)
+  await pickFromTrackMenu(page, 'Feature height', 'Normal')
+  await pickFromTrackMenu(page, 'Feature height', 'Grow the track')
+  await page.mouse.move(0, 0)
+  await page.waitForTimeout(2000)
+  await page.locator('[data-testid="track_menu_icon"]').first().blur()
+  const box = (locator: Locator) => locator.first().boundingBox()
+  const [track, exon6, exon7, canonical, isoform3] = await Promise.all([
+    box(page.getByTestId(/^trackRenderingContainer-/)),
+    box(page.getByTestId('highlight-band').nth(0)),
+    box(page.getByTestId('highlight-band').nth(1)),
+    box(page.getByText('NM_032327.4', { exact: true })),
+    box(page.getByText('NM_198044.3', { exact: true })),
+  ])
+  const html =
+    track && exon6 && exon7 && canonical && isoform3
+      ? [
+          outline(canonical),
+          outline(isoform3),
+          note(
+            'isoform 1, the canonical protein →',
+            exon6.x - 16,
+            canonical.y - 12,
+            '-100%',
+          ),
+          note('isoform 3 →', exon6.x - 16, isoform3.y - 12, '-100%'),
+          note(
+            'exon 6, 29 bases: skipped',
+            exon6.x + exon6.width / 2,
+            track.y + track.height - 24,
+            '-50%',
+          ),
+          note(
+            'first 88 bases of exon 7: skipped',
+            exon7.x + exon7.width / 2,
+            track.y + track.height - 24,
+            '-50%',
+          ),
+        ].join('')
+      : ''
+  await page
+    .locator('body')
+    .evaluate((body, html) => body.insertAdjacentHTML('beforeend', html), html)
+}
+
+const RED = '#d00000'
+
+function outline(b: { x: number; y: number; width: number; height: number }) {
+  return `<div style="position:absolute;left:${b.x - 3}px;top:${b.y - 1}px;width:${b.width + 6}px;height:${b.height + 2}px;border:2px solid ${RED};border-radius:3px;z-index:10000;pointer-events:none"></div>`
+}
+
+function note(text: string, x: number, y: number, shift: string) {
+  return `<div style="position:absolute;left:${x}px;top:${y}px;transform:translateX(${shift});color:${RED};font:bold 14px Roboto,sans-serif;background:rgba(255,255,255,0.9);padding:1px 4px;white-space:nowrap;z-index:10000;pointer-events:none">${text}</div>`
+}
 
 function serve() {
   const server = createServer((request, response) => {
@@ -159,7 +252,7 @@ function serve() {
 
 async function capture(page: Page, shot: Shot, origin: string) {
   await page.setViewportSize({ width: shot.width ?? 1400, height: shot.height })
-  await page.goto(`${origin}${shot.path}`)
+  await page.goto(new URL(shot.path, origin).href)
   if (shot.follow) {
     const target = await page.locator(shot.follow).first().getAttribute('href')
     await page.goto(target ?? '')
@@ -170,6 +263,7 @@ async function capture(page: Page, shot: Shot, origin: string) {
   if (shot.hover) {
     await page.locator(shot.hover).first().hover()
   }
+  await shot.prepare?.(page)
   await page.waitForTimeout(shot.wait * 1000)
   const file = join(BLOG, shot.dir, `${shot.name}.jpg`)
   const boxes = await Promise.all(

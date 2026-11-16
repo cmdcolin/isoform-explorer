@@ -20,7 +20,7 @@ heroAlt:
 import Shot from '../../components/Shot.astro'
 import { expressionOf, share, tissueShare } from '../../lib/expression.ts'
 import { story } from '../../lib/stories.ts'
-import proteinView from './figures/zdhhc16-protein-view.jpg'
+import spliceChanges from './figures/zdhhc16-splice-changes.jpg'
 
 export const s = story('ZDHHC16', 'Q969W1-3')
 export const e = expressionOf('Q969W1-3')
@@ -52,16 +52,15 @@ Isoform 3 also lacks the first 16 of the 21 residues of the fourth transmembrane
 helix (199–219).
 
 <Shot
-  src={proteinView}
-  alt="JBrowse with ZDHHC16 on chromosome 10 at the left, in RefSeq and GENCODE tracks, and at the right the protein view of NM_198044.3: the AlphaFold DB models of isoform 3 and of the canonical protein drawn as ribbons in two colours and superposed, under an alignment of the genome-translated and model sequences."
+  src={spliceChanges}
+  alt="JBrowse at chr10:97,452,350–97,453,900 with the RefSeq transcripts of ZDHHC16 stacked one per row. Two regions are shaded and labelled in red: exon 6, 29 bases, skipped, and the first 88 bases of exon 7, skipped. Red notes point to two rows, NM_032327.4 as isoform 1, the canonical protein and NM_198044.3 as isoform 3. The isoform 3 row has no exon 6 and its exon 7 starts at the right edge of the second shaded region."
   href={s.href}
   open="Open isoform 3 on the ZDHHC16 page"
 >
-  JBrowse's protein view, which the isoform 3 section of the gene page opens,
-  superposes AlphaFold DB's models of isoform 3 and the canonical protein and
-  aligns each residue to the genome, so a residue picked in 3D can be found on
-  the transcripts at the left. pLDDT is the predictor's confidence in each
-  model.
+  Exons 5 to 8 of ZDHHC16 in JBrowse, RefSeq transcripts only. The shaded
+  stretches are the 117 bases that isoform 3 (NM_198044.3) leaves out compared
+  with NM_032327.4, one of two RefSeq transcripts for the canonical protein. The gene page also opens JBrowse's protein
+  view for isoform 3, with AlphaFold DB models of both proteins superposed.
 </Shot>
 
 ## Where isoform 3 is made
