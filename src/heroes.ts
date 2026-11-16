@@ -169,7 +169,7 @@ async function annotateZdhhc16(page: Page) {
     box(page.getByTestId(/^trackRenderingContainer-/)),
     box(page.getByTestId('highlight-band').nth(0)),
     box(page.getByTestId('highlight-band').nth(1)),
-    box(page.getByText('NM_032327.4', { exact: true })),
+    box(page.getByText('NM_198046.3', { exact: true })),
     box(page.getByText('NM_198044.3', { exact: true })),
   ])
   const html =
@@ -178,7 +178,7 @@ async function annotateZdhhc16(page: Page) {
           outline(canonical),
           outline(isoform3),
           note(
-            'isoform 1, the canonical protein →',
+            'MANE Select, canonical protein →',
             exon6.x - 16,
             canonical.y - 12,
             '-100%',
