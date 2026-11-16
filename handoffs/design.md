@@ -96,10 +96,13 @@ story. The same standard applies here.
 
 - **Home:** modelled on Interface explorer's hero: a short headline, one
   sentence saying what the site shows, and a simple diagram (a canonical
-  protein, and an isoform with its domain missing). The search box (gene,
+  protein, and an isoform with its domain missing), then a screenshot of a
+  gene page's map (`site/preview.png`, ZDHHC16 with its DHHC domain hovered),
+  linked to that page and hidden on phones. The search box (gene,
   UniProt accession, ENST, NM) comes next in its own section, not in the hero:
   the owner found a search box front and center discouraging to visitors who
-  first want to know what the site is about. Then tiles of explorable counts
+  first want to know what the site is about; for the same reason the site
+  header has no search box. Then tiles of explorable counts
   from `totals.json`, three worked examples chosen by the pipeline's own
   numbers, and a closing note that the site says nothing about expression.
 - **Browse:** one sortable, filterable row per protein from `index.json`.

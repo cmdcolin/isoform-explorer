@@ -2,30 +2,23 @@
 import { indexRows } from '../lib/data.ts'
 import { href } from '../lib/site.ts'
 
-interface Props {
-  compact?: boolean
-}
-
-const { compact = false } = Astro.props
 const shared = Object.fromEntries(indexRows().flatMap(row => (row.page === row.gene ? [] : [[row.page, row.protein]])))
-const id = compact ? 'header-search' : 'search'
-const placeholder = compact ? 'Gene, accession, ENST or NM' : 'TP53, P04637-2, ENST00000420246 or NM_001126114'
 ---
 
-<form class:list={['search', { compact }]} role="search" action={href('browse/')} data-names={JSON.stringify(shared)} data-about={href('about/')}>
-  <label class="visually-hidden" for={id}>Search by gene symbol, UniProt accession, Ensembl transcript or RefSeq transcript</label>
+<form class="search" role="search" action={href('browse/')} data-names={JSON.stringify(shared)} data-about={href('about/')}>
+  <label class="visually-hidden" for="search">Search by gene symbol, UniProt accession, Ensembl transcript or RefSeq transcript</label>
   <input
-    id={id}
+    id="search"
     type="search"
     name="q"
-    placeholder={placeholder}
+    placeholder="TP53, P04637-2, ENST00000420246 or NM_001126114"
     autocomplete="off"
     autocapitalize="characters"
     spellcheck="false"
-    aria-describedby={`${id}-results`}
+    aria-describedby="search-results"
   />
-  <button type="submit" class="button primary">{compact ? 'Go' : 'Look up'}</button>
-  <div class="search-results" id={`${id}-results`} aria-live="polite"></div>
+  <button type="submit" class="button primary">Look up</button>
+  <div class="search-results" id="search-results" aria-live="polite"></div>
 </form>
 
 <script>

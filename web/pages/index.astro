@@ -29,18 +29,31 @@ const worked = examples().map(example => ({ example, sentence: exampleSentence(e
 const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']
 ---
 
-<Layout nav="home">
+<Layout>
   <section class="hero">
     <div class="hero-top">
       <div>
         <h1>Explore what alternative protein isoforms lack</h1>
         <p class="lede">
-          See which residues, domains, sites, modelled structure and predicted partner interfaces each human isoform is
-          missing, compared with UniProt's canonical sequence.
+          See which domains, sites and predicted partner interfaces each human isoform lacks, compared with UniProt's
+          canonical protein.
         </p>
       </div>
       <Fragment set:html={isoformDiagram()} />
     </div>
+    <a class="hero-shot" href={geneHref('ZDHHC16')}>
+      <img
+        src={href('preview.png')}
+        width="2200"
+        height="488"
+        fetchpriority="high"
+        alt="The ZDHHC16 gene page's map: topology, domains, sites and canonical pLDDT above four isoforms drawn on the canonical sequence, with the DHHC domain highlighted down the rows and isoform 3's gap running through it"
+      />
+      <span>
+        Each gene page draws every isoform of a protein on its canonical sequence, under the canonical's domains, sites
+        and model confidence. Here, ZDHHC16 with its DHHC domain highlighted.
+      </span>
+    </a>
   </section>
 
   <section>
