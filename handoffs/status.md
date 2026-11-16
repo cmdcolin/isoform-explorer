@@ -25,20 +25,16 @@ file says where the work stands.
   against its own rules). UniProt-derived statements all matched. Its findings
   are fixed or listed below.
 
-## Still filling in
+## Filled in on 2026-11-16
 
-- **Isoform model confidence.** AlphaFold DB's file server rate-limits bursts
-  (429, then 403, with no Retry-After), and isoform models have no bulk
-  download. `pnpm plddt <pause seconds>` fetches the pending confidence
-  documents one at a time; one request every second or two is tolerated. It was
-  left running on the build server. To finish:
-  - copy the server's `data/plddt/` into the local `data/plddt/`;
-  - run `pnpm isoforms`; `totals.json`'s `modelsPending` should reach 0, bar ten
-    canonical models missing from the bulk proteome file, which `pnpm plddt`
-    also fetches;
-  - commit `site/data`.
-- Pages already distinguish "model exists, confidence not yet fetched" from "no
-  model", so the site is correct while this fills in.
+- **Isoform model confidence.** The build server's `pnpm plddt` finished; its
+  `data/plddt/` was copied down and `modelsPending` is 0.
+- **Partner interfaces were blank on main from `9d915dcb` to here.** That
+  commit's `site/data` was written by a run without `out/interfaces.json` and
+  without the chain rule, so `interfaceProteins` read 0 and some entries lost
+  their chains. Before committing `site/data`, check that `totals.json`'s
+  `interfaceProteins` is not 0 and that `git diff` touches only what the change
+  should.
 
 ## Deployment
 
