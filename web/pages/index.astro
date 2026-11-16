@@ -5,6 +5,7 @@ import { browseQuery } from '../lib/browse.ts'
 import { examples, gene, totals } from '../lib/data.ts'
 import { exampleSentence } from '../lib/examples.ts'
 import { GROUPS } from '../lib/features.ts'
+import { isoformDiagram } from '../lib/isoform-diagram.ts'
 import { INTERFACE_MISSING, MODELLED_MISSING, groupMissing } from '../lib/labels.ts'
 import { geneHref, href } from '../lib/site.ts'
 
@@ -30,12 +31,21 @@ const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']
 
 <Layout nav="home">
   <section class="hero">
-    <h1>If this transcript is the one being made, what does the protein lose?</h1>
-    <p class="lede">
-      Enter a gene, a UniProt accession, or an Ensembl or RefSeq transcript. Isoform explorer compares each isoform UniProt
-      describes with the canonical sequence and lists the residues, features, confidently modelled structure and predicted
-      partner interfaces it lacks. It says nothing about whether, where or how much a transcript is expressed.
-    </p>
+    <div class="hero-top">
+      <div>
+        <h1>Explore what alternative protein isoforms lack</h1>
+        <p class="lede">
+          See which residues, domains, sites, modelled structure and predicted partner interfaces each human isoform is
+          missing, compared with UniProt's canonical sequence.
+        </p>
+      </div>
+      <Fragment set:html={isoformDiagram()} />
+    </div>
+  </section>
+
+  <section>
+    <h2>Look up a gene or transcript</h2>
+    <p>A gene, a UniProt accession, or an Ensembl or RefSeq transcript opens the protein's page at that isoform.</p>
     <Search />
     <p class="search-tries muted">
       Try {tries.map((value, index) => (
@@ -91,4 +101,7 @@ const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']
       ))
     }
   </section>
+  <p class="note">
+    The site compares sequences only. It says nothing about whether, where or how much a transcript is expressed.
+  </p>
 </Layout>

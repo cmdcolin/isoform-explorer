@@ -1,7 +1,7 @@
 ---
 import '../styles/site.css'
 import Search from '../components/Search.astro'
-import { INTERFACE_EXPLORER, href } from '../lib/site.ts'
+import { INTERFACE_EXPLORER, REPOSITORY, href } from '../lib/site.ts'
 
 interface Props {
   title?: string
@@ -16,7 +16,6 @@ const { title, description = DEFAULT_DESCRIPTION, nav, indexed = true } = Astro.
 const fullTitle = title ? `${title} · Isoform explorer` : 'Isoform explorer'
 const canonical = new URL(Astro.url.pathname, Astro.site)
 const links = [
-  ['home', 'Home', ''],
   ['browse', 'Browse', 'browse/'],
   ['about', 'About', 'about/'],
 ] as const
@@ -53,6 +52,7 @@ const links = [
           ))
         }
         <a class="sibling-link" href={INTERFACE_EXPLORER}>Interface explorer</a>
+        <a href={REPOSITORY}>GitHub</a>
       </nav>
     </header>
     <main id="app">
@@ -64,7 +64,7 @@ const links = [
       >, predicted structures and complexes from <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> (CC-BY 4.0),
       viewer <a href="https://jbrowse.org/jb2/">JBrowse 2</a>. A sibling of <a href={INTERFACE_EXPLORER}
         >Interface explorer</a
-      >, by Colin Diesh with Claude AI assistance. <a href="https://github.com/cmdcolin/isoform-explorer">Source</a>.
+      >, by Colin Diesh with Claude AI assistance.
     </footer>
     <script>
       import '../scripts/guides.ts'

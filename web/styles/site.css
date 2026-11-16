@@ -10,6 +10,8 @@
   --caution: #d97a14;
   --chain: #bdb8ab;
   --partner: #3f9b78;
+  --diagram-protein: #f4b9a4;
+  --chip-text: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -25,6 +27,8 @@
     --caution: #e8a046;
     --chain: #77746c;
     --partner: #4fb38c;
+    --diagram-protein: #b0644f;
+    --chip-text: #111110;
   }
 }
 
@@ -128,11 +132,30 @@ section {
   font-size: clamp(28px, 5vw, 42px);
   line-height: 1.15;
   margin: 24px 0 12px;
-  max-width: 22ch;
+  max-width: 18ch;
 }
 
 .hero .lede {
   font-size: 17px;
+}
+
+.hero-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+  gap: 16px 48px;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .hero-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.isoform-diagram {
+  display: block;
+  width: 100%;
+  max-width: 360px;
 }
 
 .split {

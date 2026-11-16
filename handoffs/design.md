@@ -94,11 +94,14 @@ story. The same standard applies here.
 
 ## Pages
 
-- **Home:** the question as the headline, one search box (gene, UniProt
-  accession, ENST, NM), tiles of explorable counts from `totals.json`, three
-  worked examples chosen by the pipeline's own numbers. The search box is the
-  primary action here, unlike Interface explorer's hero, because the question
-  starts from a transcript.
+- **Home:** modelled on Interface explorer's hero: a short headline, one
+  sentence saying what the site shows, and a simple diagram (a canonical
+  protein, and an isoform with its domain missing). The search box (gene,
+  UniProt accession, ENST, NM) comes next in its own section, not in the hero:
+  the owner found a search box front and center discouraging to visitors who
+  first want to know what the site is about. Then tiles of explorable counts
+  from `totals.json`, three worked examples chosen by the pipeline's own
+  numbers, and a closing note that the site says nothing about expression.
 - **Browse:** one sortable, filterable row per protein from `index.json`.
 - **Gene page (`/gene/<page>/`):** one per protein, one anchored section per
   isoform (`#P04637-2`), so a transcript search lands on its isoform.

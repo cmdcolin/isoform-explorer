@@ -9,6 +9,8 @@ export const JBROWSE = jbrowseUrl(
 export const INTERFACE_EXPLORER =
   'https://cmdcolin.github.io/interface-explorer/'
 
+export const REPOSITORY = 'https://github.com/cmdcolin/isoform-explorer'
+
 export function href(path = '') {
   return `${BASE}${path}`
 }
