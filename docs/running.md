@@ -25,9 +25,11 @@ committed). `pnpm all` runs the first two in order.
   protein from the API) with their cached pLDDT, and reads the interfaces from
   `out/interfaces.json`. It also caches Interface explorer's page lists and
   the GRCh38 places of the isoforms' Ensembl transcripts (one batched pass
-  over Ensembl's REST API) and the exons of the canonical isoforms' transcripts
+  over Ensembl's REST API) and the exons of every isoform's transcripts
   (from GENCODE 49's GFF3, downloaded once to `data/`, about 120 MB, into
-  `data/gencode_exons.json`), so a rerun needs no network. Writes `site/data/genes/`, `index.json`, `totals.json`,
+  `data/gencode_exons.json`), so a rerun needs no network. The canonical's
+  exons number the map's Exons row; one transcript per isoform, the one
+  closest to the canonical's, is drawn in the gene view. Writes `site/data/genes/`, `index.json`, `totals.json`,
   `examples.json` and the search maps in `site/data/search/`. With accessions it
   rewrites only those gene files, not the totals. It ends by saying how many
   proteins' model lists and how many models' pLDDT are still pending.

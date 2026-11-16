@@ -229,8 +229,8 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
       structures && record.structures[canonical.accession] && (
         <p class="structure-note muted small">
           Exons of one GENCODE 49 transcript per isoform{record.locus && <>, {record.locus}</>}, drawn in the direction of
-          transcription. Introns are cut to a fixed width; thick boxes are coding, thin ones untranslated. The band joins the
-          canonical's coding exons to the residues they encode.
+          transcription. Thick boxes are coding; thin ones are untranslated and drawn at a fifth of the scale; introns are cut to a
+          fixed width. The band joins the canonical's coding exons to the residues they encode.
         </p>
       )
     }

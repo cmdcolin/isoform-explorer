@@ -119,6 +119,11 @@ story. The same standard applies here.
   isoform (`#P04637-2`), so a transcript search lands on its isoform.
   - A map: canonical feature rows, pLDDT band and partner-interface rows above
     one row per isoform drawn on canonical coordinates.
+  - A Protein / Gene + protein toggle (CSS only; Protein by default). The gene
+    view draws each isoform's transcript, introns at a fixed width, above the
+    map, with a band joining the canonical's coding exons to its residues; it
+    exists so splicing that cuts inside an exon (an alternative acceptor or
+    donor) can be seen rather than explained.
   - Per isoform, the answer first as a sentence, then the losses grouped under
     the edit that causes them, then transcripts, UniProt's note and links
     (UniProt, Ensembl, RefSeq, AlphaFold DB, isoform superposed on canonical in
@@ -140,7 +145,11 @@ story. The same standard applies here.
   isoform whose GENCODE 49 coding length is the canonical length, plus or
   minus a stop codon, in coding nucleotides; `first` is the exon number of
   the first coding exon; null otherwise; the map draws an Exons row and cuts
-  each isoform bar at the junctions),
+  each isoform bar at the junctions), `structures` (by isoform accession, the
+  GRCh38 exons and coding span of one GENCODE 49 transcript whose coding
+  length fits the isoform: for the canonical the first such, for the others
+  the one differing from the canonical's in the fewest bases; isoforms with
+  none are absent),
   `ensemblGenes`, and `unmapped`: the ENST, NM and NP ids UniProt lists for the
   entry without naming an isoform. A model whose pLDDT is not cached yet keeps
   its entry and CIF link with null pLDDT fields.

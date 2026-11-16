@@ -18,6 +18,7 @@ type Bases = [start: number, end: number]
 const ROW = 18
 const NUMBERS = 14
 const INTRON = 12
+const UNTRANSLATED = 0.2
 const BAND = 36
 const CHARACTER_WIDTH = 5.6
 
@@ -42,25 +43,60 @@ export function merged(spans: Bases[]) {
   return runs
 }
 
+function codingBases(structures: Structure[]) {
+  return merged(
+    structures.flatMap(({ coding, exons }) =>
+      exons.flatMap(([start, end]): Bases[] => {
+        const from = Math.max(start, coding[0])
+        const to = Math.min(end, coding[1])
+        return from <= to ? [[from, to]] : []
+      }),
+    ),
+  )
+}
+
+function pieces(block: Bases, coding: Bases[]) {
+  const cuts = coding
+    .flatMap(([start, end]) => [start, end + 1])
+    .filter(cut => cut > block[0] && cut <= block[1])
+  const edges = [block[0], ...cuts, block[1] + 1]
+  return edges.slice(1).map((end, i) => {
+    const start = edges[i] ?? block[0]
+    return {
+      start,
+      end,
+      weight: coding.some(([from, to]) => from <= start && end - 1 <= to) ? 1 : UNTRANSLATED,
+    }
+  })
+}
+
+/** Exons at a shared scale, untranslated bases shrunk, introns at a fixed width, 5′ on the left. */
 export function genomeScale(structures: Structure[], left: number, right: number) {
   const blocks = merged(structures.flatMap(s => s.exons))
-  const total = blocks.reduce((sum, block) => sum + bases(block), 0)
-  const step = (right - left - INTRON * (blocks.length - 1)) / total
-  const reverse = (structures[0]?.strand ?? 1) < 0
-  const starts = blocks.map(
-    (_, i) =>
-      left +
-      i * INTRON +
-      step * blocks.slice(0, i).reduce((sum, block) => sum + bases(block), 0),
+  const coding = codingBases(structures)
+  const all = blocks.flatMap((block, i) =>
+    pieces(block, coding).map(piece => ({ ...piece, block: i })),
   )
+  const weighted = (piece: { start: number; end: number; weight: number }) =>
+    (piece.end - piece.start) * piece.weight
+  const step =
+    (right - left - INTRON * (blocks.length - 1)) /
+    all.reduce((sum, piece) => sum + weighted(piece), 0)
+  const placed = all.map((piece, i) => ({
+    ...piece,
+    x:
+      left +
+      piece.block * INTRON +
+      step * all.slice(0, i).reduce((sum, before) => sum + weighted(before), 0),
+  }))
   const forward = (position: number) => {
-    const i = blocks.findIndex(([, end]) => position <= end)
-    const [start] = blocks[i] ?? [position]
-    return (starts[i] ?? right) + (position - start) * step
+    const piece = placed.find(({ end }) => position <= end)
+    return piece ? piece.x + (position - piece.start) * piece.weight * step : right
   }
+  const reverse = (structures[0]?.strand ?? 1) < 0
   return ([start, end]: Bases) => {
     const from = forward(start)
-    const to = forward(end) + step
+    const to = forward(end + 1)
     return { x: reverse ? left + right - to : from, width: to - from }
   }
 }

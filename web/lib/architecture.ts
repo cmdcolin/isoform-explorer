@@ -59,8 +59,8 @@ export function nodes({ proteins, isoforms, ipsae, contact }: Numbers): Node[] {
       id: 'exons',
       kind: 'step',
       source: 'GENCODE 49',
-      title: 'Canonical exons',
-      lines: ['exons, coding sequence'],
+      title: 'Transcript exons',
+      lines: ['every isoform, coding sequence'],
     },
 
     { id: 'out', kind: 'file', title: 'out/', lines: ['interface residues'] },
