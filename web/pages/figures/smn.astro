@@ -1,0 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { motorNeuronFigure } from '../../lib/motor-neuron-figure.ts'
+---
+
+<Layout title="A motor neuron" indexed={false}>
+  <div class="hero-figure"><Fragment set:html={motorNeuronFigure()} /></div>
+</Layout>

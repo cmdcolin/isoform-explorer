@@ -76,6 +76,14 @@ const SHOTS: Shot[] = [
     wait: 1,
   },
   {
+    name: 'motor-neuron',
+    dir: 'heroes',
+    path: 'figures/smn/',
+    clip: ['svg.motor-neuron-figure'],
+    height: 900,
+    wait: 1,
+  },
+  {
     name: 'tetramer',
     dir: 'heroes',
     path: 'figures/pkm/',

@@ -1,0 +1,74 @@
+---
+title: 'Spinal muscular atrophy and the exon a drug restores'
+date: '2026-11-16'
+order: 6
+description:
+  'In spinal muscular atrophy, SMN1 is lost and the near-identical SMN2 mostly
+  skips exon 7, making a shorter protein, SMN-Δ7. The antisense drug
+  nusinersen makes SMN2 keep the exon.'
+hero: './heroes/motor-neuron.jpg'
+heroPosition: 'left'
+heroAlt:
+  'An illustration of one motor neuron. On the left, a cross-section of the
+  spinal cord: a pale oval with butterfly-shaped grey matter, and an orange
+  nerve cell with branching dendrites in the front horn. Its axon, wrapped in
+  segments of myelin, leaves the cord and curves across to the right, where it
+  branches and ends on five striped, pink muscle fibres.'
+---
+
+import { diseaseHref } from '../../lib/diseases.ts'
+import { story } from '../../lib/stories.ts'
+
+export const s = story('SMN1', 'Q16637-3')
+export const edit = s.isoform.edits[0]
+export const sma1 = s.diseases.find(d => d.name === 'Spinal muscular atrophy 1')
+export const notes = s.isoform.notes.map(n => n.text)
+
+_SMN1_ encodes the survival motor neuron protein. UniProt links the gene to
+{['no', 'one', 'two', 'three', 'four', 'five'][s.diseases.length] ?? s.diseases.length} forms of spinal muscular atrophy, from{' '}
+<a href={sma1 ? diseaseHref(sma1) : s.href}>spinal muscular atrophy 1</a>,
+which begins before six months of age, to milder forms that begin later. In
+UniProt's words, they are characterized by "degeneration of the anterior horn
+cells of the spinal cord, leading to symmetrical muscle weakness and atrophy".
+The drawing above shows one of those cells, a motor neuron, and the muscle it
+reaches.
+
+## Two genes, one base apart in exon 7
+
+The human genome has two nearly identical genes side by side, _SMN1_ and _SMN2_ ([Lefebvre et al., 1995](https://doi.org/10.1016/0092-8674(95)90460-3)).
+One base differs in exon 7, and with the _SMN2_ base most transcripts skip
+that exon ([Lorson et al., 1999](https://doi.org/10.1073/pnas.96.11.6307)).
+People with spinal muscular atrophy lack a working _SMN1_, so their protein
+comes from _SMN2_, and according to UniProt the severity of the disease depends
+mainly on how many copies of _SMN2_ they have.
+
+UniProt has one entry, {s.record.accession}, for the protein of both genes.
+Transcripts without exon 7 encode isoform {s.isoform.name} ({s.isoform.accession}),
+which the gene page sums up as:
+
+> {s.answer}
+
+The protein ends in {edit?.replacement} in place of the canonical residues{' '}
+{edit?.start}–{edit?.end}. According to UniProt's notes on the isoform, it
+"does not homooligomerize", is "thought to be a non-functional protein", and is
+"primarily derived from SMN2 gene".
+
+## A drug that changes splicing
+
+Antisense oligonucleotides are short, modified strands of nucleic acid that
+bind a matching stretch of RNA. Ones that cover a splicing silencer in the
+intron after exon 7 made _SMN2_ keep the exon in mice
+([Hua et al., 2008](https://doi.org/10.1016/j.ajhg.2008.01.014)). One such
+drug, nusinersen, was tested in infants with spinal muscular atrophy: more of
+the infants given it reached motor milestones and survived without permanent
+ventilation than of those given a sham procedure
+([Finkel et al., 2017](https://doi.org/10.1056/NEJMoa1702752)).
+
+## RNA-seq reads fit SMN1 and SMN2
+
+_SMN1_ and _SMN2_ differ at only a few bases, so an RNA-seq read that covers
+none of them could come from either gene. Reads that skip exon 7 come from both
+genes' transcripts, and only those that cover one of the differing bases can be
+told apart.
+
+<a href={s.href}>{`Open ${s.isoform.name} on the SMN1 page`}</a>.

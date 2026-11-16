@@ -155,7 +155,8 @@ story. The same standard applies here.
   palmitate as a skeletal formula (`web/lib/active-site-figure.ts`), an mRNA
   with ribosomes on its start codons and the proteins they make
   (`web/lib/start-codons-figure.ts`, coordinates from RefSeq in
-  `web/lib/posts-data.ts`), a chart of
+  `web/lib/posts-data.ts`), an anatomical drawing of a motor neuron from
+  spinal cord to muscle (`web/lib/motor-neuron-figure.ts`), a chart of
   GTEx data, and an illustration of a PDB structure in David Goodsell's style
   (`src/illustration.ts` extracts the atoms, `web/scripts/illustrate.ts` draws
   them). Screenshots of the gene page and of JBrowse appear inside posts as
