@@ -49,7 +49,6 @@ const links = [
             </a>
           ))
         }
-        <a class="sibling-link" href={INTERFACE_EXPLORER}>Interface explorer</a>
         <a href={REPOSITORY}>GitHub</a>
       </nav>
     </header>
@@ -57,12 +56,15 @@ const links = [
       <slot />
     </main>
     <footer class="site-footer">
-      Prototype. Proteins, isoforms, features and transcript cross-references from <a href="https://www.uniprot.org/"
-        >UniProt</a
-      >, predicted structures and complexes from <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> (CC-BY 4.0),
-      viewer <a href="https://jbrowse.org/jb2/">JBrowse 2</a>. A sibling of <a href={INTERFACE_EXPLORER}
-        >Interface explorer</a
-      >, by Colin Diesh with Claude AI assistance.
+      <nav aria-label="Sibling sites">
+        <a href={INTERFACE_EXPLORER}>Interface explorer</a>
+      </nav>
+      <p>
+        Prototype. Proteins, isoforms, features and transcript cross-references from <a href="https://www.uniprot.org/"
+          >UniProt</a
+        >, predicted structures and complexes from <a href="https://alphafold.ebi.ac.uk/">AlphaFold DB</a> (CC-BY 4.0),
+        viewer <a href="https://jbrowse.org/jb2/">JBrowse 2</a>. By Colin Diesh with Claude AI assistance.
+      </p>
     </footer>
     <script>
       import '../scripts/guides.ts'

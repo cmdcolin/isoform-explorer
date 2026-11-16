@@ -54,7 +54,6 @@ a {
   align-items: center;
   justify-content: space-between;
   padding: 14px max(16px, calc((100% - 1048px) / 2));
-  border-bottom: 1px solid var(--border);
 }
 
 .brand {
@@ -82,11 +81,6 @@ a {
   color: var(--text);
   font-weight: 650;
   text-decoration: none;
-}
-
-.site-header nav .sibling-link {
-  padding-left: 18px;
-  border-left: 1px solid var(--border);
 }
 
 h1:focus {
@@ -575,6 +569,18 @@ details.more summary {
   color: var(--text-2);
   font-size: 13px;
   text-align: center;
+}
+
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.site-footer p {
+  margin: 0;
 }
 
 /* Search, browse table and home */
