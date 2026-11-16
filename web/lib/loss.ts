@@ -515,7 +515,7 @@ export function residueClause(
     : swapPhrases.length
       ? [
           listText([...swapPhrases, insertPhrase].filter(Boolean)),
-          'nothing else is missing',
+          'every other canonical residue is present',
         ].join('; ')
       : inserts.length
         ? `has every canonical residue and ${insertNoun}`
@@ -663,8 +663,8 @@ export function modelText(record: GeneRecord, isoform: Isoform) {
               ? "Its confidence is not compared with the canonical model's."
               : 'Not compared with the canonical protein, which has no full-length model with confidence fetched.'
             : model.losingConfidence === 0
-              ? `No shared residue falls from pLDDT ≥ ${FOLDED_PLDDT} in the canonical model to below ${UNFOLDED_PLDDT} in this one.`
-              : `${plural(model.losingConfidence, 'shared residue')} ${model.losingConfidence === 1 ? 'falls' : 'fall'} from pLDDT ≥ ${FOLDED_PLDDT} in the canonical model to below ${UNFOLDED_PLDDT} in this one: the model's confidence, not a measurement of folding.`
+              ? `Every shared residue with pLDDT ≥ ${FOLDED_PLDDT} in the canonical model has pLDDT ${UNFOLDED_PLDDT} or more in this one.`
+              : `${plural(model.losingConfidence, 'shared residue')} ${model.losingConfidence === 1 ? 'has' : 'have'} pLDDT ≥ ${FOLDED_PLDDT} in the canonical model and below ${UNFOLDED_PLDDT} in this one; pLDDT is the model's confidence in each residue.`
         }`
 }
 

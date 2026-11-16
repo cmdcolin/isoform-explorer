@@ -258,7 +258,7 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
       partners > 0 && (
         <span>
           <span class="swatch" style="background:var(--interface)"></span>predicted interface with a partner; circles show
-          the share of its residues present, which is not evidence of binding
+          the share of its residues present in the isoform
         </span>
       )
     }
@@ -290,7 +290,8 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
       {canonical.transcripts.maneSelect && <span class="badge">MANE Select</span>}
     </h2>
     <p class="answer">
-      UniProt's canonical isoform: every other section on this page is measured against its {count(record.length)} residues.
+      {canonical.accession} is UniProt's canonical isoform, and every other section on this page is measured against its{' '}
+      {count(record.length)} residues.
       {maneElsewhere && <> MANE Select encodes <a href={`#${maneElsewhere.accession}`}>{maneElsewhere.accession}</a> instead.</>}
     </p>
     <dl class="facts">
@@ -424,7 +425,7 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
                   {s.touched.length === 0
                     ? `Every predicted interface residue is present, for ${plural(s.partners, 'partner')}. `
                     : s.intact.length > 0 && `Every interface residue is present for ${listText(s.intact)}. `}
-                  Present residues are not evidence of binding: no isoform was modelled with a partner.
+                  Each isoform was modelled alone, so a present residue shows only that the residue is there.
                 </p>
               </dd>
             </>

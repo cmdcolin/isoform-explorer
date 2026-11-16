@@ -39,12 +39,12 @@ export const COLUMN_NOTES: Record<string, string> = {
   transcripts:
     'Alternative isoforms with at least one Ensembl or RefSeq transcript UniProt maps to them.',
   missing:
-    'The most canonical residues any one isoform is missing, with nothing in their place, out of the canonical length. Replaced residues are not counted.',
-  modelled: `The most ${MODELLED} any one isoform is missing; replaced residues are not counted. Blank until the canonical model’s pLDDT is fetched.`,
+    'The most canonical residues any one isoform is missing, with nothing in their place, out of the canonical length.',
+  modelled: `The most ${MODELLED} any one isoform is missing, with nothing in their place. Blank until the canonical model’s pLDDT is fetched.`,
   ...Object.fromEntries(
     GROUPS.map(group => [
       group,
-      `Isoforms ${groupMissing(group)}: ${FEATURE_GROUPS[group].join(', ').toLowerCase()}. Missing only; a replaced residue never counts.`,
+      `Isoforms ${groupMissing(group)} (${FEATURE_GROUPS[group].join(', ').toLowerCase()}), counting missing residues only.`,
     ]),
   ),
   interface: `Isoforms ${INTERFACE_MISSING}.`,

@@ -43,10 +43,10 @@ canonical sequence is M2, so M1 appears on the PKM page as isoform{' '}
 
 ## Mutually exclusive exons
 
-The two exons have the same length, so the reading frame holds either way, and
+M1's and M2's exons have the same length, so the reading frame holds either way, and
 residues {swapStart}–{swapEnd} of M2 become as many different residues in M1.
-Isoform explorer calls that a swap: the stretch is replaced and nothing is
-missing. The features in the replaced stretch are listed all the same, and one
+Isoform explorer calls that a swap, with the stretch replaced and every other
+residue present. The features in the replaced stretch are listed all the same, and one
 of them is part of the binding site for fructose 1,6-bisphosphate (FBP), M2's
 allosteric activator.
 
@@ -71,8 +71,8 @@ the swapped stretch.
 
 ## Where M1's exon is included
 
-The two exons splice into the same exon downstream, so the reads crossing each
-junction can be compared. In GTEx v8, the reads from M1's exon make up{' '}
+M1's and M2's exons are both joined to the same exon downstream, so the reads
+across each junction can be compared. In GTEx v8, the reads from M1's exon make up{' '}
 {tissueShare(e, 'Muscle - Skeletal')} of those in skeletal muscle,{' '}
 {tissueShare(e, 'Brain - Cerebellar Hemisphere')} in cerebellar hemisphere and{' '}
 {tissueShare(e, 'Heart - Left Ventricle')} in heart left ventricle, against{' '}

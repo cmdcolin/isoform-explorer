@@ -12,7 +12,7 @@ const t = totals()
   <h1>Browse</h1>
   <p class="lede">
     One row for each of the {t.proteins.toLocaleString()} proteins. Counts are of alternative isoforms, each measured
-    against the canonical sequence, and only missing residues count: a residue replaced by other sequence never does.
+    against the canonical sequence, and include only residues with nothing in their place.
     See <a href={href('about/')}>About</a> for the rules.
   </p>
   <details class="column-notes">

@@ -37,12 +37,11 @@ export const f2rl2 = expressionOf('O00254-2')
 export const pkm = expressionOf('P14618-2')
 export const alzheimer = diseasesOfPage('APP').find(d => d.acronym === 'AD1')
 
-Isoform explorer compares an isoform's sequence with the canonical protein's and
-computes nothing about where either is made. To answer that, you need RNA or
-protein data from somewhere else, and the easiest numbers to find, GTEx's
-per-transcript expression, can mislead. This post compares them with a more
-direct count on two isoforms, then lists the public sources that measure
-isoforms rather than genes.
+Isoform explorer compares an isoform's sequence with the canonical protein's.
+To find where either is made, you need RNA or protein data from elsewhere, and
+the easiest numbers to find, GTEx's per-transcript expression, can be wrong for
+an isoform. This post compares them with a direct count of reads on two
+isoforms, then lists public sources with data for each isoform.
 
 ## Two ways to measure an isoform's share
 
@@ -56,9 +55,8 @@ we took the splice junction its transcript has and the canonical's lacks, and
 the canonical junction that starts or ends at the same splice site. The junction
 share is the isoform's reads as a fraction of both. We counted reads in
 recount's realignment of the GTEx v8 samples through
-[Snaptron](https://snaptron.cs.jhu.edu/), grouped by tissue: our tally of public
-data on {FETCHED}, not a published result. `pnpm expression` in the repository
-reproduces it.
+[Snaptron](https://snaptron.cs.jhu.edu/), grouped by tissue. The counts are our own tally of public
+data on {FETCHED}, and `pnpm expression` in the repository reproduces it.
 
 In the chart above, blue circles are the junction share and orange diamonds the
 TPM share.

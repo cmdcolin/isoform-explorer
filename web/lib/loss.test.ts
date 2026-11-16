@@ -294,7 +294,7 @@ describe('the answer sentence', () => {
       novel: 14,
     })
     expect(answer(r, i)).toBe(
-      'Has 14 different residues in place of 24 residues of the Ig-like 3 domain (77–100); nothing else is missing; in a replaced stretch: 1 modification.',
+      'Has 14 different residues in place of 24 residues of the Ig-like 3 domain (77–100); every other canonical residue is present; in a replaced stretch: 1 modification.',
     )
   })
 
@@ -423,7 +423,7 @@ describe('structure, interfaces and models', () => {
         }),
       ),
     ).toMatch(
-      /3 shared residues fall .* the model's confidence, not a measurement of folding\.$/,
+      /3 shared residues have pLDDT .* the model's confidence in each residue\.$/,
     )
   })
 
