@@ -12,7 +12,7 @@ export function isoformDiagram() {
   const isoform = 124
   const domainWidth = DOMAIN.end - DOMAIN.start
   return `
-    <svg class="isoform-diagram" viewBox="0 0 400 200" role="img" aria-label="Cartoon of a canonical protein with a domain, and an alternative isoform of it with that stretch missing">
+    <svg class="isoform-diagram" viewBox="0 0 400 200" role="img" aria-label="Cartoon of a canonical protein with a domain, and an alternative isoform of it with the domain spliced out">
       <g fill="currentColor" font-size="14">
         <text x="${LEFT}" y="${canonical - 10}">canonical protein</text>
         <text x="${LEFT}" y="${isoform - 10}">alternative isoform</text>
@@ -27,7 +27,7 @@ export function isoformDiagram() {
         <path d="M${DOMAIN.start} ${canonical + BAR + 4}V${isoform - 4}" />
         <path d="M${DOMAIN.end} ${canonical + BAR + 4}V${isoform - 4}" />
       </g>
-      <text x="${DOMAIN.start + domainWidth / 2}" y="${isoform + BAR + 40}" font-size="14" text-anchor="middle" fill="currentColor">missing</text>
+      <text x="${DOMAIN.start + domainWidth / 2}" y="${isoform + BAR + 40}" font-size="14" text-anchor="middle" fill="currentColor">spliced out</text>
       <path d="M${DOMAIN.start + domainWidth / 2} ${isoform + BAR + 26}V${isoform + BAR + 4}" stroke="currentColor" stroke-width="1.2" />
     </svg>`
 }

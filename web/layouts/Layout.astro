@@ -10,7 +10,7 @@ interface Props {
 }
 
 const DEFAULT_DESCRIPTION =
-  'If this transcript is the one being made, what does the protein lose? Residues, UniProt features, confidently modelled structure and predicted partner interfaces, for every described human protein isoform.'
+  'Explore every described human protein isoform beside its canonical protein, in residues, UniProt features, AlphaFold model confidence and predicted partner interfaces.'
 const { title, description = DEFAULT_DESCRIPTION, nav, indexed = true } = Astro.props
 const fullTitle = title ? `${title} · Isoform explorer` : 'Isoform explorer'
 const canonical = new URL(Astro.url.pathname, Astro.site)
@@ -29,7 +29,7 @@ const links = [
     <meta name="description" content={description} />
     {indexed && <link rel="canonical" href={canonical} />}
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={title ?? 'Isoform explorer: what does this transcript’s protein lose?'} />
+    <meta property="og:title" content={title ?? 'Isoform explorer: human protein isoforms'} />
     <meta property="og:description" content={description} />
     {indexed && <meta property="og:url" content={canonical} />}
     <link rel="icon" href={href('logo.svg')} type="image/svg+xml" />

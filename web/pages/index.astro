@@ -33,10 +33,10 @@ const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']
   <section class="hero">
     <div class="hero-top">
       <div>
-        <h1>Explore what alternative protein isoforms lack</h1>
+        <h1>Explore human protein isoforms</h1>
         <p class="lede">
-          See which domains, sites and predicted partner interfaces each human isoform lacks, compared with UniProt's
-          canonical protein.
+          Compare each isoform with UniProt's canonical protein, residue by residue, across domains, sites, AlphaFold models
+          and predicted partner interfaces.
         </p>
       </div>
       <Fragment set:html={isoformDiagram()} />
@@ -115,6 +115,7 @@ const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']
     }
   </section>
   <p class="note">
-    The site compares sequences only. It says nothing about whether, where or how much a transcript is expressed.
+    Isoform explorer compares sequences. For where and how much each transcript is expressed, see{' '}
+    <a href="https://gtexportal.org/">GTEx</a>.
   </p>
 </Layout>

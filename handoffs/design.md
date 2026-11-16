@@ -13,6 +13,14 @@ isoform: 10,649 proteins and 22,131 alternative isoforms on 2026-11-15.
 
 ## The one question
 
+Public copy (the home hero, ledes, meta descriptions, README) frames the site
+as an open-ended explorer of isoforms, in positive statements: "Explore human
+protein isoforms", "compare each isoform with the canonical protein". The
+owner asked for this over the loss framing below, following the
+anti-ai-writing-tropes skill in `~/src/claudish`. Answer sentences, counts and
+methods keep "lacks" and "missing", because those words name what is
+measured.
+
 **If this transcript is the one being made, what does the protein lose?**
 
 - The visitor arrives with a transcript (ENST or NM), a gene or a UniProt
@@ -104,7 +112,8 @@ story. The same standard applies here.
   first want to know what the site is about; for the same reason the site
   header has no search box. Then tiles of explorable counts
   from `totals.json`, three worked examples chosen by the pipeline's own
-  numbers, and a closing note that the site says nothing about expression.
+  numbers, and a closing note that the site compares sequences and points to
+  GTEx for expression.
 - **Browse:** one sortable, filterable row per protein from `index.json`.
 - **Gene page (`/gene/<page>/`):** one per protein, one anchored section per
   isoform (`#P04637-2`), so a transcript search lands on its isoform.
