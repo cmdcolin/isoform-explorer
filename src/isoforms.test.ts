@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import {
   alphaFoldDb,
   bandRuns,
+  decayOf,
   examples,
   fates,
   featureLosses,
@@ -34,6 +35,8 @@ const noTranscripts = {
   refseq: [],
   refseqProteins: [],
   maneSelect: false,
+  decay: [],
+  onlyDecay: false,
 }
 
 function isoform(overrides: Partial<Isoform>): Isoform {
@@ -411,6 +414,8 @@ describe('summaries', () => {
       refseq: ['NM_1.2'],
       refseqProteins: ['NP_1.1'],
       maneSelect: true,
+      decay: [],
+      onlyDecay: false,
     },
     features: [
       [0, 20, 0],
@@ -526,6 +531,8 @@ describe('summaries', () => {
             refseq: [],
             refseqProteins: [],
             maneSelect: false,
+            decay: [],
+            onlyDecay: false,
           },
           features: [[0, 21, 0]],
         }),
@@ -602,5 +609,42 @@ describe('alphaFoldDb', () => {
       plddt: null,
     })
     expect([...alphaFold.pendingModels]).toEqual(['AF-P1-2-F1'])
+  })
+})
+
+describe('decayOf', () => {
+  const types = new Map([
+    ['ENST1', { type: 'nonsense_mediated_decay', complete: true }],
+    ['ENST2', { type: 'protein_coding', complete: true }],
+    ['ENST3', { type: 'nonsense_mediated_decay', complete: false }],
+    ['ENST4', null],
+  ])
+
+  it('lists the transcripts GENCODE types nonsense_mediated_decay', () => {
+    expect(decayOf(['ENST1.2', 'ENST2.1', 'ENST3.1'], types).decay).toEqual([
+      'ENST1.2',
+      'ENST3.1',
+    ])
+  })
+
+  it('says only decay when every transcript is a complete decay transcript', () => {
+    expect(decayOf(['ENST1.2'], types).onlyDecay).toBe(true)
+  })
+
+  it('needs every transcript, so one coding transcript is enough to say no', () => {
+    expect(decayOf(['ENST1.2', 'ENST2.1'], types).onlyDecay).toBe(false)
+  })
+
+  it('does not vouch for a transcript GENCODE 49 lacks', () => {
+    expect(decayOf(['ENST1.2', 'ENST4.1'], types).onlyDecay).toBe(false)
+    expect(decayOf(['ENST1.2', 'ENST9.1'], types).onlyDecay).toBe(false)
+  })
+
+  it('does not vouch for an incomplete coding sequence', () => {
+    expect(decayOf(['ENST3.1'], types).onlyDecay).toBe(false)
+  })
+
+  it('says nothing for an isoform without Ensembl transcripts', () => {
+    expect(decayOf([], types)).toEqual({ decay: [], onlyDecay: false })
   })
 })

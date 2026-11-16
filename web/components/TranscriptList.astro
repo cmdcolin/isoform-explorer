@@ -1,0 +1,70 @@
+---
+import type { Transcripts } from '../../src/types.ts'
+import { GENCODE_BIOTYPES } from '../lib/site.ts'
+
+interface Props {
+  transcripts: Transcripts
+  none: string
+}
+
+const { transcripts, none } = Astro.props
+const mane = (index: number) => transcripts.maneSelect && index === 0
+const lists = [
+  {
+    source: 'RefSeq',
+    links: transcripts.refseq.map((id, index) => ({
+      id,
+      href: `https://www.ncbi.nlm.nih.gov/nuccore/${id}`,
+      mane: mane(index),
+      decay: false,
+    })),
+  },
+  {
+    source: 'Ensembl',
+    links: transcripts.ensembl.map((id, index) => ({
+      id,
+      href: `https://www.ensembl.org/Homo_sapiens/Transcript/Summary?t=${id.split('.')[0]}`,
+      mane: mane(index),
+      decay: transcripts.decay.includes(id),
+    })),
+  },
+].filter(list => list.links.length > 0)
+const which =
+  transcripts.ensembl.length === 1
+    ? "this isoform's Ensembl transcript"
+    : `all ${transcripts.ensembl.length} of this isoform's Ensembl transcripts`
+---
+
+{
+  lists.length === 0 ? (
+    none
+  ) : (
+    <>
+      {transcripts.onlyDecay && (
+        <p>
+          GENCODE 49 gives {which} the type <code>nonsense_mediated_decay</code>, which{' '}
+          <a href={GENCODE_BIOTYPES}>it assigns</a> when a transcript's coding sequence ends more than 50 bases before a
+          downstream splice site.
+        </p>
+      )}
+      {lists.map(list => (
+        <p>
+          {list.source}:{' '}
+          {list.links.map((link, k) => (
+            <>
+              {k > 0 && ', '}
+              <a href={link.href}>{link.id}</a>
+              {link.mane && ' (MANE Select)'}
+              {link.decay && (
+                <>
+                  {' '}
+                  (<a href={GENCODE_BIOTYPES}>GENCODE</a>: nonsense_mediated_decay)
+                </>
+              )}
+            </>
+          ))}
+        </p>
+      ))}
+    </>
+  )
+}

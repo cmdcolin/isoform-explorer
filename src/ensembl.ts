@@ -22,7 +22,7 @@ import {
 } from './json.ts'
 import { DATA } from './paths.ts'
 import { unversioned } from './sequences.ts'
-import type { Layout, Structure } from './types.ts'
+import type { Layout, Structure, TranscriptType } from './types.ts'
 
 const LOOKUP = 'https://rest.ensembl.org/lookup/id'
 const BATCH = 1000
@@ -31,6 +31,7 @@ const PAUSE = 1000
 const LOW = 100
 const PATH = join(DATA, 'ensembl_transcripts.json')
 const LAYOUTS = join(DATA, 'gencode_exons.json')
+const TYPES = join(DATA, 'gencode_types.json')
 const GENCODE = join(DATA, 'gencode.v49.annotation.gff3.gz')
 const GENCODE_URL =
   'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/gencode.v49.annotation.gff3.gz'
@@ -300,6 +301,58 @@ export async function transcriptLayouts(ids: string[]) {
     )
   }
   return layouts
+}
+
+export function gencodeType(attributes: string) {
+  const type = /(?:^|;)transcript_type=([^;]+)/.exec(attributes)?.[1]
+  const tags = /(?:^|;)tag=([^;]+)/.exec(attributes)?.[1]?.split(',') ?? []
+  return type
+    ? {
+        type,
+        complete:
+          !tags.includes('cds_start_NF') && !tags.includes('cds_end_NF'),
+      }
+    : null
+}
+
+export function typeOf(value: unknown) {
+  const found = record(value)
+  const type = text(found.type)
+  return type ? { type, complete: found.complete === true } : null
+}
+
+async function readTypes(wanted: Set<string>) {
+  const found = new Map<string, TranscriptType>()
+  const lines = createInterface({
+    input: createReadStream(GENCODE).pipe(createGunzip()),
+    crlfDelay: Infinity,
+  })
+  for await (const line of lines) {
+    const [, , type, , , , , , attributes = ''] = line.split('\t')
+    const id = type === 'transcript' && GFF_TRANSCRIPT.exec(attributes)?.[1]
+    const transcript = id && wanted.has(id) ? gencodeType(attributes) : null
+    if (id && transcript) {
+      found.set(id, transcript)
+    }
+  }
+  return found
+}
+
+export async function transcriptTypes(ids: string[]) {
+  const types = new Map(
+    Object.entries(record(existsSync(TYPES) ? readJson(TYPES) : {})).map(
+      ([id, value]) => [id, typeOf(value)],
+    ),
+  )
+  const missing = new Set(ids.filter(id => !types.has(id)))
+  if (missing.size > 0 && (await gencodeFile())) {
+    const found = await readTypes(missing)
+    for (const id of missing) {
+      types.set(id, found.get(id) ?? null)
+    }
+    writeJson(TYPES, Object.fromEntries(types))
+  }
+  return types
 }
 
 export function locusOf(places: (Place | null | undefined)[]) {

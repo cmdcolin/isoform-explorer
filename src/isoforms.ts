@@ -17,6 +17,7 @@ import {
   structureOf,
   transcriptLayouts,
   transcriptPlaces,
+  transcriptTypes,
 } from './ensembl.ts'
 import type { Place } from './ensembl.ts'
 import { explorerPages } from './explorer.ts'
@@ -51,6 +52,7 @@ import type {
   Lookup,
   Model,
   Totals,
+  TranscriptType,
   Transcripts,
 } from './types.ts'
 import {
@@ -379,7 +381,25 @@ export function readInterfaces(path = join(OUT, 'interfaces.json')) {
   )
 }
 
-function transcriptsOf(entry: UniProtEntry) {
+const DECAY = 'nonsense_mediated_decay'
+
+export function decayOf(
+  ids: string[],
+  types: Map<string, TranscriptType | null>,
+) {
+  const typed = ids.map(id => ({ id, type: types.get(unversioned(id)) }))
+  return {
+    decay: typed.filter(t => t.type?.type === DECAY).map(t => t.id),
+    onlyDecay:
+      typed.length > 0 &&
+      typed.every(t => t.type?.type === DECAY && t.type.complete),
+  }
+}
+
+function transcriptsOf(
+  entry: UniProtEntry,
+  types: Map<string, TranscriptType | null>,
+) {
   const ensembl = ensemblByIsoform(entry)
   const refseq = refseqByIsoform(entry)
   const refseqProteins = refseqProteinsByIsoform(entry)
@@ -401,12 +421,16 @@ function transcriptsOf(entry: UniProtEntry) {
       ),
     )
   return {
-    of: (isoform: string) => ({
-      ensembl: ordered(ensembl.get(isoform) ?? []),
-      refseq: ordered(refseq.get(isoform) ?? []),
-      refseqProteins: ordered(refseqProteins.get(isoform) ?? []),
-      maneSelect: isoform === mane,
-    }),
+    of: (isoform: string) => {
+      const ids = ordered(ensembl.get(isoform) ?? [])
+      return {
+        ensembl: ids,
+        refseq: ordered(refseq.get(isoform) ?? []),
+        refseqProteins: ordered(refseqProteins.get(isoform) ?? []),
+        maneSelect: isoform === mane,
+        ...decayOf(ids, types),
+      } satisfies Transcripts
+    },
     unmapped: (shown: Set<string>) => ({
       ensembl: unmapped(ensembl, shown),
       refseq: unmapped(refseq, shown),
@@ -449,12 +473,20 @@ export interface Sources {
   explorer: (accession: string) => GeneRecord['explorer']
   places: Map<string, Place | null>
   layouts: Map<string, Layout | null>
+  types: Map<string, TranscriptType | null>
 }
 
 export async function geneRecord(
   entry: UniProtEntry,
   page: string,
-  { interfaces: predicted, alphaFold, explorer, places, layouts }: Sources,
+  {
+    interfaces: predicted,
+    alphaFold,
+    explorer,
+    places,
+    layouts,
+    types,
+  }: Sources,
 ) {
   const accession = accessionOf(entry)
   const sequence = sequenceOf(entry)
@@ -465,7 +497,7 @@ export async function geneRecord(
   const isoforms = editsByIsoform(entry)
   const displayed = [...isoforms].find(([, info]) => info.displayed)
   const notes = notesByMolecule(entry)
-  const transcripts = transcriptsOf(entry)
+  const transcripts = transcriptsOf(entry, types)
   const features = featuresOf(entry)
   const models = await alphaFold.models(accession)
   const canonical = alphaFold.scored(models.get(accession), sequence)
@@ -876,12 +908,14 @@ async function main(workers = '8', ...accessions: string[]) {
   )
   const places = await transcriptPlaces(mapped)
   const layouts = await transcriptLayouts(mapped)
+  const types = await transcriptTypes(mapped)
   const sources = {
     interfaces,
     alphaFold,
     explorer: await explorerPages(),
     places,
     layouts,
+    types,
   } satisfies Sources
   const failed: string[] = []
   const genes = (

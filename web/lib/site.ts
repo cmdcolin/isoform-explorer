@@ -9,6 +9,9 @@ export const JBROWSE = jbrowseUrl(
 export const INTERFACE_EXPLORER =
   'https://cmdcolin.github.io/interface-explorer/'
 
+export const GENCODE_BIOTYPES =
+  'https://www.gencodegenes.org/pages/biotypes.html'
+
 export const REPOSITORY = 'https://github.com/cmdcolin/isoform-explorer'
 
 export function href(path = '') {

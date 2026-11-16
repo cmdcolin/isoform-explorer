@@ -1,7 +1,8 @@
 ---
 import '../../styles/gene.css'
 import { isoformAtLocusUrl, isoformUrl, transcriptsUrl } from '../../../src/links.ts'
-import type { Isoform, Transcripts } from '../../../src/types.ts'
+import type { Isoform } from '../../../src/types.ts'
+import TranscriptList from '../../components/TranscriptList.astro'
 import Layout from '../../layouts/Layout.astro'
 import { gene, indexRows } from '../../lib/data.ts'
 import { GROUPS, GROUP_LABELS } from '../../lib/features.ts'
@@ -77,22 +78,6 @@ function titleOf(i: { name: string; synonyms: string[]; accession: string }) {
   return [named && `isoform ${named}`, ...i.synonyms].filter(Boolean).join(' · ')
 }
 
-function transcriptLinks(t: Transcripts) {
-  const mark = (index: number) => (t.maneSelect && index === 0 ? ' (MANE Select)' : '')
-  return {
-    ensembl: t.ensembl.map((id, index) => ({
-      id,
-      href: `https://www.ensembl.org/Homo_sapiens/Transcript/Summary?t=${id.split('.')[0]}`,
-      mark: mark(index),
-    })),
-    refseq: t.refseq.map((id, index) => ({
-      id,
-      href: `https://www.ncbi.nlm.nih.gov/nuccore/${id}`,
-      mark: mark(index),
-    })),
-  }
-}
-
 function superposedUrl(i: Isoform) {
   const transcript = transcriptOf(i)
   return symbol && transcript && i.model && canonical.model
@@ -137,11 +122,9 @@ const sections = record.isoforms.map(i => {
     notes: ownNotes(i),
     sharesNotes: sharesNotes(i),
     model: modelText(record, i),
-    transcripts: transcriptLinks(i.transcripts),
     superposed: superposedUrl(i),
   }
 })
-const canonicalLinks = transcriptLinks(canonical.transcripts)
 const structures = structureMap(record, mane?.accession)
 const description = `What ${others === 1 ? 'the one alternative isoform' : `each of the ${others} alternative isoforms`} of ${record.gene} (${record.protein}) lacks relative to the canonical protein: residues, UniProt features, model confidence${partners ? ' and predicted partner interfaces' : ''}.`
 ---
@@ -322,38 +305,10 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
       }
       <dt>Transcripts</dt>
       <dd>
-        {
-          canonicalLinks.ensembl.length + canonicalLinks.refseq.length === 0 ? (
-            'UniProt maps no Ensembl or RefSeq transcript to the canonical isoform.'
-          ) : (
-            <>
-              {canonicalLinks.refseq.length > 0 && (
-                <p>
-                  RefSeq:{' '}
-                  {canonicalLinks.refseq.map((t, k) => (
-                    <>
-                      {k > 0 && ', '}
-                      <a href={t.href}>{t.id}</a>
-                      {t.mark}
-                    </>
-                  ))}
-                </p>
-              )}
-              {canonicalLinks.ensembl.length > 0 && (
-                <p>
-                  Ensembl:{' '}
-                  {canonicalLinks.ensembl.map((t, k) => (
-                    <>
-                      {k > 0 && ', '}
-                      <a href={t.href}>{t.id}</a>
-                      {t.mark}
-                    </>
-                  ))}
-                </p>
-              )}
-            </>
-          )
-        }
+        <TranscriptList
+          transcripts={canonical.transcripts}
+          none="UniProt maps no Ensembl or RefSeq transcript to the canonical isoform."
+        />
       </dd>
     </dl>
     <div class="actions">
@@ -475,36 +430,10 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
           )}
           <dt>Transcripts</dt>
           <dd>
-            {s.transcripts.ensembl.length + s.transcripts.refseq.length === 0 ? (
-              'UniProt maps no Ensembl or RefSeq transcript to this isoform, so no transcript search leads here.'
-            ) : (
-              <>
-                {s.transcripts.refseq.length > 0 && (
-                  <p>
-                    RefSeq:{' '}
-                    {s.transcripts.refseq.map((t, k) => (
-                      <>
-                        {k > 0 && ', '}
-                        <a href={t.href}>{t.id}</a>
-                        {t.mark}
-                      </>
-                    ))}
-                  </p>
-                )}
-                {s.transcripts.ensembl.length > 0 && (
-                  <p>
-                    Ensembl:{' '}
-                    {s.transcripts.ensembl.map((t, k) => (
-                      <>
-                        {k > 0 && ', '}
-                        <a href={t.href}>{t.id}</a>
-                        {t.mark}
-                      </>
-                    ))}
-                  </p>
-                )}
-              </>
-            )}
+            <TranscriptList
+              transcripts={s.isoform.transcripts}
+              none="UniProt maps no Ensembl or RefSeq transcript to this isoform, so no transcript search leads here."
+            />
           </dd>
         </dl>
         <div class="actions">

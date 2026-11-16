@@ -69,6 +69,16 @@ export interface Transcripts {
   /** NP ids of the isoform, with versions. */
   refseqProteins: string[]
   maneSelect: boolean
+  /** The `ensembl` ids GENCODE 49 types nonsense_mediated_decay. */
+  decay: string[]
+  /** Every `ensembl` id is in GENCODE 49, typed nonsense_mediated_decay, with a complete coding sequence. */
+  onlyDecay: boolean
+}
+
+/** A transcript's GENCODE transcript_type; `complete` unless tagged cds_start_NF or cds_end_NF. */
+export interface TranscriptType {
+  type: string
+  complete: boolean
 }
 
 /** UniProt text about this isoform, `topic` naming the comment it is from. */

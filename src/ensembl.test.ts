@@ -3,11 +3,13 @@ import { describe, expect, it } from 'vitest'
 import {
   cachedPlace,
   codingParts,
+  gencodeType,
   junctionsOf,
   layoutOf,
   locusOf,
   placeOf,
   structureOf,
+  typeOf,
 } from './ensembl.ts'
 
 describe('placeOf', () => {
@@ -192,5 +194,49 @@ describe('structureOf', () => {
       [90, 129],
       [201, 300],
     ])
+  })
+})
+
+describe('gencodeType', () => {
+  it('reads the transcript type from GFF3 attributes', () => {
+    expect(
+      gencodeType(
+        'ID=ENST00000525085.1;transcript_id=ENST00000525085.1;transcript_type=protein_coding;level=2;tag=basic,CCDS',
+      ),
+    ).toEqual({ type: 'protein_coding', complete: true })
+  })
+
+  it('marks a coding sequence tagged as starting or ending outside the transcript', () => {
+    expect(
+      gencodeType(
+        'transcript_id=ENST1.1;transcript_type=nonsense_mediated_decay;tag=basic,cds_start_NF,mRNA_start_NF',
+      ),
+    ).toEqual({ type: 'nonsense_mediated_decay', complete: false })
+    expect(
+      gencodeType(
+        'transcript_id=ENST1.1;transcript_type=nonsense_mediated_decay;tag=cds_end_NF',
+      ),
+    ).toEqual({ type: 'nonsense_mediated_decay', complete: false })
+  })
+
+  it('does not take gene_type for the transcript type', () => {
+    expect(
+      gencodeType('gene_type=protein_coding;transcript_id=ENST1.1'),
+    ).toBeNull()
+  })
+})
+
+describe('typeOf', () => {
+  it('reads a type as the cache writes it', () => {
+    expect(typeOf({ type: 'nonsense_mediated_decay', complete: true })).toEqual(
+      {
+        type: 'nonsense_mediated_decay',
+        complete: true,
+      },
+    )
+  })
+
+  it('gives nothing for a transcript GENCODE lacks', () => {
+    expect(typeOf(null)).toBeNull()
   })
 })

@@ -97,6 +97,15 @@ story. The same standard applies here.
   ("A major isoform"). The MANE Select transcript is marked because it is a
   fact about annotation; when it encodes a non-canonical isoform, the page says
   so, since "loses" is measured against UniProt's canonical.
+- **GENCODE's decay type is GENCODE's.** Each Ensembl transcript GENCODE 49
+  types `nonsense_mediated_decay` carries that term, verbatim and attributed,
+  as MANE Select is marked. Only when every Ensembl transcript of an isoform is
+  in GENCODE 49, of that type and with a complete coding sequence (no
+  `cds_start_NF` or `cds_end_NF` tag) does the isoform's Transcripts entry say
+  so in a sentence, with GENCODE's rule (coding sequence ending more than 50
+  bases before a downstream splice site). Never paraphrase it as degraded, not
+  made or predicted NMD. A mixed isoform gets the inline marks only: there the
+  type often reflects a spliced 3′ UTR, not the protein (ADARB1).
 - **Not novel transcripts.** Only isoforms UniProt describes. A transcript not
   mapped to one is not on the site; About says so.
 
