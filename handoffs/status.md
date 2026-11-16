@@ -40,16 +40,17 @@ file says where the work stands.
 - Pages already distinguish "model exists, confidence not yet fetched" from "no
   model", so the site is correct while this fills in.
 
-## For the owner to do
+## Deployment
 
-- Create the GitHub repository and enable Pages; `.github/workflows/pages.yml`
-  builds, checks links and deploys on a push to main. Nothing has been pushed.
-- Every JBrowse link loads `jbrowse/config.json` from the deployed site, so they
-  404 until the first deploy. The superposed and genome views were checked
-  against Interface explorer's deployed config, which has no GENCODE track:
-  opening an isoform by ENST is the one path not yet seen working end to end.
-  Check one ENST-only isoform after deploying.
-- The header and footer have no link to the repository yet.
+- Repository: https://github.com/cmdcolin/isoform-explorer (public). Pages
+  builds from `.github/workflows/pages.yml` on every push to main and serves
+  https://cmdcolin.github.io/isoform-explorer/. The footer links the repository.
+- Every JBrowse link loads `jbrowse/config.json` from the deployed site. The
+  GENCODE track is kept, so ENST-only isoforms can open. GENCODE's GFF3 has no
+  `Name` attribute, so the track's label expression shows `gene_name` on genes
+  and the transcript id on transcripts; without it genes read as ENSG ids.
+  Opening an isoform by ENST has still not been seen working end to end in a
+  browser.
 
 ## Open, small
 

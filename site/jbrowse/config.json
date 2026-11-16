@@ -124,6 +124,18 @@
       ],
       "assemblyNames": [
         "hg38"
+      ],
+      "displays": [
+        {
+          "type": "LinearBasicDisplay",
+          "displayId": "hg38-gencodeComp-LinearBasicDisplay",
+          "renderer": {
+            "type": "SvgFeatureRenderer",
+            "labels": {
+              "name": "jexl:get(feature,'type')=='gene' ? (get(feature,'gene_name') || get(feature,'id')) : (get(feature,'name') || get(feature,'id'))"
+            }
+          }
+        }
       ]
     }
   ],
