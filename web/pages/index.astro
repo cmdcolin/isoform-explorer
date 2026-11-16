@@ -41,7 +41,7 @@ const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']
       </div>
       <Fragment set:html={isoformDiagram()} />
     </div>
-    <a class="hero-shot" href={geneHref('ZDHHC16')}>
+    <figure class="hero-shot">
       <img
         src={href('preview.png')}
         width="2200"
@@ -49,11 +49,12 @@ const tries = ['TP53', 'P04637-2', 'ENST00000420246.6', 'NM_001126114']
         fetchpriority="high"
         alt="The ZDHHC16 gene page's map: topology, domains, sites, canonical pLDDT and numbered exons above four isoforms drawn on the canonical sequence, each bar cut at the exon junctions, with the DHHC domain highlighted down the rows"
       />
-      <span>
+      <figcaption>
         Each gene page draws every isoform of a protein on its canonical sequence, under the canonical's domains, sites,
         model confidence and exons. Here, ZDHHC16, whose isoform 2 skips exon 8, with its DHHC domain highlighted.
-      </span>
-    </a>
+        <a href={geneHref('ZDHHC16')}>Open the ZDHHC16 page</a>
+      </figcaption>
+    </figure>
   </section>
 
   <section>

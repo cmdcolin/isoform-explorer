@@ -154,10 +154,14 @@ section {
 
 .hero-shot {
   display: block;
-  margin-top: 24px;
+  margin: 24px 0 0;
   color: var(--text-2);
   font-size: 14px;
-  text-decoration: none;
+}
+
+.hero-shot figcaption a {
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .hero-shot img {
@@ -167,10 +171,6 @@ section {
   margin-bottom: 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
-}
-
-.hero-shot:hover img {
-  border-color: var(--interface);
 }
 
 @media (max-width: 640px) {
