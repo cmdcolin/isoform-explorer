@@ -15,9 +15,9 @@ file says where the work stands.
 
 - Pipeline: `pnpm interfaces` (predicted partner interfaces for every protein
   with an alternative isoform) and `pnpm isoforms` (every described isoform's
-  losses on canonical coordinates, the index, totals, search lookups and worked
-  examples). A rerun with full caches needs no network, takes seconds, and
-  leaves `git status` clean.
+  losses on canonical coordinates, the index, totals and search lookups). A
+  rerun with full caches needs no network, takes seconds, and leaves
+  `git status` clean.
 - Site: home with search, browse, one gene page per protein with an anchored
   section per isoform, About. A full build is about 10,600 pages and 400 MB.
 - One outside review of the built site (a reader told nothing of the design,

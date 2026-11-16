@@ -121,7 +121,8 @@ story. The same standard applies here.
   first want to know what the site is about; for the same reason the site
   header has no search box. Then tiles of explorable counts
   from `totals.json`, a card per blog post with its hero, and a closing note that the site compares sequences and points to
-  GTEx for expression.
+  the expression post rather than straight to GTEx, whose per-transcript
+  numbers that post shows can mislead.
 - **Browse:** one sortable, filterable row per protein from `index.json`.
 - **Gene page (`/gene/<page>/`):** one per protein, one anchored section per
   isoform (`#P04637-2`), so a transcript search lands on its isoform.

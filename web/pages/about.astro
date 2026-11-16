@@ -5,7 +5,7 @@ import Layout from '../layouts/Layout.astro'
 import { architectureSvg } from '../lib/architecture.ts'
 import { totals } from '../lib/data.ts'
 import { share } from '../lib/labels.ts'
-import { INTERFACE_EXPLORER, JBROWSE, REPOSITORY } from '../lib/site.ts'
+import { INTERFACE_EXPLORER, JBROWSE, REPOSITORY, href } from '../lib/site.ts'
 
 const t = totals()
 const n = (value: number) => value.toLocaleString()
@@ -59,7 +59,10 @@ const references = [
 
     <h2>Related data</h2>
     <ul>
-      <li>Expression by tissue: <a href="https://gtexportal.org/">GTEx</a>.</li>
+      <li>
+        Expression by tissue: <a href="https://gtexportal.org/">GTEx</a>, whose per-transcript numbers can mislead; check the
+        isoform's splice junction first, as <a href={href('blog/2026-11-16-where-isoforms-are-made/')}>this post</a> explains.
+      </li>
       <li>ClinVar variants on predicted interfaces: <a href={INTERFACE_EXPLORER}>Interface explorer</a>.</li>
       <li>Transcripts without a UniProt isoform: the GENCODE and RefSeq tracks in <a href={JBROWSE}>JBrowse 2</a>.</li>
     </ul>
