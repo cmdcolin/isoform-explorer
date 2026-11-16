@@ -1,61 +1,37 @@
+import { codingParts } from '../../src/ensembl.ts'
 import type { GeneRecord, Structure } from '../../src/types.ts'
 import { esc } from './html.ts'
-import { type Run, span } from './loss.ts'
+import { type Run, count, mergeRuns, runLength, span } from './loss.ts'
 import {
+  CHARACTER_WIDTH,
   LEFT,
   RIGHT,
   WIDTH,
+  fixed,
   mapRows,
   mapWidth,
   minWidth,
+  partnerTracks,
   rowLabel,
   scale,
   spanData,
 } from './maps.ts'
 
-type Bases = [start: number, end: number]
-
 const ROW = 18
-const NUMBERS = 14
+const ROWS_TOP = 14
 const INTRON = 12
 const UNTRANSLATED = 0.2
 const BAND = 36
-const CHARACTER_WIDTH = 5.6
 
-function fixed(n: number) {
-  return Number(n.toFixed(1))
-}
+type Place = ReturnType<typeof genomeScale>
 
-function bases([start, end]: Bases) {
-  return end - start + 1
-}
-
-export function merged(spans: Bases[]) {
-  const runs: Bases[] = []
-  for (const [start, end] of spans.toSorted((a, b) => a[0] - b[0])) {
-    const last = runs.at(-1)
-    if (last && start <= last[1] + 1) {
-      last[1] = Math.max(last[1], end)
-    } else {
-      runs.push([start, end])
-    }
-  }
-  return runs
-}
-
-function codingBases(structures: Structure[]) {
-  return merged(
-    structures.flatMap(({ coding, exons }) =>
-      exons.flatMap(([start, end]): Bases[] => {
-        const from = Math.max(start, coding[0])
-        const to = Math.min(end, coding[1])
-        return from <= to ? [[from, to]] : []
-      }),
-    ),
+function codedParts(structure: Structure) {
+  return codingParts(structure).flatMap(({ number, coding }) =>
+    coding ? [{ number, ...coding }] : [],
   )
 }
 
-function pieces(block: Bases, coding: Bases[]) {
+function pieces(block: Run, coding: Run[]) {
   const cuts = coding
     .flatMap(([start, end]) => [start, end + 1])
     .filter(cut => cut > block[0] && cut <= block[1])
@@ -65,81 +41,71 @@ function pieces(block: Bases, coding: Bases[]) {
     return {
       start,
       end,
-      weight: coding.some(([from, to]) => from <= start && end - 1 <= to) ? 1 : UNTRANSLATED,
+      weight: coding.some(([from, to]) => from <= start && end - 1 <= to)
+        ? 1
+        : UNTRANSLATED,
     }
   })
 }
 
 /** Exons at a shared scale, untranslated bases shrunk, introns at a fixed width, 5′ on the left. */
 export function genomeScale(structures: Structure[], left: number, right: number) {
-  const blocks = merged(structures.flatMap(s => s.exons))
-  const coding = codingBases(structures)
-  const all = blocks.flatMap((block, i) =>
-    pieces(block, coding).map(piece => ({ ...piece, block: i })),
+  const blocks = mergeRuns(structures.flatMap(s => s.exons))
+  const coding = mergeRuns(
+    structures.flatMap(s => codedParts(s).map(part => part.bases)),
   )
+  const all = blocks.map(block => pieces(block, coding))
   const weighted = (piece: { start: number; end: number; weight: number }) =>
     (piece.end - piece.start) * piece.weight
   const step =
     (right - left - INTRON * (blocks.length - 1)) /
-    all.reduce((sum, piece) => sum + weighted(piece), 0)
-  const placed = all.map((piece, i) => ({
-    ...piece,
-    x:
-      left +
-      piece.block * INTRON +
-      step * all.slice(0, i).reduce((sum, before) => sum + weighted(before), 0),
-  }))
+    all.flat().reduce((sum, piece) => sum + weighted(piece), 0)
+  let x = left - INTRON
+  const placed = all.flatMap(block => {
+    x += INTRON
+    return block.map(piece => {
+      const at = x
+      x += weighted(piece) * step
+      return { ...piece, x: at }
+    })
+  })
   const forward = (position: number) => {
     const piece = placed.find(({ end }) => position <= end)
-    return piece ? piece.x + (position - piece.start) * piece.weight * step : right
+    return piece
+      ? piece.x + (position - piece.start) * piece.weight * step
+      : right
   }
   const reverse = (structures[0]?.strand ?? 1) < 0
-  return ([start, end]: Bases) => {
+  return ([start, end]: Run) => {
     const from = forward(start)
     const to = forward(end + 1)
     return { x: reverse ? left + right - to : from, width: to - from }
   }
 }
 
-/** Exons in transcript order, with the coding bases and their offsets in coding nucleotides. */
-export function codingParts({ strand, coding, exons }: Structure) {
-  const ordered = strand < 0 ? exons.toReversed() : exons
-  let before = 0
-  return ordered.map((exon, i) => {
-    const start = Math.max(exon[0], coding[0])
-    const end = Math.min(exon[1], coding[1])
-    const part = start <= end ? { bases: [start, end] satisfies Bases, from: before } : null
-    before += part ? bases(part.bases) : 0
-    return { exon, number: i + 1, coding: part }
-  })
-}
-
-export function canonicalResidues(
-  canonical: Structure,
-  [start, end]: Bases,
-  length: number,
-) {
-  return codingParts(canonical).flatMap(({ coding }) => {
-    const [low, high] = coding?.bases ?? [0, -1]
-    const from = Math.max(low, start)
-    const to = Math.min(high, end)
-    const offsets =
-      coding && from <= to
-        ? (canonical.strand < 0 ? [high - to, high - from] : [from - low, to - low]).map(
-            n => coding.from + n,
-          )
-        : []
-    const [first = 0, last = -1] = offsets.map(n => Math.floor(n / 3) + 1)
-    const run: Run = [first, Math.min(last, length)]
-    return run[0] <= run[1] ? [run] : []
-  })
+/** The canonical residues whose codons lie in the given bases. */
+export function canonicalResidues(canonical: Structure, length: number) {
+  const coded = codedParts(canonical)
+  return ([start, end]: Run) =>
+    coded.flatMap(({ bases: [low, high], from }) => {
+      const first = Math.max(low, start)
+      const last = Math.min(high, end)
+      const [a, b] =
+        canonical.strand < 0
+          ? [high - last, high - first]
+          : [first - low, last - low]
+      const run: Run = [
+        Math.floor((from + a) / 3) + 1,
+        Math.min(Math.floor((from + b) / 3) + 1, length),
+      ]
+      return first <= last && run[0] <= run[1] ? [run] : []
+    })
 }
 
 function transcriptSvg(
-  place: ReturnType<typeof genomeScale>,
+  place: Place,
   structure: Structure,
-  canonical: Structure,
-  length: number,
+  residuesOf: ReturnType<typeof canonicalResidues>,
   top: number,
 ) {
   const line = place([
@@ -152,19 +118,15 @@ function transcriptSvg(
     .map(({ exon, number, coding }) => {
       const whole = place(exon)
       const thick = coding && place(coding.bases)
-      const residues = coding ? canonicalResidues(canonical, coding.bases, length) : []
-      const title = `Exon ${number} of ${structure.transcript}: ${exon[0].toLocaleString('en')}–${exon[1].toLocaleString('en')}, ${bases(exon)} bp${residues.length ? `; the canonical's residues ${residues.map(([a, b]) => span(a, b)).join(', ')} come from these bases` : ''}`
-      return `<g class="exon"${residues.length ? ` data-span="${spanData(residues)}"` : ''}><title>${esc(title)}</title><rect class="utr" x="${fixed(whole.x)}" y="${top + 3}" width="${fixed(whole.width)}" height="6"/>${thick ? `<rect class="cds" x="${fixed(thick.x)}" y="${top + 1}" width="${fixed(thick.width)}" height="10"/>` : ''}</g>`
+      const residues = coding ? residuesOf(coding.bases) : []
+      const untranslated =
+        !coding || coding.bases[0] !== exon[0] || coding.bases[1] !== exon[1]
+      return `<g class="exon"${residues.length ? ` data-span="${spanData(residues)}"` : ''}><title>${esc(`Exon ${number} of ${structure.transcript}: ${count(exon[0])}–${count(exon[1])}, ${runLength([exon])} bp`)}</title>${untranslated ? `<rect class="utr" x="${fixed(whole.x)}" y="${top + 3}" width="${fixed(whole.width)}" height="6"/>` : ''}${thick ? `<rect class="cds" x="${fixed(thick.x)}" y="${top + 1}" width="${fixed(thick.width)}" height="10"/>` : ''}</g>`
     })
     .join('')}`
 }
 
-function guides(
-  place: ReturnType<typeof genomeScale>,
-  canonical: Structure,
-  top: number,
-  bottom: number,
-) {
+function guides(place: Place, canonical: Structure, top: number, bottom: number) {
   return `<g class="guides">${canonical.exons
     .flatMap(exon => {
       const { x, width } = place(exon)
@@ -174,34 +136,27 @@ function guides(
     .join('')}</g>`
 }
 
-function numbers(place: ReturnType<typeof genomeScale>, canonical: Structure) {
+function numbers(place: Place, canonical: Structure) {
   return codingParts(canonical)
     .map(({ exon, number }) => {
       const { x, width } = place(exon)
-      return width > 4 + String(number).length * CHARACTER_WIDTH
+      return width > 6 + String(number).length * CHARACTER_WIDTH
         ? `<text class="number" x="${fixed(x + width / 2)}" y="10" text-anchor="middle">${number}</text>`
         : ''
     })
     .join('')
 }
 
-function projection(
-  place: ReturnType<typeof genomeScale>,
-  canonical: Structure,
-  length: number,
-  top: number,
-) {
+function projection(place: Place, canonical: Structure, length: number, top: number) {
   const s = scale(length)
   const at = (nucleotides: number) => s.left + (nucleotides / 3) * s.step
-  return `<g class="projection">${codingParts(canonical)
-    .flatMap(({ number, coding }, i) => {
-      const end = coding && Math.min(coding.from + bases(coding.bases), length * 3)
-      const gene = coding && place(coding.bases)
-      return coding && gene && end !== null && end > coding.from
-        ? [
-            `<path class="p${i % 2}" d="M${fixed(gene.x)} ${top}H${fixed(gene.x + gene.width)}L${fixed(at(end))} ${top + BAND}H${fixed(at(coding.from))}z"><title>${esc(`Exon ${number}'s coding bases become the canonical's residues ${span(Math.floor(coding.from / 3) + 1, Math.ceil(end / 3))}`)}</title></path>`,
-          ]
-        : []
+  return `<g class="projection">${codedParts(canonical)
+    .map(({ number, bases, from }, i) => {
+      const end = Math.min(from + runLength([bases]), length * 3)
+      const gene = place(bases)
+      return end > from
+        ? `<path class="p${i % 2}" d="M${fixed(gene.x)} ${top}H${fixed(gene.x + gene.width)}L${fixed(at(end))} ${top + BAND}H${fixed(at(from))}z"><title>${esc(`Exon ${number}'s coding bases become the canonical's residues ${span(Math.floor(from / 3) + 1, Math.ceil(end / 3))}`)}</title></path>`
+        : ''
     })
     .join('')}</g>`
 }
@@ -213,19 +168,18 @@ export function structureMap(
   const canonical = record.structures[record.canonical.accession]
   const rows = mapRows(record, maneAccession)
   const drawn = rows.flatMap(row => record.structures[row.accession] ?? [])
-  const width = mapWidth(record)
+  const width = mapWidth(partnerTracks(record))
   const place = genomeScale(drawn, LEFT, WIDTH - RIGHT)
-  const rowsTop = NUMBERS
-  const rowsBottom = rowsTop + rows.length * ROW
-  const height = rowsBottom + BAND
-  return canonical && drawn.length > 1
-    ? `<svg class="structure track" viewBox="0 0 ${width} ${height}" style="min-width:${minWidth(width)}px" role="img" aria-label="${esc(`${record.gene}: the exons of a GENCODE transcript for each of ${drawn.length} isoforms, introns shortened, above the canonical's coding exons mapped onto its residues`)}">${numbers(place, canonical)}${guides(place, canonical, rowsTop - 2, rowsBottom)}${rows
+  const rowsBottom = ROWS_TOP + rows.length * ROW
+  const residuesOf = canonical && canonicalResidues(canonical, record.length)
+  return canonical && residuesOf && drawn.length > 1
+    ? `<svg class="structure track" viewBox="0 0 ${width} ${rowsBottom + BAND}" style="min-width:${minWidth(width)}px" role="img" aria-label="${esc(`${record.gene}: the exons of a GENCODE transcript for each of ${drawn.length} isoforms, introns shortened, above the canonical's coding exons mapped onto its residues`)}">${numbers(place, canonical)}${guides(place, canonical, ROWS_TOP - 2, rowsBottom)}${rows
         .map((row, index) => {
-          const top = rowsTop + index * ROW
+          const top = ROWS_TOP + index * ROW
           const structure = record.structures[row.accession]
           return `<g class="iso"><title>${esc(structure ? `${row.title}; exons of ${structure.transcript}` : row.title)}</title>${rowLabel(row, index === 0, top)}${
             structure
-              ? transcriptSvg(place, structure, canonical, record.length, top)
+              ? transcriptSvg(place, structure, residuesOf, top)
               : `<text class="none" x="${LEFT}" y="${top + 10}">No GENCODE transcript encodes this isoform's length</text>`
           }</g>`
         })

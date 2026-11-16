@@ -149,15 +149,16 @@ export interface GeneRecord {
   structures: Record<string, Structure>
 }
 
-/**
- * A GENCODE transcript encoding the isoform, in GRCh38 coordinates; `exons`
- * ascending, whatever the strand.
- */
-export interface Structure {
-  transcript: string
+/** Exons and coding span of a transcript, in GRCh38 coordinates. */
+export interface Layout {
   strand: number
   coding: [start: number, end: number]
   exons: [start: number, end: number][]
+}
+
+/** A GENCODE transcript encoding the isoform. */
+export interface Structure extends Layout {
+  transcript: string
 }
 
 export interface Exons {

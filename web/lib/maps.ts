@@ -32,7 +32,7 @@ const COLUMN = 22
 const MAP_PARTNERS = 12
 const ALIKE = 0.8
 const BRIDGE = 4
-const CHARACTER_WIDTH = 5.6
+export const CHARACTER_WIDTH = 5.6
 const TICKS: FeatureGroup[] = ['sites', 'modifications']
 
 const REGIONS: FeatureType[] = ['Region', 'Coiled coil']
@@ -124,7 +124,7 @@ export function scale(
 
 type Scale = ReturnType<typeof scale>
 
-function fixed(n: number) {
+export function fixed(n: number) {
   return Number(n.toFixed(1))
 }
 
@@ -289,7 +289,7 @@ function pie(x: number, y: number, radius: number, share: number) {
       : ''
 }
 
-export interface Row {
+interface Row {
   accession: string
   label: string
   name: string
@@ -357,8 +357,7 @@ function headerHeightOf(tracks: { label: string }[]) {
     : 0
 }
 
-export function mapWidth(record: Pick<GeneRecord, 'gene' | 'interfaces'>) {
-  const tracks = partnerTracks(record)
+export function mapWidth(tracks: { label: string }[]) {
   return (
     WIDTH +
     (tracks.length
@@ -447,7 +446,7 @@ export function isoformMap(
     })
     .join('')
   const rowsTop = Math.max(y + 8, headerHeightOf(tracks))
-  const width = mapWidth(record)
+  const width = mapWidth(tracks)
   const isoformRows = mapRows(record, maneAccession)
   const headers = tracks
     .map((track, index) => {

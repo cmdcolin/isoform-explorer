@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 
 import type { Structure } from '../../src/types.ts'
-import { canonicalResidues, codingParts, genomeScale, merged } from './structures.ts'
+import { canonicalResidues, genomeScale } from './structures.ts'
 
 const ZDHHC16: Structure = {
   transcript: 'ENST00000393760.6',
@@ -23,53 +23,32 @@ const ZDHHC16: Structure = {
   ],
 }
 
-describe('merged', () => {
-  test('joins overlapping and touching spans', () => {
-    expect(
-      merged([
-        [10, 20],
-        [1, 5],
-        [21, 30],
-        [25, 26],
-      ]),
-    ).toEqual([
-      [1, 5],
-      [10, 30],
-    ])
-  })
-})
-
-describe('codingParts', () => {
-  test('numbers exons along the transcript and counts coding nucleotides before each', () => {
-    const parts = codingParts(ZDHHC16)
-    expect(parts[0]?.coding).toBeNull()
-    expect(parts[2]).toMatchObject({ number: 3, coding: { bases: [97451676, 97451918], from: 0 } })
-    expect(parts[6]?.coding?.from).toBe(556)
-  })
-
-  test('walks a minus-strand transcript from its highest coordinate', () => {
-    const parts = codingParts({ transcript: 'T', strand: -1, coding: [100, 290], exons: [[90, 129], [201, 300]] })
-    expect(parts.map(p => [p.number, p.exon, p.coding?.from])).toEqual([
-      [1, [201, 300], 0],
-      [2, [90, 129], 90],
-    ])
-  })
-})
+const MINUS: Structure = {
+  transcript: 'T',
+  strand: -1,
+  coding: [100, 290],
+  exons: [
+    [90, 129],
+    [201, 300],
+  ],
+}
 
 describe('canonicalResidues', () => {
+  const residuesOf = canonicalResidues(ZDHHC16, 377)
+
   test('a later acceptor inside exon 7, as in ZDHHC16 isoform 3, keeps residues 215-230', () => {
-    expect(canonicalResidues(ZDHHC16, [97453618, 97453663], 377)).toEqual([[215, 230]])
+    expect(residuesOf([97453618, 97453663])).toEqual([[215, 230]])
   })
 
   test('untranslated bases encode no residues, and the stop codon is not one', () => {
-    expect(canonicalResidues(ZDHHC16, [97446175, 97446353], 377)).toEqual([])
-    expect(canonicalResidues(ZDHHC16, [97456889, 97456891], 377)).toEqual([])
+    expect(residuesOf([97446175, 97446353])).toEqual([])
+    expect(residuesOf([97456889, 97456891])).toEqual([])
   })
 
   test('counts from the high end on the minus strand', () => {
-    const minus: Structure = { transcript: 'T', strand: -1, coding: [100, 290], exons: [[90, 129], [201, 300]] }
-    expect(canonicalResidues(minus, [285, 290], 63)).toEqual([[1, 2]])
-    expect(canonicalResidues(minus, [100, 129], 63)).toEqual([[31, 40]])
+    const minus = canonicalResidues(MINUS, 63)
+    expect(minus([285, 290])).toEqual([[1, 2]])
+    expect(minus([100, 129])).toEqual([[31, 40]])
   })
 })
 
@@ -86,11 +65,7 @@ describe('genomeScale', () => {
   })
 
   test('puts the 5′ end on the left for a minus-strand gene', () => {
-    const place = genomeScale(
-      [{ transcript: 'T', strand: -1, coding: [100, 290], exons: [[90, 129], [201, 300]] }],
-      0,
-      1000,
-    )
+    const place = genomeScale([MINUS], 0, 1000)
     expect(place([201, 300]).x).toBe(0)
     expect(place([90, 129]).x).toBeGreaterThan(place([201, 300]).x)
   })

@@ -497,10 +497,6 @@
   fill: var(--text-2);
 }
 
-.structure .projection path {
-  stroke: none;
-}
-
 .structure .projection .p0 {
   fill: color-mix(in srgb, var(--chain) 45%, transparent);
 }

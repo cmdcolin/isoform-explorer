@@ -12,13 +12,13 @@ import {
   writeJson,
 } from './json.ts'
 import {
-  canonicalExons,
+  junctionsOf,
   locusOf,
   structureOf,
   transcriptLayouts,
   transcriptPlaces,
 } from './ensembl.ts'
-import type { Layout, Place } from './ensembl.ts'
+import type { Place } from './ensembl.ts'
 import { explorerPages } from './explorer.ts'
 import { pythonRound } from './numeric.ts'
 import { DATA, OUT, SITE_DATA } from './paths.ts'
@@ -47,6 +47,7 @@ import type {
   IndexRow,
   InterfaceLoss,
   Isoform,
+  Layout,
   Lookup,
   Model,
   Totals,
@@ -499,6 +500,8 @@ export async function geneRecord(
     sequence.length,
     null,
   )
+  const canonicalJunctions =
+    canonicalStructure && junctionsOf(canonicalStructure, sequence.length)
   const structures: GeneRecord['structures'] = {}
   if (canonicalStructure) {
     structures[canonicalAccession] = canonicalStructure
@@ -540,11 +543,10 @@ export async function geneRecord(
     locus: locusOf(
       shown.flatMap(t => t.ensembl).map(id => places.get(unversioned(id))),
     ),
-    exons: canonicalExons(
-      canonicalTranscripts.ensembl,
-      layouts,
-      sequence.length,
-    ),
+    exons:
+      canonicalStructure && canonicalJunctions
+        ? { transcript: canonicalStructure.transcript, ...canonicalJunctions }
+        : null,
     structures,
   } satisfies GeneRecord
 }

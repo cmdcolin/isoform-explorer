@@ -226,7 +226,7 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
       <Fragment set:html={isoformMap(record, mane?.accession)} />
     </div>
     {
-      structures && record.structures[canonical.accession] && (
+      structures && (
         <p class="structure-note muted small">
           Exons of one GENCODE 49 transcript per isoform{record.locus && <>, {record.locus}</>}, drawn in the direction of
           transcription. Thick boxes are coding; thin ones are untranslated and drawn at a fifth of the scale; introns are cut to a

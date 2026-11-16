@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   cachedPlace,
-  canonicalExons,
+  codingParts,
   junctionsOf,
   layoutOf,
   locusOf,
@@ -29,12 +29,6 @@ describe('cachedPlace', () => {
       97446142,
       97457370,
     ])
-  })
-
-  it('still reads a raw lookup result', () => {
-    expect(
-      cachedPlace({ seq_region_name: '17', start: 7668421, end: 7687490 }),
-    ).toEqual(['17', 7668421, 7687490])
   })
 
   it('gives nothing for an id cached as unknown', () => {
@@ -127,18 +121,31 @@ describe('junctionsOf', () => {
   })
 })
 
-describe('canonicalExons', () => {
-  it('takes the first transcript whose translation fits the canonical length', () => {
+describe('codingParts', () => {
+  it('numbers exons along the transcript and counts coding nucleotides before each', () => {
     const layout = layoutOf(ZDHHC16)
-    const short: [number, number] = [97451676, 97456000]
-    const layouts = new Map([
-      ['ENST1', layout && { ...layout, coding: short }],
-      ['ENST2', layout],
+    const parts = layout && codingParts(layout)
+    expect(parts?.[0]?.coding).toBeNull()
+    expect(parts?.[2]).toMatchObject({
+      number: 3,
+      coding: { bases: [97451676, 97451918], from: 0 },
+    })
+    expect(parts?.[6]?.coding?.from).toBe(556)
+  })
+
+  it('walks a minus-strand transcript from its highest coordinate', () => {
+    const parts = codingParts({
+      strand: -1,
+      coding: [100, 290],
+      exons: [
+        [90, 129],
+        [201, 300],
+      ],
+    })
+    expect(parts.map(p => [p.number, p.exon, p.coding?.from])).toEqual([
+      [1, [201, 300], 0],
+      [2, [90, 129], 90],
     ])
-    expect(
-      canonicalExons(['ENST3.1', 'ENST1.4', 'ENST2.6'], layouts, 377)
-        ?.transcript,
-    ).toBe('ENST2.6')
   })
 })
 
@@ -162,7 +169,7 @@ describe('structureOf', () => {
     ).toBe('ENST1.1')
   })
 
-  it('prefers the fitting transcript sharing most bases with the canonical one', () => {
+  it('prefers the fitting transcript differing from the canonical one in fewest bases', () => {
     const like = structureOf(['ENST2.1'], layouts, 377, null)
     expect(
       structureOf(['ENST3.1', 'ENST1.1', 'ENST2.1'], layouts, 377, like)

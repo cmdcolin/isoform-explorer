@@ -22,7 +22,7 @@ import {
 } from './json.ts'
 import { DATA } from './paths.ts'
 import { unversioned } from './sequences.ts'
-import type { Structure } from './types.ts'
+import type { Layout, Structure } from './types.ts'
 
 const LOOKUP = 'https://rest.ensembl.org/lookup/id'
 const BATCH = 1000
@@ -38,12 +38,6 @@ const GFF_TRANSCRIPT = /transcript_id=(ENST\d+)\.\d+;/
 const PRIMARY = /^([1-9]|1\d|2[0-2]|X|Y|MT)$/
 
 export type Place = [chromosome: string, start: number, end: number]
-
-export interface Layout {
-  strand: number
-  coding: [start: number, end: number]
-  exons: [start: number, end: number][]
-}
 
 function seconds(header: string | null, fallback: number) {
   return (number(Number(header)) ?? fallback) * 1000
@@ -91,12 +85,8 @@ export function placeOf(value: unknown): Place | null {
 }
 
 export function cachedPlace(value: unknown) {
-  const [chromosome, start, end] = list(value)
-  return text(chromosome) &&
-    number(start) !== undefined &&
-    number(end) !== undefined
-    ? placeOf({ seq_region_name: chromosome, start, end })
-    : placeOf(value)
+  const [seq_region_name, start, end] = list(value)
+  return placeOf({ seq_region_name, start, end })
 }
 
 function cachedPlaces() {
@@ -145,43 +135,44 @@ export function layoutOf(value: unknown): Layout | null {
     : null
 }
 
-export function junctionsOf({ strand, coding, exons }: Layout, length: number) {
-  const ordered = exons.toSorted((a, b) =>
-    strand < 0 ? b[1] - a[1] : a[0] - b[0],
-  )
-  const codingLengths = ordered.map(([start, end]) =>
-    Math.max(0, Math.min(end, coding[1]) - Math.max(start, coding[0]) + 1),
-  )
-  const total = codingLengths.reduce((sum, n) => sum + n, 0)
-  const first = codingLengths.findIndex(n => n > 0)
-  const ends = codingLengths.map((_, i) =>
-    codingLengths.slice(0, i + 1).reduce((sum, n) => sum + n, 0),
-  )
-  return first >= 0 && (total === length * 3 || total === (length + 1) * 3)
+/** Exons in transcript order with their coding bases and the coding nucleotides before them. */
+export function codingParts({ strand, coding, exons }: Layout) {
+  let before = 0
+  return exons
+    .toSorted((a, b) => strand * (a[0] - b[0]))
+    .map((exon, i) => {
+      const start = Math.max(exon[0], coding[0])
+      const end = Math.min(exon[1], coding[1])
+      const part =
+        start <= end
+          ? { bases: [start, end] satisfies [number, number], from: before }
+          : null
+      before += part ? end - start + 1 : 0
+      return { exon, number: i + 1, coding: part }
+    })
+}
+
+export function junctionsOf(layout: Layout, length: number) {
+  const parts = codingParts(layout)
+  const coded = parts.flatMap(({ coding }) => (coding ? [coding] : []))
+  const last = coded.at(-1)
+  const total = last ? last.from + last.bases[1] - last.bases[0] + 1 : 0
+  return total === length * 3 || total === (length + 1) * 3
     ? {
-        first: first + 1,
-        junctions: ends.slice(first).filter(end => end < length * 3),
+        first: parts.findIndex(({ coding }) => coding !== null) + 1,
+        junctions: coded
+          .slice(1)
+          .map(({ from }) => from)
+          .filter(from => from < length * 3),
       }
     : null
 }
 
-export function canonicalExons(
-  transcripts: string[],
-  layouts: Map<string, Layout | null>,
-  length: number,
-) {
-  return (
-    transcripts
-      .map(transcript => {
-        const layout = layouts.get(unversioned(transcript))
-        const edges = layout ? junctionsOf(layout, length) : null
-        return edges && { transcript, ...edges }
-      })
-      .find(exons => exons !== null) ?? null
-  )
+function bases(exons: Layout['exons']) {
+  return exons.reduce((sum, [start, end]) => sum + end - start + 1, 0)
 }
 
-function sharedBases(a: Structure['exons'], b: Structure['exons']) {
+function sharedBases(a: Layout['exons'], b: Layout['exons']) {
   return a.reduce(
     (sum, [start, end]) =>
       sum +
@@ -205,23 +196,23 @@ export function structureOf(
     return layout && junctionsOf(layout, length)
       ? [
           {
-            transcript,
-            strand: layout.strand,
-            coding: layout.coding,
-            exons: layout.exons.toSorted((a, b) => a[0] - b[0]),
+            structure: {
+              transcript,
+              ...layout,
+              exons: layout.exons.toSorted((a, b) => a[0] - b[0]),
+            },
+            score: like
+              ? 2 * sharedBases(layout.exons, like.exons) - bases(layout.exons)
+              : 0,
           },
         ]
       : []
   })
-  const bases = (exons: Structure['exons']) => sharedBases(exons, exons)
-  const score = (structure: Structure) =>
-    like
-      ? 2 * sharedBases(structure.exons, like.exons) - bases(structure.exons)
-      : 0
-  return fitting.reduce<Structure | null>(
-    (best, structure) =>
-      best && score(best) >= score(structure) ? best : structure,
-    null,
+  return (
+    fitting.reduce<(typeof fitting)[number] | null>(
+      (best, next) => (best && best.score >= next.score ? best : next),
+      null,
+    )?.structure ?? null
   )
 }
 
