@@ -19,8 +19,8 @@ file says where the work stands.
   rerun with full caches needs no network, takes seconds, and leaves
   `git status` clean.
 - Site: home, search, browse, one gene page per protein with an anchored
-  section per isoform, diseases, blog, About. A full build is about 10,600
-  gene pages and 4,451 disease pages.
+  section per isoform, diseases, blog, How it works, About. A full build is
+  about 10,600 gene pages and 4,451 disease pages.
 - One outside review of the built site (a reader told nothing of the design,
   then eight isoforms checked against UniProt's REST API, then the site checked
   against its own rules). UniProt-derived statements all matched. Its findings
