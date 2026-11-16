@@ -1,9 +1,11 @@
 ---
 import '../../styles/gene.css'
+import { SYSTEMS } from '../../../src/types.ts'
 import Layout from '../../layouts/Layout.astro'
 import { diseases, gene } from '../../lib/data.ts'
 import { answer, maneIsoform } from '../../lib/loss.ts'
 import { isoformMap } from '../../lib/maps.ts'
+import { diseaseHref } from '../../lib/diseases.ts'
 import { INTERFACE_EXPLORER, geneHref, href } from '../../lib/site.ts'
 
 export function getStaticPaths() {
@@ -19,6 +21,13 @@ const genes = disease.genes.map(link => {
   return { link, record, map: isoformMap(record, maneIsoform(record)?.accession) }
 })
 const names = genes.map(g => g.record.gene).join(', ')
+const groups = SYSTEMS.filter(s => disease.systems.some(k => k === s.key))
+const series = disease.series
+const relatives = series
+  ? diseases()
+      .filter(d => d.series?.id === series.id && d.id !== disease.id)
+      .toSorted((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+  : []
 ---
 
 <Layout
@@ -33,10 +42,39 @@ const names = genes.map(g => g.record.gene).join(', ')
     {disease.omim && <><a href={`https://omim.org/entry/${disease.omim}`}>OMIM {disease.omim}</a> · </>}
     <a href={`https://www.uniprot.org/diseases/${disease.id}`}>UniProt {disease.id}</a>
   </p>
+  {
+    groups.length > 0 && (
+      <p class="disease-groups">
+        {groups.map(g => (
+          <a class="chip" href={href(`diseases/?group=${g.key}`)}>
+            {g.label}
+          </a>
+        ))}
+      </p>
+    )
+  }
   <figure class="disease-quote">
     <blockquote>{disease.description}</blockquote>
     <figcaption class="muted small">UniProt's description of the disease.</figcaption>
   </figure>
+  {
+    series && relatives.length > 0 && (
+      <div class="disease-series">
+        <p class="muted">
+          OMIM's series <a href={`https://omim.org/phenotypicSeries/${series.id}`}>{series.name}</a> has{' '}
+          {relatives.length} other {relatives.length === 1 ? 'disease' : 'diseases'} on this site. Their genes, each linked to
+          its disease's page:
+        </p>
+        <p class="series-chips">
+          {relatives.map(d => (
+            <a class="chip" href={diseaseHref(d)} title={d.name}>
+              {d.genes.map(g => g.gene).join(', ')}
+            </a>
+          ))}
+        </p>
+      </div>
+    )
+  }
   {
     genes.map(({ link, record, map }) => (
       <section class="disease-gene">

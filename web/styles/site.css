@@ -952,3 +952,46 @@ table.browse .protein {
 .disease-note p {
   margin: 6px 0 0;
 }
+
+.disease-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 6px;
+}
+
+.chip {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--link);
+  background: var(--link);
+  color: var(--chip-text);
+}
+
+.chip[aria-pressed='true'] .muted {
+  color: inherit;
+}
+
+a.chip {
+  text-decoration: none;
+  display: inline-block;
+}
+
+.series-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.series-chips .chip {
+  padding: 3px 10px;
+  font-size: 14px;
+}

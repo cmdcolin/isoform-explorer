@@ -224,6 +224,37 @@ export interface DiseaseGene {
   note: string
 }
 
+/** Broad groups of diseases, each one or more MONDO classes and their descendants. */
+export const SYSTEMS = [
+  { key: 'brain', label: 'Brain and nerves', mondo: ['MONDO:0005071'] },
+  { key: 'heart', label: 'Heart and blood vessels', mondo: ['MONDO:0004995'] },
+  {
+    key: 'muscle',
+    label: 'Muscles, bones and connective tissue',
+    mondo: ['MONDO:0002081', 'MONDO:0003900'],
+  },
+  { key: 'eye', label: 'Eyes', mondo: ['MONDO:0024458'] },
+  { key: 'ear', label: 'Hearing', mondo: ['MONDO:0002409'] },
+  { key: 'skin', label: 'Skin, hair and nails', mondo: ['MONDO:0002051'] },
+  {
+    key: 'kidney',
+    label: 'Kidneys and urinary tract',
+    mondo: ['MONDO:0002118'],
+  },
+  { key: 'gut', label: 'Digestive system and liver', mondo: ['MONDO:0004335'] },
+  { key: 'lung', label: 'Lungs and airways', mondo: ['MONDO:0005087'] },
+  { key: 'hormone', label: 'Hormones', mondo: ['MONDO:0005151'] },
+  { key: 'blood', label: 'Blood', mondo: ['MONDO:0005570'] },
+  { key: 'immune', label: 'Immune system', mondo: ['MONDO:0005046'] },
+  { key: 'reproduction', label: 'Reproduction', mondo: ['MONDO:0005039'] },
+  { key: 'metabolism', label: 'Metabolism', mondo: ['MONDO:0005066'] },
+  { key: 'mitochondria', label: 'Mitochondria', mondo: ['MONDO:0044970'] },
+  { key: 'development', label: 'Development', mondo: ['MONDO:0021147'] },
+  { key: 'cancer', label: 'Cancer and tumours', mondo: ['MONDO:0045024'] },
+] as const
+
+export type SystemKey = (typeof SYSTEMS)[number]['key']
+
 /** A UniProt disease linked to at least one protein on the site. */
 export interface Disease {
   id: string
@@ -233,6 +264,10 @@ export interface Disease {
   description: string
   omim: string
   genes: DiseaseGene[]
+  /** Groups from MONDO, through the disease's OMIM id; empty without one. */
+  systems: SystemKey[]
+  /** The OMIM phenotypic series MONDO places the disease in, if any. */
+  series: { id: string; name: string } | null
 }
 
 /** Disease name, UniProt acronym, page slug and gene symbols, for search. */

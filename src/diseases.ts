@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 
 import { list, readJson, record, records, text, writeJson } from './json.ts'
+import { readClassifier } from './mondo.ts'
 import { SITE_DATA } from './paths.ts'
 import { DISEASE_SEARCH } from './types.ts'
 import type { Disease, DiseaseEntry, IndexRow } from './types.ts'
@@ -14,9 +15,12 @@ export function slugOf(name: string) {
     .replace(/^-|-$/g, '')
 }
 
+type Classify = (omim: string) => Pick<Disease, 'systems' | 'series'>
+
 export function diseasesOf(
   entries: UniProtEntry[],
   rows: Pick<IndexRow, 'page' | 'gene' | 'accession'>[],
+  classify: Classify = () => ({ systems: [], series: null }),
 ) {
   const byAccession = new Map(rows.map(row => [row.accession, row]))
   const found = new Map<string, Disease>()
@@ -42,6 +46,8 @@ export function diseasesOf(
               ? (text(reference.id) ?? '')
               : '',
           genes: [],
+          systems: [],
+          series: null,
         }
         known.genes.push({ page: row.page, gene: row.gene, note })
         found.set(id, known)
@@ -65,6 +71,7 @@ export function diseasesOf(
           ? `${slug}-${disease.id.toLowerCase()}`
           : slug,
       genes: disease.genes.toSorted((a, b) => a.gene.localeCompare(b.gene)),
+      ...classify(disease.omim),
     }
   })
 }
@@ -86,9 +93,16 @@ if (import.meta.main) {
       gene: text(row.gene) ?? '',
       accession: text(row.accession) ?? '',
     }))
-  const diseases = diseasesOf(await diseaseEntries(), rows)
+  const diseases = diseasesOf(
+    await diseaseEntries(),
+    rows,
+    await readClassifier(),
+  )
   writeJson(join(SITE_DATA, 'diseases.json'), diseases)
   writeJson(join(SITE_DATA, DISEASE_SEARCH), searchEntries(diseases))
+  console.log(
+    `${diseases.filter(d => d.systems.length).length} with a group, ${diseases.filter(d => d.series).length} in an OMIM series`,
+  )
   console.log(
     `${diseases.length} diseases over ${new Set(diseases.flatMap(d => d.genes.map(g => g.page))).size} proteins`,
   )

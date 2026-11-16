@@ -175,7 +175,12 @@ story. The same standard applies here.
   verbatim ("The disease is caused by variants affecting…", "may be
   caused…", "susceptibility…"), the gene map and each isoform's answer
   sentence. The site says nothing about whether an isoform matters for the
-  disease; ClinVar variants stay on Interface explorer. A note longer than one
+  disease; ClinVar variants stay on Interface explorer. Diseases are grouped by
+  body system or process (`SYSTEMS` in `src/types.ts`: a label per MONDO
+  class, matched through the disease's OMIM id and every MONDO ancestor), as
+  chips that filter the list (`/diseases/?group=brain`); a disease page lists
+  its groups and the other diseases in its OMIM phenotypic series, as
+  Interface explorer does. A note longer than one
   sentence shows its first sentence and opens to the rest. Search matches
   disease names, acronyms and genes by word (`search/diseases.json`), so a
   visitor can type "cystic fibrosis". Gene pages link their

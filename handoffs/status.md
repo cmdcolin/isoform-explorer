@@ -49,7 +49,9 @@ file says where the work stands.
 - **Diseases:** `pnpm diseases` writes `site/data/diseases.json` from
   UniProt's disease comments (4,451 diseases over 3,154 proteins); `/diseases/`
   lists them with a filter, and each `/disease/<slug>/` page draws the linked
-  genes' maps with each isoform's answer sentence. This reverses the earlier
+  genes' maps with each isoform's answer sentence. MONDO groups them into 17
+  body systems and processes, and into OMIM phenotypic series; search finds
+  them by name. This reverses the earlier
   "drop the disease fetch" cleanup, which removed an unused download.
 - **Generated sentences** use "has" in place of "swaps … for", "inserts" and
   "carries": "Has 45 different residues in place of 45 residues of …".

@@ -71,7 +71,8 @@ static files), with the base path `/isoform-explorer/`.
 - `pnpm diseases`: after `pnpm isoforms`, fetches UniProt's disease comments
   for reviewed human entries (cached in `data/uniprot_diseases.json`) and
   writes `site/data/diseases.json`, one entry per disease linked to a protein
-  on the site.
+  on the site, grouped through MONDO (cached in `data/mondo.obo.gz`), and
+  `site/data/search/diseases.json` for search.
 - `pnpm expression`: for each isoform in `CASES` in `src/expression.ts`, finds
   the splice junction its GENCODE transcript has and the canonical's lacks,
   counts reads across it and across the canonical junction from the same splice
