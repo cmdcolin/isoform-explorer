@@ -21,6 +21,7 @@ import { FIGURE_TISSUES } from '../../lib/expression-figure.ts'
 import {
   FETCHED,
   expressionOf,
+  largestTpmShare,
   share,
   shareTable,
   tissueShare,
@@ -31,6 +32,7 @@ export const app = expressionOf('P05067-4')
 export const ndufc2 = expressionOf('O95298-2')
 export const zdhhc16 = expressionOf('Q969W1-3')
 export const f2rl2 = expressionOf('O00254-2')
+export const pkm = expressionOf('P14618-2')
 
 Isoform explorer compares an isoform's sequence with the canonical protein's and
 computes nothing about where either is made. To answer that, you need RNA or
@@ -105,7 +107,7 @@ like the major form.
 
 ## The worked examples
 
-The three earlier posts each get the same check:
+The other worked examples each get the same check:
 
 - [ZDHHC16 isoform 3](../2026-11-16-zdhhc16-active-site/), which lacks the
   catalytic cysteine, has {share(zdhhc16)} of junction reads overall and{' '}
@@ -115,6 +117,9 @@ The three earlier posts each get the same check:
   signal peptide, has {share(f2rl2)} of junction reads, though RSEM gives it 0
   TPM in every tissue.
 - [NDUFC2 isoform 4](../2026-11-16-ndufc2-membrane-helix/) is the case above.
+- [Pyruvate kinase M1](../2026-11-16-pkm-subunit-contact/) fails the other
+  way: {tissueShare(pkm, 'Muscle - Skeletal')} of junction reads in skeletal
+  muscle, and never more than {largestTpmShare(pkm)} of the gene by TPM.
 
 ## Public sources that measure isoforms
 

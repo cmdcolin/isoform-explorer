@@ -52,6 +52,14 @@ const SHOTS: Shot[] = [
     wait: 1,
   },
   {
+    name: 'tetramer',
+    dir: 'heroes',
+    path: 'figures/pkm/',
+    clip: ['.hero-figure canvas'],
+    height: 900,
+    wait: 3,
+  },
+  {
     name: 'alternative-acceptor',
     dir: 'heroes',
     path: 'gene/NDUFC2/',

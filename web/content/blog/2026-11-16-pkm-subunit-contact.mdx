@@ -1,0 +1,93 @@
+---
+title: 'Pyruvate kinase M1 swaps the stretch where its subunits meet'
+date: '2026-11-16'
+order: 4
+description:
+  'PKM makes pyruvate kinase M1 or M2 by using one of two exons. The 45
+  residues they encode sit where the four subunits meet, beside the pocket for
+  fructose 1,6-bisphosphate.'
+hero: './heroes/tetramer.jpg'
+heroAlt:
+  'An illustration of the pyruvate kinase M2 tetramer from the crystal
+  structure 3BJF, each atom a flat-colored sphere with dark outlines. Four
+  subunits in pale blue, green, sand and lilac form a rough square. Orange
+  patches, residues 389–433 of each subunit, run down the middle where the two
+  halves of the tetramer meet, and small blue fructose 1,6-bisphosphate
+  molecules sit in pockets beside two of them.'
+---
+
+import Html from '../../components/Html.astro'
+import { FIGURE_TISSUES } from '../../lib/expression-figure.ts'
+import {
+  expressionOf,
+  largestTpmShare,
+  shareTable,
+  tissueShare,
+} from '../../lib/expression.ts'
+import { story } from '../../lib/stories.ts'
+
+export const s = story('PKM', 'P14618-2')
+export const e = expressionOf('P14618-2')
+export const contacts = s.record.interfaces.PKM ?? []
+export const [swapStart, swapEnd] = [389, 433]
+export const inSwap = contacts.filter(r => r >= swapStart && r <= swapEnd)
+
+Pyruvate kinase catalyses the last step of glycolysis. The _PKM_ gene encodes two
+forms of it, M1 and M2, by including one exon or the other of a neighbouring
+pair, a choice first traced in rat
+([Noguchi et al., 1986](https://pubmed.ncbi.nlm.nih.gov/3020052/)). UniProt's
+canonical sequence is M2, so M1 appears on the PKM page as isoform{' '}
+{s.isoform.accession}, which the page sums up as:
+
+> {s.answer}
+
+## One exon or the other
+
+The two exons have the same length, so the reading frame holds either way, and
+residues {swapStart}–{swapEnd} of M2 become as many different residues in M1.
+Isoform explorer calls that a swap: the stretch is replaced and nothing is
+missing. The features in the replaced stretch are listed all the same, and one
+of them is part of the binding site for fructose 1,6-bisphosphate (FBP), M2's allosteric
+activator.
+
+UniProt's note on M1 says it is active by itself, with no need for FBP, and
+that it replaces M2 in adult tissues after birth.
+
+## Where the stretch sits
+
+The drawing above is the crystal structure of M2 bound to FBP
+([PDB 3BJF](https://www.rcsb.org/structure/3BJF),
+[Christofk et al., 2008](https://doi.org/10.1038/nature06667)), four subunits
+in four pale colours, with residues {swapStart}–{swapEnd} of each in orange
+and FBP in blue. The orange stretches meet down the middle, where one pair of
+subunits holds onto the other, and FBP binds where each stretch ends, at
+residues 432–437. UniProt annotates residues {swapStart}–{swapEnd} as an
+intersubunit contact.
+
+The gene page's own partner interface comes from a different model: AlphaFold
+DB predicts PKM only as a dimer, and most of that pair's interface lies
+outside the stretch. Of its {contacts.length} interface residues, {inSwap.length} fall in the
+swapped stretch.
+
+## Which tissues use M1's exon
+
+The two exons splice into the same exon downstream, so the reads crossing
+each junction can be compared. In GTEx v8, the reads from M1's exon make up{' '}
+{tissueShare(e, 'Muscle - Skeletal')} of those in skeletal muscle,{' '}
+{tissueShare(e, 'Brain - Cerebellar Hemisphere')} in cerebellar hemisphere and{' '}
+{tissueShare(e, 'Heart - Left Ventricle')} in heart left ventricle, against{' '}
+{tissueShare(e, 'Liver')} in liver and{' '}
+{tissueShare(e, 'Whole Blood')} in whole blood. M2 is the form proliferating
+and tumour cells use
+([Christofk et al., 2008](https://doi.org/10.1038/nature06734)).
+
+GTEx's transcript TPM misses this. It gives M1's transcripts at most{' '}
+{largestTpmShare(e)} of the gene in any tissue, skeletal muscle included. NDUFC2
+isoform 4 failed the other way, rare by its junction and a third of the gene by
+TPM;
+[Where is an isoform made?](../2026-11-16-where-isoforms-are-made/) explains
+the junction count.
+
+<Html html={shareTable(e, FIGURE_TISSUES)} />
+
+<a href={s.href}>Open M1 on the PKM page</a>.

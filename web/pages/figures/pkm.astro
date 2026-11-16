@@ -1,0 +1,18 @@
+---
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+import Layout from '../../layouts/Layout.astro'
+
+const { atoms } = JSON.parse(readFileSync(join(process.cwd(), 'web', 'content', 'blog', 'data', 'pkm-atoms.json'), 'utf8'))
+---
+
+<Layout title="Pyruvate kinase M2 tetramer" indexed={false}>
+  <div class="hero-figure illustration">
+    <canvas data-atoms={JSON.stringify(atoms)} style="width: 900px; height: 600px"></canvas>
+  </div>
+</Layout>
+
+<script>
+  import '../../scripts/illustrate.ts'
+</script>

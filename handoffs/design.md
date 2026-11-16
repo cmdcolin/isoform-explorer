@@ -146,13 +146,18 @@ story. The same standard applies here.
   post has a hero of a different kind, retaken by `pnpm heroes`: a topology
   drawing generated from UniProt features (`web/lib/topology.ts`, rendered on a
   `figures/` page), the gene page's Gene + protein view with a feature
-  hovered, JBrowse's protein view loaded from the live site, and a chart of
-  GTEx data. A post may cite literature and public expression data to say
+  hovered, JBrowse's protein view loaded from the live site, a chart of
+  GTEx data, and an illustration of a PDB structure in David Goodsell's style
+  (`src/illustration.ts` extracts the atoms, `web/scripts/illustrate.ts` draws
+  them on a `figures/` page). A new post needs a hero unlike all of these, a
+  drawing made for it rather than another screenshot of the site; the owner
+  drops a post whose hero would not be new. A post may cite literature and public expression data to say
   where an isoform is made, attributed to its source; the rules above still
   hold for every sentence the site generates. GTEx transcript TPM is never
   quoted alone: `pnpm expression` also counts reads across the isoform's own
   splice junction, because the two can disagree completely (NDUFC2 isoform 4:
-  about 39% of the gene by TPM, 49 junction reads in all of GTEx). The
+  about 39% of the gene by TPM, 49 junction reads in all of GTEx; PKM M1 the
+  other way, 95% of junction reads in skeletal muscle and under 4% by TPM). The
   junction tallies are our count of public data, and posts say so.
 - **About:** scope, sources, each rule above, and what is left out.
 

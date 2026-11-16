@@ -53,6 +53,10 @@ export function share(
   return percent(c.isoformReads / (c.isoformReads + c.canonicalReads))
 }
 
+export function largestTpmShare(c: ExpressionCase) {
+  return percent(Math.max(...c.tissues.map(t => t.tpmShare ?? 0)))
+}
+
 export function tissueShare(c: ExpressionCase, name: string) {
   const tissue = c.tissues.find(t => t.tissue === name)
   const value = tissue ? junctionShare(tissue) : null

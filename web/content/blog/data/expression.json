@@ -1868,6 +1868,473 @@
      "tpmShare": 0
     }
    ]
+  },
+  {
+   "page": "PKM",
+   "gene": "PKM",
+   "isoform": "P14618-2",
+   "junctions": {
+    "chromosome": "chr15",
+    "isoform": [
+     72200656,
+     72203021
+    ],
+    "canonical": [
+     72200656,
+     72202453
+    ],
+    "shared": "acceptor"
+   },
+   "transcriptsInGtex": [
+    "ENST00000319622",
+    "ENST00000568459"
+   ],
+   "isoformReads": 5342931,
+   "canonicalReads": 10527127,
+   "isoformSamples": 19014,
+   "samples": 19081,
+   "tissues": [
+    {
+     "tissue": "Adipose - Subcutaneous",
+     "samples": 731,
+     "isoformReads": 52195,
+     "canonicalReads": 272943,
+     "isoformSamples": 731,
+     "tpmShare": 0.015329387355708955
+    },
+    {
+     "tissue": "Adipose - Visceral (Omentum)",
+     "samples": 562,
+     "isoformReads": 26095,
+     "canonicalReads": 188487,
+     "isoformSamples": 562,
+     "tpmShare": 0.010982873954344106
+    },
+    {
+     "tissue": "Adrenal Gland",
+     "samples": 274,
+     "isoformReads": 10996,
+     "canonicalReads": 336309,
+     "isoformSamples": 274,
+     "tpmShare": 0.0038787280529008045
+    },
+    {
+     "tissue": "Artery - Aorta",
+     "samples": 452,
+     "isoformReads": 134042,
+     "canonicalReads": 305766,
+     "isoformSamples": 452,
+     "tpmShare": 0.022839511292654983
+    },
+    {
+     "tissue": "Artery - Coronary",
+     "samples": 253,
+     "isoformReads": 46835,
+     "canonicalReads": 131986,
+     "isoformSamples": 253,
+     "tpmShare": 0.019472468108642116
+    },
+    {
+     "tissue": "Artery - Tibial",
+     "samples": 693,
+     "isoformReads": 198366,
+     "canonicalReads": 347962,
+     "isoformSamples": 693,
+     "tpmShare": 0.03810462287546342
+    },
+    {
+     "tissue": "Bladder",
+     "samples": 21,
+     "isoformReads": 2871,
+     "canonicalReads": 11705,
+     "isoformSamples": 21,
+     "tpmShare": 0.010707366242016026
+    },
+    {
+     "tissue": "Brain - Amygdala",
+     "samples": 163,
+     "isoformReads": 42307,
+     "canonicalReads": 59350,
+     "isoformSamples": 163,
+     "tpmShare": 0.011039720513861094
+    },
+    {
+     "tissue": "Brain - Anterior cingulate cortex (BA24)",
+     "samples": 201,
+     "isoformReads": 120624,
+     "canonicalReads": 66534,
+     "isoformSamples": 201,
+     "tpmShare": 0.01682255012713341
+    },
+    {
+     "tissue": "Brain - Caudate (basal ganglia)",
+     "samples": 273,
+     "isoformReads": 114414,
+     "canonicalReads": 141015,
+     "isoformSamples": 273,
+     "tpmShare": 0.009057697572021885
+    },
+    {
+     "tissue": "Brain - Cerebellar Hemisphere",
+     "samples": 250,
+     "isoformReads": 204699,
+     "canonicalReads": 32774,
+     "isoformSamples": 250,
+     "tpmShare": 0.026081029888830917
+    },
+    {
+     "tissue": "Brain - Cerebellum",
+     "samples": 285,
+     "isoformReads": 197102,
+     "canonicalReads": 43678,
+     "isoformSamples": 285,
+     "tpmShare": 0.026313047477659845
+    },
+    {
+     "tissue": "Brain - Cortex",
+     "samples": 286,
+     "isoformReads": 236989,
+     "canonicalReads": 96718,
+     "isoformSamples": 286,
+     "tpmShare": 0.015685952439139002
+    },
+    {
+     "tissue": "Brain - Frontal Cortex (BA9)",
+     "samples": 224,
+     "isoformReads": 232974,
+     "canonicalReads": 68588,
+     "isoformSamples": 224,
+     "tpmShare": 0.017375143784539485
+    },
+    {
+     "tissue": "Brain - Hippocampus",
+     "samples": 220,
+     "isoformReads": 65584,
+     "canonicalReads": 65896,
+     "isoformSamples": 219,
+     "tpmShare": 0.011021557042002339
+    },
+    {
+     "tissue": "Brain - Hypothalamus",
+     "samples": 221,
+     "isoformReads": 114585,
+     "canonicalReads": 65958,
+     "isoformSamples": 221,
+     "tpmShare": 0.015469267443853595
+    },
+    {
+     "tissue": "Brain - Nucleus accumbens (basal ganglia)",
+     "samples": 262,
+     "isoformReads": 158861,
+     "canonicalReads": 105056,
+     "isoformSamples": 262,
+     "tpmShare": 0.011498749237070238
+    },
+    {
+     "tissue": "Brain - Putamen (basal ganglia)",
+     "samples": 221,
+     "isoformReads": 81996,
+     "canonicalReads": 104148,
+     "isoformSamples": 221,
+     "tpmShare": 0.007516442098183053
+    },
+    {
+     "tissue": "Brain - Spinal cord (cervical c-1)",
+     "samples": 171,
+     "isoformReads": 18498,
+     "canonicalReads": 51388,
+     "isoformSamples": 171,
+     "tpmShare": 0.014732859671982608
+    },
+    {
+     "tissue": "Brain - Substantia nigra",
+     "samples": 154,
+     "isoformReads": 53816,
+     "canonicalReads": 67654,
+     "isoformSamples": 154,
+     "tpmShare": 0.008979323163991637
+    },
+    {
+     "tissue": "Breast - Mammary Tissue",
+     "samples": 482,
+     "isoformReads": 29613,
+     "canonicalReads": 189516,
+     "isoformSamples": 482,
+     "tpmShare": 0.010139192081363976
+    },
+    {
+     "tissue": "Cells - Cultured fibroblasts",
+     "samples": 520,
+     "isoformReads": 51671,
+     "canonicalReads": 1068871,
+     "isoformSamples": 520,
+     "tpmShare": 0.006906277559122964
+    },
+    {
+     "tissue": "Cells - EBV-transformed lymphocytes",
+     "samples": 196,
+     "isoformReads": 67535,
+     "canonicalReads": 636894,
+     "isoformSamples": 196,
+     "tpmShare": 0.006963246578950833
+    },
+    {
+     "tissue": "Cells - Leukemia cell line (CML)",
+     "samples": 204,
+     "isoformReads": 5618,
+     "canonicalReads": 318406,
+     "isoformSamples": 201,
+     "tpmShare": null
+    },
+    {
+     "tissue": "Cervix - Ectocervix",
+     "samples": 9,
+     "isoformReads": 561,
+     "canonicalReads": 3586,
+     "isoformSamples": 9,
+     "tpmShare": 0.011931796401609714
+    },
+    {
+     "tissue": "Cervix - Endocervix",
+     "samples": 10,
+     "isoformReads": 762,
+     "canonicalReads": 3854,
+     "isoformSamples": 10,
+     "tpmShare": 0.01807709063984291
+    },
+    {
+     "tissue": "Colon - Sigmoid",
+     "samples": 389,
+     "isoformReads": 55492,
+     "canonicalReads": 105856,
+     "isoformSamples": 389,
+     "tpmShare": 0.01508098107451308
+    },
+    {
+     "tissue": "Colon - Transverse",
+     "samples": 433,
+     "isoformReads": 36904,
+     "canonicalReads": 186202,
+     "isoformSamples": 433,
+     "tpmShare": 0.00823714977734223
+    },
+    {
+     "tissue": "Esophagus - Gastroesophageal Junction",
+     "samples": 399,
+     "isoformReads": 92831,
+     "canonicalReads": 186856,
+     "isoformSamples": 399,
+     "tpmShare": 0.011208870455661707
+    },
+    {
+     "tissue": "Esophagus - Mucosa",
+     "samples": 625,
+     "isoformReads": 22086,
+     "canonicalReads": 757366,
+     "isoformSamples": 625,
+     "tpmShare": 0.0034054630021555714
+    },
+    {
+     "tissue": "Esophagus - Muscularis",
+     "samples": 553,
+     "isoformReads": 147710,
+     "canonicalReads": 272126,
+     "isoformSamples": 553,
+     "tpmShare": 0.013440480012748625
+    },
+    {
+     "tissue": "Fallopian Tube",
+     "samples": 9,
+     "isoformReads": 699,
+     "canonicalReads": 3280,
+     "isoformSamples": 9,
+     "tpmShare": 0.01139359663737112
+    },
+    {
+     "tissue": "Heart - Atrial Appendage",
+     "samples": 450,
+     "isoformReads": 287668,
+     "canonicalReads": 189570,
+     "isoformSamples": 450,
+     "tpmShare": 0.005297160910348325
+    },
+    {
+     "tissue": "Heart - Left Ventricle",
+     "samples": 492,
+     "isoformReads": 316912,
+     "canonicalReads": 166441,
+     "isoformSamples": 492,
+     "tpmShare": 0.00336828706631893
+    },
+    {
+     "tissue": "Kidney - Cortex",
+     "samples": 94,
+     "isoformReads": 2276,
+     "canonicalReads": 76255,
+     "isoformSamples": 94,
+     "tpmShare": 0.0027859464481413796
+    },
+    {
+     "tissue": "Kidney - Medulla",
+     "samples": 4,
+     "isoformReads": 217,
+     "canonicalReads": 4801,
+     "isoformSamples": 4,
+     "tpmShare": 0.00335997590298089
+    },
+    {
+     "tissue": "Liver",
+     "samples": 251,
+     "isoformReads": 896,
+     "canonicalReads": 10521,
+     "isoformSamples": 200,
+     "tpmShare": 0
+    },
+    {
+     "tissue": "Lung",
+     "samples": 655,
+     "isoformReads": 39016,
+     "canonicalReads": 349413,
+     "isoformSamples": 655,
+     "tpmShare": 0.01101448341640116
+    },
+    {
+     "tissue": "Minor Salivary Gland",
+     "samples": 178,
+     "isoformReads": 23944,
+     "canonicalReads": 124383,
+     "isoformSamples": 178,
+     "tpmShare": 0.006242810120388373
+    },
+    {
+     "tissue": "Muscle - Skeletal",
+     "samples": 881,
+     "isoformReads": 1586722,
+     "canonicalReads": 88816,
+     "isoformSamples": 881,
+     "tpmShare": 0.005697760981808489
+    },
+    {
+     "tissue": "Nerve - Tibial",
+     "samples": 659,
+     "isoformReads": 68810,
+     "canonicalReads": 272087,
+     "isoformSamples": 659,
+     "tpmShare": 0.021004214006572385
+    },
+    {
+     "tissue": "Ovary",
+     "samples": 195,
+     "isoformReads": 11812,
+     "canonicalReads": 57293,
+     "isoformSamples": 195,
+     "tpmShare": 0.024126792752646044
+    },
+    {
+     "tissue": "Pancreas",
+     "samples": 360,
+     "isoformReads": 3149,
+     "canonicalReads": 55105,
+     "isoformSamples": 349,
+     "tpmShare": 0.0019876555064703497
+    },
+    {
+     "tissue": "Pituitary",
+     "samples": 301,
+     "isoformReads": 29932,
+     "canonicalReads": 133919,
+     "isoformSamples": 301,
+     "tpmShare": 0.011839866787960262
+    },
+    {
+     "tissue": "Prostate",
+     "samples": 263,
+     "isoformReads": 26618,
+     "canonicalReads": 127971,
+     "isoformSamples": 263,
+     "tpmShare": 0.004237005251395141
+    },
+    {
+     "tissue": "Skin - Not Sun Exposed (Suprapubic)",
+     "samples": 639,
+     "isoformReads": 31506,
+     "canonicalReads": 400260,
+     "isoformSamples": 639,
+     "tpmShare": 0.004699544155558053
+    },
+    {
+     "tissue": "Skin - Sun Exposed (Lower leg)",
+     "samples": 781,
+     "isoformReads": 51324,
+     "canonicalReads": 558875,
+     "isoformSamples": 781,
+     "tpmShare": 0.00601172302636652
+    },
+    {
+     "tissue": "Small Intestine - Terminal Ileum",
+     "samples": 193,
+     "isoformReads": 10387,
+     "canonicalReads": 84699,
+     "isoformSamples": 193,
+     "tpmShare": 0.008340283745087657
+    },
+    {
+     "tissue": "Spleen",
+     "samples": 255,
+     "isoformReads": 6276,
+     "canonicalReads": 133626,
+     "isoformSamples": 255,
+     "tpmShare": 0.006101371321662625
+    },
+    {
+     "tissue": "Stomach",
+     "samples": 384,
+     "isoformReads": 21951,
+     "canonicalReads": 138378,
+     "isoformSamples": 384,
+     "tpmShare": 0.004907584500748905
+    },
+    {
+     "tissue": "Testis",
+     "samples": 410,
+     "isoformReads": 121915,
+     "canonicalReads": 145498,
+     "isoformSamples": 410,
+     "tpmShare": 0.007844779721103236
+    },
+    {
+     "tissue": "Thyroid",
+     "samples": 706,
+     "isoformReads": 20069,
+     "canonicalReads": 286319,
+     "isoformSamples": 705,
+     "tpmShare": 0.007676204012585116
+    },
+    {
+     "tissue": "Uterus",
+     "samples": 159,
+     "isoformReads": 13632,
+     "canonicalReads": 53463,
+     "isoformSamples": 159,
+     "tpmShare": 0.02402770690448226
+    },
+    {
+     "tissue": "Vagina",
+     "samples": 173,
+     "isoformReads": 13810,
+     "canonicalReads": 125236,
+     "isoformSamples": 173,
+     "tpmShare": 0.00979120048798485
+    },
+    {
+     "tissue": "Whole Blood",
+     "samples": 852,
+     "isoformReads": 28758,
+     "canonicalReads": 647470,
+     "isoformSamples": 852,
+     "tpmShare": 0.003230403829317102
+    }
+   ]
   }
  ]
 }

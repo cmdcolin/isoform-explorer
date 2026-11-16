@@ -20,6 +20,7 @@
     "format": "prettier --write src",
     "check-links": "node src/checkLinks.ts dist",
     "heroes": "node src/heroes.ts",
+    "illustration": "node src/illustration.ts",
     "expression": "node src/expression.ts"
   },
   "devDependencies": {

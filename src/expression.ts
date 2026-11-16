@@ -11,6 +11,7 @@ export const CASES = [
   { page: 'NDUFC2', isoform: 'O95298-2' },
   { page: 'ZDHHC16', isoform: 'Q969W1-3' },
   { page: 'F2RL2', isoform: 'O00254-2' },
+  { page: 'PKM', isoform: 'P14618-2' },
 ]
 
 const SNAPTRON = 'https://snaptron.cs.jhu.edu/gtexv2/snaptron'

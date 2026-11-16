@@ -74,11 +74,16 @@ static files), with the base path `/isoform-explorer/`.
   site in every GTEx v8 sample (Snaptron's `gtexv2`), and fetches GTEx's median
   transcript TPM. Writes `web/content/blog/data/expression.json`, which the
   blog posts read; responses are cached in `data/expression/`.
+- `pnpm illustration`: for each entry in `ILLUSTRATIONS` in
+  `src/illustration.ts`, downloads the PDB structure (cached in `data/pdb/`),
+  keeps the heavy atoms of the protein and one ligand, turns them so the
+  molecule lies flat to the viewer, and writes
+  `web/content/blog/data/<name>-atoms.json`, which a `figures/` page draws.
 - `pnpm heroes [name ...]`: after a build, retakes the blog's hero and figure
   screenshots in `web/content/blog/` with headless Chrome (`CHROME` overrides
   `/usr/bin/google-chrome`). The JBrowse shots load the deployed site's
-  `jbrowse/config.json` and need the network. `PAGES=F2RL2,NDUFC2,ZDHHC16 pnpm
-  build` builds just the gene pages the shots use.
+  `jbrowse/config.json` and need the network. `PAGES=F2RL2,NDUFC2,PKM,ZDHHC16
+  pnpm build` builds just the gene pages the shots use.
 - `pnpm check-links`: after a build, checks that every internal link in `dist/`
   points at a file that exists.
 - `pnpm test` and `pnpm typecheck`: unit tests (Vitest) and type checks of the
