@@ -8,4 +8,5 @@ export default defineConfig({
   publicDir: './site',
   outDir: './dist',
   build: { inlineStylesheets: 'never' },
+  compressHTML: false,
 })
