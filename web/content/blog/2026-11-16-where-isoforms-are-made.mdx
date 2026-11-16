@@ -27,7 +27,9 @@ import {
   shareTable,
   tissueShare,
 } from '../../lib/expression.ts'
+import { gene } from '../../lib/data.ts'
 import { diseaseHref, diseasesOfPage } from '../../lib/diseases.ts'
+import { sashimiFigure } from '../../lib/sashimi-figure.ts'
 import { geneHref } from '../../lib/site.ts'
 
 export const app = expressionOf('P05067-4')
@@ -36,6 +38,11 @@ export const zdhhc16 = expressionOf('Q969W1-3')
 export const f2rl2 = expressionOf('O00254-2')
 export const pkm = expressionOf('P14618-2')
 export const alzheimer = diseasesOfPage('APP').find(d => d.acronym === 'AD1')
+export const sashimiTissues = new Map([
+  ['Brain - Cerebellar Hemisphere', 'Cerebellar hemisphere'],
+  ['Brain - Frontal Cortex (BA9)', 'Frontal cortex'],
+  ['Liver', 'Liver'],
+])
 
 Isoform explorer compares an isoform's sequence with the canonical protein's.
 To find where either is made, you need RNA or protein data from elsewhere, and
@@ -59,7 +66,8 @@ recount's realignment of the GTEx v8 samples through
 data on {FETCHED}, and `pnpm expression` in the repository reproduces it.
 
 In the chart above, blue circles are the junction share and orange diamonds the
-TPM share.
+TPM share. The sashimi plots below draw the same junctions as arcs between
+exons, each labelled with the reads that cross it, in three of the tissues.
 
 ## APP695: highest in brain by TPM and by junction reads
 
@@ -75,6 +83,20 @@ hemisphere and {tissueShare(app, 'Brain - Frontal Cortex (BA9)')} in frontal
 cortex, against {tissueShare(app, 'Liver')} in liver, and the TPM share follows
 it.
 
+<Html
+  html={sashimiFigure(gene('APP'), app, {
+    title: 'Reads across APP exons 6 to 9 in GTEx v8',
+    names: { canonical: 'APP770 (canonical)', isoform: 'APP695' },
+    exons: [6, 9],
+    notes: { 7: 'Kunitz domain', 8: 'OX-2' },
+    absent: ['absent from APP695'],
+    tissues: sashimiTissues,
+  })}
+/>
+
+In brain, the blue arc that jumps from exon 6 to exon 9 is the thicker one; in
+liver, nearly every read goes from exon 6 into exon 7.
+
 Studies from before RNA-seq found the same. In 1988 the Kunitz exon was found in
 cDNAs from tissues outside the brain
 ([Tanzi et al.](https://doi.org/10.1038/331528a0)). Ribonuclease protection in
@@ -88,18 +110,36 @@ had about three times more Kunitz-containing APP protein
 
 <Html html={shareTable(app, FIGURE_TISSUES)} />
 
-## NDUFC2 isoform 4: a third of the gene by TPM, almost no junction reads
+## NDUFC2 isoform 4: a warning about TPM
+
+NDUFC2 is not a case of tissue-specific splicing. It is here because GTEx
+transcript TPM gives isoform 4 over a third of the gene in every tissue, the
+orange diamonds lined up near 40% in the chart above, while the reads say the
+isoform is hardly made anywhere.
 
 <a href={geneHref('NDUFC2', 'O95298-2')}>NDUFC2 isoform 4</a> lacks the
 protein's only transmembrane helix, through a splice acceptor 69 bases inside
-exon 2. GTEx transcript TPM gives it over a third of the gene in every tissue,
-more than the canonical transcript, but the isoform's junction has
+exon 2. TPM gives it more of the gene than the canonical transcript, but the
+isoform's junction has
 {ndufc2.isoformReads} reads in {ndufc2.isoformSamples} of
 {ndufc2.samples.toLocaleString()} samples, and the canonical junction from the
 same splice site has {ndufc2.canonicalReads.toLocaleString()}. One ENCODE
 long-read sample, embryonic kidney
 ([ENCFF529HGR](https://www.encodeproject.org/files/ENCFF529HGR/)), has 405
 full-length reads of the canonical transcript and none of isoform 4's.
+
+<Html
+  html={sashimiFigure(gene('NDUFC2'), ndufc2, {
+    title: 'Reads across NDUFC2 exons 1 and 2 in GTEx v8',
+    names: { canonical: 'Canonical', isoform: 'Isoform 4' },
+    exons: [1, 2],
+    absent: [
+      'absent from isoform 4: 69 bases,',
+      'residues 56–78, with the membrane helix',
+    ],
+    tissues: sashimiTissues,
+  })}
+/>
 
 We have not traced why RSEM credits the isoform so heavily. Its transcript
 differs from the canonical in that one junction and in a shorter 3′ end, so

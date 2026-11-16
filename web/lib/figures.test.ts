@@ -6,7 +6,9 @@ import { expect, test } from 'vitest'
 import { acceptorFigure, acceptors } from './acceptor-figure.ts'
 import { activeSiteFigure } from './active-site-figure.ts'
 import { gene } from './data.ts'
+import { expressionOf } from './expression.ts'
 import { CEBPB_MRNA, CEBPB_NAMES } from './posts-data.ts'
+import { sashimiFigure } from './sashimi-figure.ts'
 import { startCodons } from './start-codons-figure.ts'
 
 const window = JSON.parse(
@@ -55,4 +57,32 @@ test('CEBPB start codons derived from UniProt land on the AUGs RefSeq marks', ()
     ['LAP', 521],
     ['LIP', 1046],
   ])
+})
+
+test('the APP sashimi plot joins exon 6 to exon 7 for APP770 and to exon 9 for APP695', () => {
+  const svg = sashimiFigure(gene('APP'), expressionOf('P05067-4'), {
+    title: 'APP',
+    names: { canonical: 'APP770', isoform: 'APP695' },
+    exons: [6, 9],
+    absent: ['absent from APP695'],
+    tissues: new Map([['Liver', 'Liver']]),
+  })
+  expect(svg).toContain('APP770 junction, exon 6 → exon 7')
+  expect(svg).toContain('APP695 junction, exon 6 → exon 9')
+  expect(svg).toContain('27,078 reads')
+  expect(svg).toContain('384 reads')
+  expect(svg.match(/class="absent"/g)).toHaveLength(4)
+})
+
+test('the NDUFC2 sashimi plot lands isoform 4 69 bases into exon 2, skipping only coding bases', () => {
+  const svg = sashimiFigure(gene('NDUFC2'), expressionOf('O95298-2'), {
+    title: 'NDUFC2',
+    names: { canonical: 'Canonical', isoform: 'Isoform 4' },
+    exons: [1, 2],
+    absent: ['absent from isoform 4'],
+    tissues: new Map([['Liver', 'Liver']]),
+  })
+  expect(svg).toContain('Isoform 4 junction, exon 1 → 69 bases into exon 2')
+  expect(svg).toContain('1 read<')
+  expect(svg.match(/class="absent"/g)).toHaveLength(2)
 })
