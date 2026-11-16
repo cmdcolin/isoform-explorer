@@ -10,9 +10,7 @@ export function sessionUrl(spec: object, jbrowse: string) {
 }
 
 export function transcriptTracks(transcriptId?: string) {
-  return transcriptId?.startsWith('ENST')
-    ? [GENCODE_TRACK, REFSEQ_TRACK]
-    : [REFSEQ_TRACK, GENCODE_TRACK]
+  return [transcriptId?.startsWith('ENST') ? GENCODE_TRACK : REFSEQ_TRACK]
 }
 
 export function transcriptsSpec(gene: string) {

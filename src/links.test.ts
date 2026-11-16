@@ -27,20 +27,20 @@ describe('links', () => {
     )
   })
 
-  test('transcripts on the genome are found by gene symbol, RefSeq above GENCODE', () => {
+  test('transcripts on the genome are found by gene symbol, on the RefSeq track alone', () => {
     expect(sessionOf(transcriptsUrl('TP53', JBROWSE))).toEqual({
       views: [
         {
           type: 'LinearGenomeView',
           assembly: 'hg38',
           loc: 'TP53',
-          tracks: ['hg38-ncbiRefSeqCurated', 'hg38-gencodeComp'],
+          tracks: ['hg38-ncbiRefSeqCurated'],
         },
       ],
     })
   })
 
-  test('an isoform opens superposed on the canonical, its transcript looked up in the first track', () => {
+  test('an isoform opens superposed on the canonical, its transcript on the one track that holds it', () => {
     const structures = [{ url: 'isoform.cif' }, { url: 'canonical.cif' }]
     expect(
       sessionOf(isoformUrl('TP53', 'NM_001126114.3', structures, JBROWSE)),
@@ -53,7 +53,7 @@ describe('links', () => {
           structures,
           connectedView: {
             assembly: 'hg38',
-            tracks: ['hg38-ncbiRefSeqCurated', 'hg38-gencodeComp'],
+            tracks: ['hg38-ncbiRefSeqCurated'],
           },
         },
       ],
@@ -61,7 +61,7 @@ describe('links', () => {
     expect(
       isoformSpec('TP53', 'ENST00000269305', structures).views[0]?.connectedView
         .tracks,
-    ).toEqual(['hg38-gencodeComp', 'hg38-ncbiRefSeqCurated'])
+    ).toEqual(['hg38-gencodeComp'])
     expect(
       isoformSpec('TP53', undefined, structures).views[0],
     ).not.toHaveProperty('transcriptId')
@@ -81,7 +81,7 @@ describe('links', () => {
       ).views[0].connectedView,
     ).toEqual({
       assembly: 'hg38',
-      tracks: ['hg38-ncbiRefSeqCurated', 'hg38-gencodeComp'],
+      tracks: ['hg38-ncbiRefSeqCurated'],
       loc: 'chr17:7668402-7687546',
     })
   })

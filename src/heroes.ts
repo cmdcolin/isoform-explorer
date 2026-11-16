@@ -22,6 +22,8 @@ const TYPES: Record<string, string> = {
   '.webp': 'image/webp',
 }
 
+const GENOME_VIEW = '[data-testid^="linear-genome-view-"]'
+
 interface Shot {
   name: string
   dir: 'heroes' | 'figures'
@@ -99,6 +101,7 @@ const SHOTS: Shot[] = [
     path: 'gene/NDUFC2/',
     click: 'label:has(input[value="gene"])',
     hover: 'g.f[data-span="56-75"]',
+    prepare: annotateNdufc2,
     clip: ['.view-toggle', '.map-wrap'],
     width: 860,
     height: 900,
@@ -107,36 +110,48 @@ const SHOTS: Shot[] = [
   {
     name: 'zdhhc16-splice-changes',
     dir: 'figures',
-    path: sessionUrl(
-      {
-        views: [
-          {
-            type: 'LinearGenomeView',
-            assembly: 'hg38',
-            loc: 'chr10:97452350-97453900',
-            tracks: [REFSEQ_TRACK],
-            highlight: ['chr10:97452895-97452923', 'chr10:97453530-97453617'],
-          },
-        ],
-      },
-      jbrowseUrl(
-        'https://cmdcolin.github.io/isoform-explorer/jbrowse/config.json',
-      ),
-    ),
+    path: genomeSession('chr10:97452300-97453950', [
+      'chr10:97452895-97452923',
+      'chr10:97453530-97453617',
+    ]),
     prepare: annotateZdhhc16,
-    clip: ['[data-testid^="linear-genome-view-"]'],
+    clip: [GENOME_VIEW],
+    width: 1600,
     height: 800,
-    wait: 3,
+    wait: 1,
   },
   {
     name: 'f2rl2-genome',
     dir: 'figures',
-    path: 'gene/F2RL2/',
-    follow: '.gene-head a.button[href*="LinearGenomeView"]',
-    height: 460,
-    wait: 30,
+    path: genomeSession('chr5:76615423-76623700', [
+      'chr5:76623167-76623230',
+      'chr5:76618638-76618640',
+    ]),
+    prepare: annotateF2rl2,
+    clip: [GENOME_VIEW],
+    height: 800,
+    wait: 1,
   },
 ]
+
+function genomeSession(loc: string, highlight: string[]) {
+  return sessionUrl(
+    {
+      views: [
+        {
+          type: 'LinearGenomeView',
+          assembly: 'hg38',
+          loc,
+          tracks: [REFSEQ_TRACK],
+          highlight,
+        },
+      ],
+    },
+    jbrowseUrl(
+      'https://cmdcolin.github.io/isoform-explorer/jbrowse/config.json',
+    ),
+  )
+}
 
 async function pickFromTrackMenu(page: Page, submenu: string, item: string) {
   await page.locator('[data-testid="track_menu_icon"]').first().click()
@@ -152,29 +167,63 @@ async function closeMenus(page: Page) {
   }
 }
 
-async function annotateZdhhc16(page: Page) {
-  await page.getByTestId('app-ready-marker').waitFor({ state: 'attached' })
-  await page.waitForTimeout(10_000)
+async function showTranscriptNames(page: Page, gene: string, last: string) {
+  await page.getByTestId(`feature-name-${gene}`).waitFor()
   await pickFromTrackMenu(page, 'Subfeature labels', 'Below')
-  await page.getByText('Isoforms trimmed').click()
-  await page.getByText('All transcripts', { exact: true }).click()
-  await closeMenus(page)
+  const trimmed = page.getByText('Isoforms trimmed')
+  if (await trimmed.isVisible()) {
+    await trimmed.click()
+    await page.getByText('All transcripts', { exact: true }).click()
+    await closeMenus(page)
+  }
   await pickFromTrackMenu(page, 'Feature height', 'Normal')
   await pickFromTrackMenu(page, 'Feature height', 'Grow the track')
   await page.mouse.move(0, 0)
-  await page.waitForTimeout(2000)
+  await page.getByText(last, { exact: true }).waitFor()
   await page.locator('[data-testid="track_menu_icon"]').first().blur()
+}
+
+function boxes(page: Page) {
   const box = (locator: Locator) => locator.first().boundingBox()
-  const [track, exon6, exon7, canonical, isoform3] = await Promise.all([
-    box(page.getByTestId(/^trackRenderingContainer-/)),
-    box(page.getByTestId('highlight-band').nth(0)),
-    box(page.getByTestId('highlight-band').nth(1)),
-    box(page.getByText('NM_198046.3', { exact: true })),
-    box(page.getByText('NM_198044.3', { exact: true })),
+  return {
+    track: () => box(page.getByTestId(/^trackRenderingContainer-/)),
+    chip: () => box(page.getByTestId('highlight-chip')),
+    band: (n: number) => box(page.getByTestId('highlight-band').nth(n)),
+    text: (text: string) => box(page.getByText(text, { exact: true })),
+  }
+}
+
+async function overlay(page: Page, notes: string[]) {
+  await page
+    .locator('body')
+    .evaluate(
+      (body, html) => body.insertAdjacentHTML('beforeend', html),
+      notes.join(''),
+    )
+}
+
+async function annotateZdhhc16(page: Page) {
+  await showTranscriptNames(page, 'ZDHHC16', 'NR_109895.2')
+  const find = boxes(page)
+  const [track, chip, exon6, exon7, canonical, isoform3] = await Promise.all([
+    find.track(),
+    find.chip(),
+    find.band(0),
+    find.band(1),
+    find.text('NM_198046.3'),
+    find.text('NM_198044.3'),
   ])
-  const html =
-    track && exon6 && exon7 && canonical && isoform3
+  await overlay(
+    page,
+    track && chip && exon6 && exon7 && canonical && isoform3
       ? [
+          ...exonNotes(exon6, exon7, track.y + track.height - 24),
+          note(
+            '117 bases in all: residues 176–214, with the DHHC motif at 182–185',
+            (exon6.x + exon6.width + exon7.x) / 2,
+            chip.y,
+            '-50%',
+          ),
           outline(canonical),
           outline(isoform3),
           note(
@@ -196,21 +245,124 @@ async function annotateZdhhc16(page: Page) {
             track.y + track.height - 24,
             '-50%',
           ),
-        ].join('')
-      : ''
-  await page
-    .locator('body')
-    .evaluate((body, html) => body.insertAdjacentHTML('beforeend', html), html)
+        ]
+      : [],
+  )
+}
+
+async function annotateNdufc2(page: Page) {
+  const box = (selector: string) => page.locator(selector).first().boundingBox()
+  const [helix, protein, transcript] = await Promise.all([
+    box('svg.map g.f.tm[data-span="56-75"]'),
+    box('svg.map g.iso[data-isoform="O95298-2"]'),
+    box('svg.structure g.exon[data-span="104-119"] >> nth=1'),
+  ])
+  await overlay(
+    page,
+    helix && protein && transcript
+      ? [
+          note(
+            'transmembrane helix, residues 56–75 →',
+            helix.x - 8,
+            helix.y + helix.height / 2 - 8,
+            '-100%',
+            RED,
+            11,
+          ),
+          note(
+            'gap: residues 56–78',
+            helix.x + 6,
+            protein.y + protein.height / 2 - 8,
+            '0',
+            RED,
+            11,
+          ),
+          note(
+            '← isoform 4: exon 2 starts later',
+            transcript.x + transcript.width + 8,
+            transcript.y + transcript.height / 2 - 8,
+            '0',
+            RED,
+            11,
+          ),
+        ]
+      : [],
+  )
+}
+
+async function annotateF2rl2(page: Page) {
+  await showTranscriptNames(page, 'F2RL2', 'NM_001256566.2')
+  const find = boxes(page)
+  const [neighbour, signal, start, canonical, isoform2] = await Promise.all([
+    find.text('NM_001285460.2'),
+    find.band(0),
+    find.band(1),
+    find.text('NM_004101.4'),
+    find.text('NM_001256566.2'),
+  ])
+  await overlay(
+    page,
+    neighbour && signal && start && canonical && isoform2
+      ? [
+          note(
+            '← IQGAP2, on the other strand: F2RL2 lies in one of its introns',
+            neighbour.x + neighbour.width + 8,
+            neighbour.y - 2,
+            '0',
+            '#555',
+          ),
+          outline(canonical),
+          outline(isoform2),
+          note(
+            'MANE Select: signal peptide, residues 1–21 →',
+            signal.x - 8,
+            canonical.y - 12,
+            '-100%',
+          ),
+          note(
+            'isoform 2: exon 1 untranslated →',
+            signal.x - 8,
+            isoform2.y - 12,
+            '-100%',
+          ),
+          note(
+            '← isoform 2 starts here, at methionine 23',
+            start.x + start.width + 8,
+            isoform2.y - 12,
+            '0',
+          ),
+        ]
+      : [],
+  )
 }
 
 const RED = '#d00000'
 
-function outline(b: { x: number; y: number; width: number; height: number }) {
+type Box = { x: number; y: number; width: number; height: number }
+
+function exonNotes(exon6: Box, exon7: Box, y: number) {
+  const pxPerBase = (exon7.x - exon6.x) / (97453530 - 97452895)
+  const centre = (start: number, end: number) =>
+    exon6.x + ((start + end) / 2 - 97452895) * pxPerBase
+  return [
+    note('exon 5', centre(97452415, 97452503), y, '-50%', '#333'),
+    note('exon 8', centre(97453799, 97453846), y, '-50%', '#333'),
+  ]
+}
+
+function outline(b: Box) {
   return `<div style="position:absolute;left:${b.x - 3}px;top:${b.y - 1}px;width:${b.width + 6}px;height:${b.height + 2}px;border:2px solid ${RED};border-radius:3px;z-index:10000;pointer-events:none"></div>`
 }
 
-function note(text: string, x: number, y: number, shift: string) {
-  return `<div style="position:absolute;left:${x}px;top:${y}px;transform:translateX(${shift});color:${RED};font:bold 14px Roboto,sans-serif;background:rgba(255,255,255,0.9);padding:1px 4px;white-space:nowrap;z-index:10000;pointer-events:none">${text}</div>`
+function note(
+  text: string,
+  x: number,
+  y: number,
+  shift: string,
+  colour = RED,
+  size = 14,
+) {
+  return `<div style="position:absolute;left:${x}px;top:${y}px;transform:translateX(${shift});color:${colour};font:bold ${size}px Roboto,sans-serif;background:rgba(255,255,255,0.9);padding:1px 4px;white-space:nowrap;z-index:10000;pointer-events:none">${text}</div>`
 }
 
 function serve() {
