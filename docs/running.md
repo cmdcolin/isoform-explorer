@@ -78,7 +78,9 @@ static files), with the base path `/isoform-explorer/`.
   `src/illustration.ts`, downloads the PDB structure (cached in `data/pdb/`),
   keeps the heavy atoms of the protein and one ligand, turns them so the
   molecule lies flat to the viewer, and writes
-  `web/content/blog/data/<name>-atoms.json`, which a `figures/` page draws.
+  `web/content/blog/data/<name>-atoms.json`, which a `figures/` page draws. For
+  each entry in `WINDOWS`, it fetches a stretch of GRCh38 from Ensembl REST
+  (cached in `data/genomic/`) and writes `web/content/blog/data/<name>.json`.
 - `pnpm heroes [name ...]`: after a build, retakes the blog's hero and figure
   screenshots in `web/content/blog/` with headless Chrome (`CHROME` overrides
   `/usr/bin/google-chrome`). The JBrowse shots load the deployed site's

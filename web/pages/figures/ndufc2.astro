@@ -1,0 +1,15 @@
+---
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+import Layout from '../../layouts/Layout.astro'
+import { acceptorFigure } from '../../lib/acceptor-figure.ts'
+import { gene } from '../../lib/data.ts'
+
+const window = JSON.parse(readFileSync(join(process.cwd(), 'web', 'content', 'blog', 'data', 'ndufc2-exon2.json'), 'utf8'))
+const figure = acceptorFigure(gene('NDUFC2'), 'O95298-2', window, [56, 75])
+---
+
+<Layout title="NDUFC2 exon 2 splice acceptors" indexed={false}>
+  <div class="hero-figure"><Fragment set:html={figure} /></div>
+</Layout>

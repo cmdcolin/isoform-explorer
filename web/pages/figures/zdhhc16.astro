@@ -1,0 +1,11 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { activeSiteFigure } from '../../lib/active-site-figure.ts'
+import { gene } from '../../lib/data.ts'
+
+const figure = activeSiteFigure(gene('ZDHHC16'), 'Q969W1-3', 'DHHC')
+---
+
+<Layout title="ZDHHC16 active site" indexed={false}>
+  <div class="hero-figure"><Fragment set:html={figure} /></div>
+</Layout>

@@ -143,15 +143,17 @@ story. The same standard applies here.
 - **Blog (`/blog/<id>/`):** worked examples, one isoform per post, written in
   MDX in `web/content/blog/`. Numbers and the quoted answer sentence come from
   the gene record through `web/lib/stories.ts`, so they follow the data. Each
-  post has a hero of a different kind, retaken by `pnpm heroes`: a topology
-  drawing generated from UniProt features (`web/lib/topology.ts`, rendered on a
-  `figures/` page), the gene page's Gene + protein view with a feature
-  hovered, JBrowse's protein view loaded from the live site, a chart of
+  post has a hero of a different kind, drawn for it and retaken by
+  `pnpm heroes` from a `figures/` page: a topology drawing generated from
+  UniProt features (`web/lib/topology.ts`), the bases of an exon with its two
+  splice acceptors and the codons between them (`web/lib/acceptor-figure.ts`,
+  bases from `pnpm illustration`), a bead chain with the active-site
+  palmitate as a skeletal formula (`web/lib/active-site-figure.ts`), a chart of
   GTEx data, and an illustration of a PDB structure in David Goodsell's style
   (`src/illustration.ts` extracts the atoms, `web/scripts/illustrate.ts` draws
-  them on a `figures/` page). A new post needs a hero unlike all of these, a
-  drawing made for it rather than another screenshot of the site; the owner
-  drops a post whose hero would not be new. A post may cite literature and public expression data to say
+  them). Screenshots of the gene page and of JBrowse appear inside posts as
+  figures, never as heroes. A new post needs a hero unlike all of these; the
+  owner drops a post whose hero would not be new. A post may cite literature and public expression data to say
   where an isoform is made, attributed to its source; the rules above still
   hold for every sentence the site generates. GTEx transcript TPM is never
   quoted alone: `pnpm expression` also counts reads across the isoform's own

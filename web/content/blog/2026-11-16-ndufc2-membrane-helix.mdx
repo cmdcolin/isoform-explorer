@@ -6,17 +6,20 @@ description:
   'Exon 2 of the isoform 4 transcript starts 69 bases late, so the protein lacks
   residues 56–78, including its single transmembrane helix, and keeps the rest
   in frame.'
-hero: './heroes/alternative-acceptor.jpg'
+hero: './heroes/splice-acceptors.jpg'
 heroAlt:
-  'The NDUFC2 gene page in its Gene + protein view, with the transmembrane
-  helix, residues 56–75, highlighted. At the top, the exons of three
-  transcripts, where exon 2 of isoform 4’s begins later than the canonical’s.
-  Below, the same isoforms on the canonical’s 119 residues, with isoform 4’s bar
-  broken from residue 56 to 78.'
+  'The start of NDUFC2 exon 2 spelled out base by base, with two arcs from exon
+  1. The blue canonical arc lands on an AG at the end of intron 1; the orange
+  isoform 4 arc lands on a second AG 69 bases into the exon. Under the bases, 23
+  orange beads for residues 56–78, the transmembrane helix (56–75) among them,
+  are marked absent from isoform 4; the grey beads after them, from D79, are
+  kept.'
 ---
 
+import Shot from '../../components/Shot.astro'
 import { expressionOf } from '../../lib/expression.ts'
 import { story } from '../../lib/stories.ts'
+import geneView from './figures/ndufc2-gene-view.jpg'
 
 export const s = story('NDUFC2', 'O95298-2')
 export const canonical = s.record.canonical.transcripts.ensembl[0]
@@ -31,22 +34,27 @@ in it, residues 56–75. The gene page sums up isoform {s.isoform.accession}
 
 ## Exon 2 without its first 69 bases
 
-The picture above is the gene page's Gene + protein view, with the helix
-highlighted. Its top half draws one GENCODE transcript per isoform. The
-canonical transcript, {canonical}, and isoform 4's,{' '}
-{s.isoform.transcripts.ensembl[0]}, both have three exons, but exon 2 of isoform
-4's begins 69 bases later, at a second splice acceptor inside the canonical
-exon.
+The drawing above spells out the start of exon 2 on the genome. The canonical
+transcript, {canonical}, and isoform 4's, {s.isoform.transcripts.ensembl[0]},
+both have three exons, but isoform 4's exon 2 starts at a second splice acceptor
+69 bases into the canonical exon. Both acceptors are an AG, and the second is
+made of the last base of the codon for E78 and the first of the codon for D79.
 
 Since 69 bases are 23 codons, the reading frame holds. The protein lacks
-residues 56–78 and continues from residue 79 to the canonical end. On the
-protein map alone the gap could pass for a skipped exon; the gene view shows
-that all three exons are there and the second one is shorter.
+residues 56–78, the whole helix among them, and continues from residue 79 to the
+canonical end.
 
-The view's lower half is the protein map. Exon 1 encodes residues 1 to 55, so
-the gap starts where exon 1 ends, and it covers the helix from end to end. The
-other alternative isoform, O95298-3, keeps the helix and differs from residue 77
-on.
+<Shot
+  src={geneView}
+  alt="The NDUFC2 gene page in its Gene + protein view, with the transmembrane helix, residues 56–75, highlighted. At the top, the exons of three transcripts, where exon 2 of isoform 4's begins later than the canonical's. Below, the same isoforms on the canonical's 119 residues, with isoform 4's bar broken from residue 56 to 78."
+  href={s.href}
+  open="Open the NDUFC2 page"
+>
+  The gene page's Gene + protein view, with the helix highlighted. On the
+  protein map alone the gap could pass for a skipped exon; the transcripts above
+  it show all three exons, with isoform 4's second exon shorter. The other
+  alternative isoform, O95298-3, keeps the helix and differs from residue 77 on.
+</Shot>
 
 Without the helix, isoform 4 has no annotated segment that spans a membrane.
 Whether it is made as a protein or joins complex I is outside what the
@@ -62,8 +70,7 @@ junction that defines it has {e.isoformReads} reads in {e.isoformSamples} of{' '
 {e.canonicalReads.toLocaleString()} for the canonical junction from the same
 splice site. No peptide unique to it has been reported.
 
-GTEx's transcript TPM says the opposite, crediting isoform 4 with over a third
-of the gene in every tissue.
+GTEx's transcript TPM gives isoform 4 over a third of the gene in every tissue.
 [Where is an isoform made? Check its splice junction first](../2026-11-16-where-isoforms-are-made/)
 compares the two measures.
 

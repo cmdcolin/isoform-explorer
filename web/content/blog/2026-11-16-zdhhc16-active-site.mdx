@@ -5,25 +5,31 @@ order: 3
 description:
   'Two splice changes remove 39 residues from the palmitoyltransferase ZDHHC16,
   among them the DHHC motif and the cysteine UniProt marks as its active site.'
-hero: './heroes/active-site.jpg'
+hero: './heroes/palmitate.jpg'
 heroAlt:
-  'JBrowse with ZDHHC16 on chromosome 10 at the left, in RefSeq and GENCODE
-  tracks, and at the right the protein view of NM_198044.3: the AlphaFold DB
-  models of isoform 3 and of the canonical protein drawn as ribbons in two
-  colours and superposed, under an alignment of the genome-translated and model
-  sequences.'
+  'ZDHHC16 residues 168–222 drawn as a chain of beads. Residues 176–214 are
+  orange with their letters, the D, H, H and C of the DHHC motif are blue, and a
+  palmitate drawn as a skeletal formula, a zigzag of carbons with a sulfur and a
+  carbonyl oxygen, hangs from cysteine 185. Below, isoform 3’s chain joins
+  residue 175 directly to 215, with dashed lines from the canonical chain
+  showing where the two ends meet.'
 ---
 
+import Shot from '../../components/Shot.astro'
 import { expressionOf, share, tissueShare } from '../../lib/expression.ts'
 import { story } from '../../lib/stories.ts'
+import proteinView from './figures/zdhhc16-protein-view.jpg'
 
 export const s = story('ZDHHC16', 'Q969W1-3')
 export const e = expressionOf('Q969W1-3')
 
 ZDHHC16 is one of the human palmitoyltransferases named for their DHHC motif
-(aspartate, histidine, histidine, cysteine). UniProt annotates the DHHC domain
-at residues 155–205 and marks the motif's cysteine, C185, as the active site, an
-S-palmitoyl cysteine intermediate. The gene page sums up isoform{' '}
+(aspartate, histidine, histidine, cysteine). These enzymes attach a palmitate to
+the motif's own cysteine first and pass it on to a substrate second
+([Rana et al., 2018](https://doi.org/10.1126/science.aao6326)). UniProt
+annotates the DHHC domain at residues 155–205 and marks the motif's cysteine,
+C185, as the active site, an S-palmitoyl cysteine intermediate. The drawing
+above shows the palmitate on C185. The gene page sums up isoform{' '}
 {s.isoform.accession} in one sentence:
 
 > {s.answer}
@@ -40,25 +46,28 @@ continues from residue 215 to the canonical end. UniProt maps isoform 3 to{' '}
 {s.isoform.transcripts.ensembl[0]} and{' '}
 {s.isoform.transcripts.refseq.join(', ')}.
 
-## The models in 3D
-
-The picture above is JBrowse's protein view, which the isoform 3 section of the
-gene page opens. It loads AlphaFold DB's model of isoform 3 and the canonical
-model, superposes them, and aligns each residue to the genome, so a residue
-picked in 3D can be found on the transcripts at the left. Each model is a
-prediction, and its pLDDT is the predictor's confidence.
-
 Isoform 3 also lacks the first 16 of the 21 residues of the fourth transmembrane
 helix (199–219).
+
+<Shot
+  src={proteinView}
+  alt="JBrowse with ZDHHC16 on chromosome 10 at the left, in RefSeq and GENCODE tracks, and at the right the protein view of NM_198044.3: the AlphaFold DB models of isoform 3 and of the canonical protein drawn as ribbons in two colours and superposed, under an alignment of the genome-translated and model sequences."
+  href={s.href}
+  open="Open isoform 3 on the ZDHHC16 page"
+>
+  JBrowse's protein view, which the isoform 3 section of the gene page opens,
+  superposes AlphaFold DB's models of isoform 3 and the canonical protein and
+  aligns each residue to the genome, so a residue picked in 3D can be found on
+  the transcripts at the left. pLDDT is the predictor's confidence in each
+  model.
+</Shot>
 
 ## Where isoform 3 is made
 
 No paper we found studies isoform 3. Its sequence comes from a cDNA of tonsil B
 cells ([BC033157.1](https://www.ncbi.nlm.nih.gov/nuccore/BC033157.1)), and no
 peptide unique to it has been reported by mass spectrometry, so the evidence is
-RNA only.
-
-The RNA evidence is plentiful. In our tally of GTEx v8 junction reads (see
+RNA only, and there is plenty of it. In our tally of GTEx v8 junction reads (see
 [the expression post](../2026-11-16-where-isoforms-are-made/) for the method),
 the isoform's junction, which skips exon 6 and enters exon 7 late, is in{' '}
 {e.isoformSamples.toLocaleString()} of {e.samples.toLocaleString()} samples and

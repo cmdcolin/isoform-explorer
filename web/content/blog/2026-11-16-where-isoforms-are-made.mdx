@@ -71,8 +71,8 @@ hemisphere and {tissueShare(app, 'Brain - Frontal Cortex (BA9)')} in frontal
 cortex, against {tissueShare(app, 'Liver')} in liver, and the TPM share follows
 it.
 
-That matches what was measured long before RNA-seq. In 1988 the Kunitz exon was
-found in cDNAs from tissues outside the brain
+Studies from before RNA-seq found the same. In 1988 the Kunitz exon was found in
+cDNAs from tissues outside the brain
 ([Tanzi et al.](https://doi.org/10.1038/331528a0)). Ribonuclease protection in
 human tissues then put APP695 mRNA ahead of the Kunitz forms in cerebral cortex
 ([Tanaka et al., 1989](<https://doi.org/10.1016/0006-291x(89)92760-5>)), and PCR
@@ -89,8 +89,8 @@ had about three times more Kunitz-containing APP protein
 <a href={geneHref('NDUFC2', 'O95298-2')}>NDUFC2 isoform 4</a> lacks the
 protein's only transmembrane helix, through a splice acceptor 69 bases inside
 exon 2. GTEx transcript TPM gives it over a third of the gene in every tissue,
-more than the canonical transcript. Reads tell a different story: the isoform's
-junction has {ndufc2.isoformReads} reads in {ndufc2.isoformSamples} of
+more than the canonical transcript, but the isoform's junction has
+{ndufc2.isoformReads} reads in {ndufc2.isoformSamples} of
 {ndufc2.samples.toLocaleString()} samples, and the canonical junction from the
 same splice site has {ndufc2.canonicalReads.toLocaleString()}. One ENCODE
 long-read sample, embryonic kidney
@@ -117,9 +117,9 @@ The other worked examples each get the same check:
   signal peptide, has {share(f2rl2)} of junction reads, though RSEM gives it 0
   TPM in every tissue.
 - [NDUFC2 isoform 4](../2026-11-16-ndufc2-membrane-helix/) is the case above.
-- [Pyruvate kinase M1](../2026-11-16-pkm-subunit-contact/) fails the other
-  way: {tissueShare(pkm, 'Muscle - Skeletal')} of junction reads in skeletal
-  muscle, and never more than {largestTpmShare(pkm)} of the gene by TPM.
+- [Pyruvate kinase M1](../2026-11-16-pkm-subunit-contact/) fails the other way:
+  {tissueShare(pkm, 'Muscle - Skeletal')} of junction reads in skeletal muscle,
+  and never more than {largestTpmShare(pkm)} of the gene by TPM.
 
 ## Public sources that measure isoforms
 
@@ -144,5 +144,5 @@ The other worked examples each get the same check:
   a preprint, with data under CC BY 4.0.
 - **Protein:** [PeptideAtlas](https://peptideatlas.org/) maps peptides to
   UniProt isoform accessions. A peptide found in only one isoform is evidence
-  for that isoform, and you have to filter for those yourself. None of the three
-  worked examples has one.
+  for that isoform, and you have to filter for those yourself. ZDHHC16 isoform
+  3, PAR3 isoform 2 and NDUFC2 isoform 4 have none.

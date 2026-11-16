@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 
-import { getText } from './cache.ts'
-import { writeJson } from './json.ts'
+import { getJson, getText } from './cache.ts'
+import { record, text, writeJson } from './json.ts'
 import { DATA, ROOT } from './paths.ts'
 
 export const KIND = { protein: 0, highlight: 1, ligand: 2 } as const
@@ -155,8 +155,26 @@ export function flatten(atoms: Atom[]) {
   })
 }
 
-export function illustrationPath(name: string) {
-  return join(ROOT, 'web', 'content', 'blog', 'data', `${name}-atoms.json`)
+export interface GenomicWindow {
+  name: string
+  chromosome: string
+  start: number
+  end: number
+  strand: 1 | -1
+}
+
+export const WINDOWS: GenomicWindow[] = [
+  {
+    name: 'ndufc2-exon2',
+    chromosome: '11',
+    start: 78073061,
+    end: 78073160,
+    strand: -1,
+  },
+]
+
+export function blogDataPath(file: string) {
+  return join(ROOT, 'web', 'content', 'blog', 'data', file)
 }
 
 if (import.meta.main) {
@@ -165,7 +183,7 @@ if (import.meta.main) {
       `https://files.rcsb.org/download/${illustration.pdb}.cif`,
       join(DATA, 'pdb', `${illustration.pdb}.cif.gz`),
     )
-    const path = illustrationPath(illustration.name)
+    const path = blogDataPath(`${illustration.name}-atoms.json`)
     writeJson(path, {
       pdb: illustration.pdb,
       title: structTitle(cif),
@@ -173,6 +191,19 @@ if (import.meta.main) {
       ligand: illustration.ligand,
       atoms: flatten(parseAtoms(cif, illustration)),
     })
+    console.log(path)
+  }
+  for (const window of WINDOWS) {
+    const region = `${window.chromosome}:${window.start}..${window.end}:${window.strand}`
+    const response = record(
+      await getJson(
+        `https://rest.ensembl.org/sequence/region/human/${region}`,
+        join(DATA, 'genomic', `${window.name}.json`),
+        { 'content-type': 'application/json' },
+      ),
+    )
+    const path = blogDataPath(`${window.name}.json`)
+    writeJson(path, { ...window, sequence: text(response.seq) ?? '' })
     console.log(path)
   }
 }
