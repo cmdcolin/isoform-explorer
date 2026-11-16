@@ -1,0 +1,73 @@
+---
+title: 'CEBPB LIP: the same mRNA, read from a later start codon'
+date: '2026-11-16'
+order: 5
+description:
+  'CEBPB has no introns. Ribosomes starting at three AUGs in one reading frame
+  make LAP*, LAP and LIP, and LIP keeps the DNA-binding bZIP domain without the
+  activation region.'
+hero: './heroes/start-codons.jpg'
+heroAlt:
+  'One CEBPB mRNA drawn to scale from its cap to its poly(A) tail, with
+  ribosomes on three start codons, labelled LAP*, LAP and LIP, each with a
+  short chain of beads coming out of it. A small upstream open reading frame
+  sits between the first two. Below, three bars aligned to the codons end at the
+  same stop: LAP* (345 residues), LAP (322, from M24) and LIP (147, from M199).
+  All three contain the bZIP domain; only LAP* and LAP contain the 9aaTAD
+  motif.'
+---
+
+import { CEBPB_MRNA, CEBPB_NAMES } from '../../lib/posts-data.ts'
+import { startCodons } from '../../lib/start-codons-figure.ts'
+import { story } from '../../lib/stories.ts'
+
+export const s = story('CEBPB', 'P17676-3')
+export const forms = startCodons(s.record, CEBPB_MRNA, CEBPB_NAMES)
+export const bzip = s.record.features.find(f => f.description === 'bZIP')
+export const tad = s.record.features.find(f => f.description === '9aaTAD')
+
+C/EBPβ, encoded by _CEBPB_, is a transcription factor with a bZIP domain. The
+gene has no introns, and its one mRNA is translated from three start codons in
+the same reading frame
+([Xiong et al., 2001](https://doi.org/10.1093/nar/29.14.3087)). UniProt's
+canonical protein, called LAP\* in the literature, starts at the first. LAP
+starts at methionine {forms[1]?.first} and LIP at methionine{' '}
+{forms[2]?.first}. The gene page sums up LIP, isoform {s.isoform.accession}:
+
+> {s.answer}
+
+## Three starts, one end
+
+The drawing above puts the mRNA (RefSeq {CEBPB_MRNA.refseq}) and the three
+proteins on one scale. All three end at the same stop codon, so they share
+their last {forms[2]?.length} residues, and with them the bZIP domain
+({bzip?.start}–{bzip?.end}), which binds DNA and pairs C/EBPβ with itself or
+another C/EBP protein. LIP starts after the 9aaTAD activation motif
+({tad?.start}–{tad?.end}) and the other N-terminal regions the gene page lists.
+
+UniProt's note on LIP says it acts as a dominant negative by forming
+heterodimers with LAP, citing
+[Zhu et al., 2002](https://doi.org/10.1074/jbc.M108075200).
+
+Between the first two start codons, RefSeq marks an upstream open reading frame
+of 11 codons as regulatory, citing a study of how translation sets the balance
+of the isoforms
+([Calkhoven et al., 2000](https://pubmed.ncbi.nlm.nih.gov/10921906/)).
+
+## What RNA data can show
+
+The other posts check an isoform's splice junction in GTEx. LIP has no junction
+of its own, and every read from the CEBPB mRNA fits all three proteins, so no
+count of RNA-seq reads can say how much LIP is made. Ribosome profiling, which
+sequences the stretches of mRNA under ribosomes, can show which start codons
+they use. RefSeq lists LAP and LIP under two
+accessions, NM_001285878.1 and NM_001285879.1, with the same {CEBPB_MRNA.length.toLocaleString()} bases and a
+different coding sequence marked on each. GENCODE has no separate transcript
+for either, so the gene page lists only the RefSeq ones.
+
+Mass spectrometry has the same limit from the other side. LIP's sequence is the
+last {forms[2]?.length} residues of LAP and LAP\*, so a peptide from inside it
+matches all three, and only one that begins at LIP's first residue would tell
+LIP apart.
+
+<a href={s.href}>Open LIP on the CEBPB page</a>.

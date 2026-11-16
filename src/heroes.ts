@@ -68,6 +68,14 @@ const SHOTS: Shot[] = [
     wait: 1,
   },
   {
+    name: 'start-codons',
+    dir: 'heroes',
+    path: 'figures/cebpb/',
+    clip: ['svg.start-codons-figure'],
+    height: 900,
+    wait: 1,
+  },
+  {
     name: 'tetramer',
     dir: 'heroes',
     path: 'figures/pkm/',

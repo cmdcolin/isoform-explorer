@@ -6,6 +6,8 @@ import { expect, test } from 'vitest'
 import { acceptorFigure, acceptors } from './acceptor-figure.ts'
 import { activeSiteFigure } from './active-site-figure.ts'
 import { gene } from './data.ts'
+import { CEBPB_MRNA, CEBPB_NAMES } from './posts-data.ts'
+import { startCodons } from './start-codons-figure.ts'
 
 const window = JSON.parse(
   readFileSync(
@@ -44,4 +46,13 @@ test('the ZDHHC16 drawing puts the palmitate on the active-site cysteine', () =>
 
 test('an isoform that keeps the active site has no drawing', () => {
   expect(() => activeSiteFigure(gene('ZDHHC16'), 'Q969W1-2', 'DHHC')).toThrow()
+})
+
+test('CEBPB start codons derived from UniProt land on the AUGs RefSeq marks', () => {
+  const forms = startCodons(gene('CEBPB'), CEBPB_MRNA, CEBPB_NAMES)
+  expect(forms.map(f => [f.name, f.base])).toEqual([
+    ['LAP*', 452],
+    ['LAP', 521],
+    ['LIP', 1046],
+  ])
 })

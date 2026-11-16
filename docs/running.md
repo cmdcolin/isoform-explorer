@@ -86,6 +86,9 @@ static files), with the base path `/isoform-explorer/`.
   `/usr/bin/google-chrome`). The JBrowse shots load the deployed site's
   `jbrowse/config.json` and need the network. `PAGES=F2RL2,NDUFC2,PKM,ZDHHC16
   pnpm build` builds just the gene pages the shots use.
+  A new post's hero must exist before the site builds, so take its first copy
+  from `pnpm dev` (the `figures/` page at the same path), then retake it with
+  `pnpm heroes <name>` after a build.
 - `pnpm check-links`: after a build, checks that every internal link in `dist/`
   points at a file that exists.
 - `pnpm test` and `pnpm typecheck`: unit tests (Vitest) and type checks of the

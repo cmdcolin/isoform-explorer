@@ -1,0 +1,12 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { gene } from '../../lib/data.ts'
+import { CEBPB_MRNA, CEBPB_NAMES } from '../../lib/posts-data.ts'
+import { startCodonsFigure } from '../../lib/start-codons-figure.ts'
+
+const figure = startCodonsFigure(gene('CEBPB'), CEBPB_MRNA, CEBPB_NAMES)
+---
+
+<Layout title="CEBPB start codons" indexed={false}>
+  <div class="hero-figure"><Fragment set:html={figure} /></div>
+</Layout>
