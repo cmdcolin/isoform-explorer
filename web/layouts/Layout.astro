@@ -8,7 +8,7 @@ import { INTERFACE_EXPLORER, REPOSITORY, href } from '../lib/site.ts'
 interface Props {
   title?: string
   description?: string
-  nav?: 'browse' | 'diseases' | 'search' | 'blog' | 'about'
+  nav?: 'browse' | 'diseases' | 'search' | 'blog' | 'architecture' | 'about'
   indexed?: boolean
   image?: ImageMetadata
 }
@@ -24,6 +24,7 @@ const links = [
   ['diseases', 'Diseases', 'diseases/'],
   ['search', 'Search', 'search/'],
   ['blog', 'Blog', 'blog/'],
+  ['architecture', 'How it works', 'architecture/'],
   ['about', 'About', 'about/'],
 ] as const
 ---

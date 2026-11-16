@@ -2,15 +2,12 @@
 import { CONFIDENT, CONTACT, MIN_PLDDT } from '../../src/interfaces.ts'
 import { FOLDED_PLDDT, INTERFACE_LOST_SHARE, SWAP_SHARE } from '../../src/isoforms.ts'
 import Layout from '../layouts/Layout.astro'
-import { architectureSvg } from '../lib/architecture.ts'
 import { totals } from '../lib/data.ts'
 import { share } from '../lib/labels.ts'
-import { INTERFACE_EXPLORER, JBROWSE, REPOSITORY, href } from '../lib/site.ts'
+import { INTERFACE_EXPLORER, JBROWSE, href } from '../lib/site.ts'
 
 const t = totals()
 const n = (value: number) => value.toLocaleString()
-
-const svg = architectureSvg({ proteins: t.proteins, isoforms: t.isoforms, ipsae: CONFIDENT, contact: CONTACT })
 
 const terms = [
   ['Missing', 'canonical residues with nothing in their place'],
@@ -41,15 +38,6 @@ const references = [
     partner interface.
     {t.modelsPending > 0 && <> Confidence for {n(t.modelsPending)} AlphaFold DB models is still being fetched.</>}
   </p>
-
-  <figure class="architecture">
-    <div class="architecture-scroll" role="img" aria-label="Pipeline diagram. UniProt entries, AlphaFold DB complexes and monomers, Ensembl transcript places and GENCODE 49 exons feed one step that compares each isoform with its canonical protein and writes one JSON file per protein. The Astro site reads those files and links to JBrowse 2, which shows GENCODE and RefSeq transcripts on hg38.">
-      <Fragment set:html={svg} />
-    </div>
-    <figcaption>
-      <span><a href={`${REPOSITORY}/blob/main/docs/running.md`}>Running the pipeline</a> lists each step's command.</span>
-    </figcaption>
-  </figure>
 
   <div class="prose">
     <h2>Terms</h2>

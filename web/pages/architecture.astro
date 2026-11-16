@@ -1,0 +1,37 @@
+---
+import { CONFIDENT, CONTACT } from '../../src/interfaces.ts'
+import Layout from '../layouts/Layout.astro'
+import { architectureSvg } from '../lib/architecture.ts'
+import { totals } from '../lib/data.ts'
+import { JBROWSE, REPOSITORY } from '../lib/site.ts'
+
+const t = totals()
+
+const svg = architectureSvg({ proteins: t.proteins, isoforms: t.isoforms, ipsae: CONFIDENT, contact: CONTACT })
+---
+
+<Layout title="How it works" nav="architecture" description="How Isoform explorer is built: data sources, the Node pipeline, and the static site and genome browser it feeds.">
+  <h1>How it works</h1>
+  <p class="lede">
+    A Node pipeline pulls UniProt, AlphaFold DB, Ensembl and GENCODE data, compares each isoform with its canonical
+    protein, and writes one JSON file per protein. Astro turns those files into a static site that links into JBrowse 2.
+  </p>
+
+  <figure class="architecture">
+    <div class="architecture-scroll" role="img" aria-label="Pipeline diagram. UniProt entries, AlphaFold DB complexes and monomers, Ensembl transcript places and GENCODE 49 exons feed one step that compares each isoform with its canonical protein and writes one JSON file per protein. The Astro site reads those files and links to JBrowse 2, which shows GENCODE and RefSeq transcripts on hg38.">
+      <Fragment set:html={svg} />
+    </div>
+    <figcaption>
+      <span><a href={`${REPOSITORY}/blob/main/docs/running.md`}>Running the pipeline</a> lists each step's command.</span>
+    </figcaption>
+  </figure>
+
+  <h2>The viewers</h2>
+  <ul>
+    <li>Gene pages draw each isoform on its canonical protein's sequence and link its AlphaFold DB model.</li>
+    <li>
+      <a href={JBROWSE}>JBrowse 2</a> shows GENCODE and RefSeq transcripts on hg38, and its protein view opens an
+      isoform's AlphaFold DB model beside its transcript.
+    </li>
+  </ul>
+</Layout>
