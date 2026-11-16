@@ -86,3 +86,15 @@ test('the NDUFC2 sashimi plot lands isoform 4 69 bases into exon 2, skipping onl
   expect(svg).toContain('1 read<')
   expect(svg.match(/class="absent"/g)).toHaveLength(2)
 })
+
+test('the ZDHHC16 sashimi plot hatches exon 6 and the first 88 bases of exon 7', () => {
+  const svg = sashimiFigure(gene('ZDHHC16'), expressionOf('Q969W1-3'), {
+    title: 'ZDHHC16',
+    names: { canonical: 'Canonical', isoform: 'Isoform 3' },
+    exons: [5, 8],
+    absent: ['absent from isoform 3'],
+    tissues: new Map([['Muscle - Skeletal', 'Skeletal muscle']]),
+  })
+  expect(svg).toContain('Isoform 3 junction, exon 5 → 88 bases into exon 7')
+  expect(svg.match(/class="absent"/g)).toHaveLength(4)
+})

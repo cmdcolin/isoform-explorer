@@ -108,19 +108,6 @@ const SHOTS: Shot[] = [
     wait: 1,
   },
   {
-    name: 'zdhhc16-splice-changes',
-    dir: 'figures',
-    path: genomeSession('chr10:97452300-97453950', [
-      'chr10:97452895-97452923',
-      'chr10:97453530-97453617',
-    ]),
-    prepare: annotateZdhhc16,
-    clip: [GENOME_VIEW],
-    width: 1600,
-    height: 800,
-    wait: 1,
-  },
-  {
     name: 'f2rl2-genome',
     dir: 'figures',
     path: genomeSession('chr5:76615423-76623700', [
@@ -200,54 +187,6 @@ async function overlay(page: Page, notes: string[]) {
       (body, html) => body.insertAdjacentHTML('beforeend', html),
       notes.join(''),
     )
-}
-
-async function annotateZdhhc16(page: Page) {
-  await showTranscriptNames(page, 'ZDHHC16', 'NR_109895.2')
-  const find = boxes(page)
-  const [track, chip, exon6, exon7, canonical, isoform3] = await Promise.all([
-    find.track(),
-    find.chip(),
-    find.band(0),
-    find.band(1),
-    find.text('NM_198046.3'),
-    find.text('NM_198044.3'),
-  ])
-  await overlay(
-    page,
-    track && chip && exon6 && exon7 && canonical && isoform3
-      ? [
-          ...exonNotes(exon6, exon7, track.y + track.height - 24),
-          note(
-            '117 bases in all: residues 176–214, with the DHHC motif at 182–185',
-            (exon6.x + exon6.width + exon7.x) / 2,
-            chip.y,
-            '-50%',
-          ),
-          outline(canonical),
-          outline(isoform3),
-          note(
-            'MANE Select, canonical protein →',
-            exon6.x - 16,
-            canonical.y - 12,
-            '-100%',
-          ),
-          note('isoform 3 →', exon6.x - 16, isoform3.y - 12, '-100%'),
-          note(
-            'exon 6, 29 bases: skipped',
-            exon6.x + exon6.width / 2,
-            track.y + track.height - 24,
-            '-50%',
-          ),
-          note(
-            'first 88 bases of exon 7: skipped',
-            exon7.x + exon7.width / 2,
-            track.y + track.height - 24,
-            '-50%',
-          ),
-        ]
-      : [],
-  )
 }
 
 async function annotateNdufc2(page: Page) {
@@ -339,16 +278,6 @@ async function annotateF2rl2(page: Page) {
 const RED = '#d00000'
 
 type Box = { x: number; y: number; width: number; height: number }
-
-function exonNotes(exon6: Box, exon7: Box, y: number) {
-  const pxPerBase = (exon7.x - exon6.x) / (97453530 - 97452895)
-  const centre = (start: number, end: number) =>
-    exon6.x + ((start + end) / 2 - 97452895) * pxPerBase
-  return [
-    note('exon 5', centre(97452415, 97452503), y, '-50%', '#333'),
-    note('exon 8', centre(97453799, 97453846), y, '-50%', '#333'),
-  ]
-}
 
 function outline(b: Box) {
   return `<div style="position:absolute;left:${b.x - 3}px;top:${b.y - 1}px;width:${b.width + 6}px;height:${b.height + 2}px;border:2px solid ${RED};border-radius:3px;z-index:10000;pointer-events:none"></div>`

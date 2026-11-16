@@ -17,10 +17,11 @@ heroAlt:
   showing where the two ends meet.'
 ---
 
-import Shot from '../../components/Shot.astro'
+import Html from '../../components/Html.astro'
+import { gene } from '../../lib/data.ts'
 import { expressionOf, share, tissueShare } from '../../lib/expression.ts'
+import { sashimiFigure } from '../../lib/sashimi-figure.ts'
 import { story } from '../../lib/stories.ts'
-import spliceChanges from './figures/zdhhc16-splice-changes.jpg'
 
 export const s = story('ZDHHC16', 'Q969W1-3')
 export const e = expressionOf('Q969W1-3')
@@ -51,18 +52,29 @@ continues from residue 215 to the canonical end. UniProt maps isoform 3 to{' '}
 Isoform 3 also lacks the first 16 of the 21 residues of the fourth transmembrane
 helix (199–219).
 
-<Shot
-  src={spliceChanges}
-  alt="JBrowse at chr10:97,452,300–97,453,950 with the RefSeq transcripts of ZDHHC16 stacked one per row, exons 5 to 8 labelled below. Two regions are shaded and labelled in red: exon 6, 29 bases, skipped, and the first 88 bases of exon 7, skipped. A red note above says the 117 bases in all are residues 176–214, with the DHHC motif at 182–185. Red notes point to NM_198046.3, the MANE Select transcript, and NM_198044.3, isoform 3, whose row has no exon 6 and an exon 7 starting at the right edge of the second shaded region."
-  href={s.href}
-  open="Open isoform 3 on the ZDHHC16 page"
->
-  Exons 5 to 8 of ZDHHC16 in JBrowse, RefSeq transcripts only. The shaded
-  stretches are the 117 bases that isoform 3 (NM_198044.3) leaves out compared
-  with NM_198046.3, the MANE Select transcript. The gene page also opens
-  JBrowse's protein view for isoform 3, with AlphaFold DB models of both
-  proteins superposed.
-</Shot>
+In the drawing below, the grey arc is the canonical junction from exon 5 into
+exon 6 and the blue arc is isoform 3's, from exon 5 to 88 bases into exon 7.
+Each arc is labelled with the GTEx reads that cross it, counted as described
+under [Where isoform 3 is made](#where-isoform-3-is-made).
+
+<Html
+  html={sashimiFigure(gene('ZDHHC16'), e, {
+    title: 'Reads across ZDHHC16 exons 5 to 8 in GTEx v8',
+    names: { canonical: 'Canonical', isoform: 'Isoform 3' },
+    exons: [5, 8],
+    notes: { 6: '29 bases' },
+    absent: [
+      'absent from isoform 3: 117 bases, residues 176–214,',
+      'with the DHHC motif at 182–185',
+    ],
+    tissues: new Map([
+      ['Muscle - Skeletal', 'Skeletal muscle'],
+      ['Heart - Left Ventricle', 'Heart left ventricle'],
+      ['Brain - Frontal Cortex (BA9)', 'Frontal cortex'],
+      ['Esophagus - Mucosa', 'Esophageal mucosa'],
+    ]),
+  })}
+/>
 
 ## Where isoform 3 is made
 
