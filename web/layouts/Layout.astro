@@ -8,7 +8,7 @@ import { INTERFACE_EXPLORER, REPOSITORY, href } from '../lib/site.ts'
 interface Props {
   title?: string
   description?: string
-  nav?: 'browse' | 'search' | 'blog' | 'about'
+  nav?: 'browse' | 'diseases' | 'search' | 'blog' | 'about'
   indexed?: boolean
   image?: ImageMetadata
 }
@@ -21,6 +21,7 @@ const fullTitle = title ? `${title} · Isoform explorer` : 'Isoform explorer'
 const canonical = new URL(Astro.url.pathname, Astro.site)
 const links = [
   ['browse', 'Browse', 'browse/'],
+  ['diseases', 'Diseases', 'diseases/'],
   ['search', 'Search', 'search/'],
   ['blog', 'Blog', 'blog/'],
   ['about', 'About', 'about/'],

@@ -5,6 +5,7 @@ import type { Isoform } from '../../../src/types.ts'
 import TranscriptList from '../../components/TranscriptList.astro'
 import Layout from '../../layouts/Layout.astro'
 import { gene, indexRows } from '../../lib/data.ts'
+import { diseaseHref, diseasesOfPage } from '../../lib/diseases.ts'
 import { GROUPS, GROUP_LABELS } from '../../lib/features.ts'
 import {
   FOLDED_PLDDT,
@@ -58,6 +59,7 @@ const explorerGene = record.explorer.gene
 const explorerIsoforms = record.explorer.isoforms
 const uniprot = `https://www.uniprot.org/uniprotkb/${record.accession}/entry`
 const others = record.isoforms.length
+const linkedDiseases = diseasesOfPage(record.page)
 const events = listText(record.events.map(e => e.toLowerCase()))
 const partners = Object.keys(record.interfaces).length
 const noteKey = (n: { topic: string; text: string }) => `${n.topic}\n${n.text}`
@@ -154,6 +156,20 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
       )
     }
     {
+      linkedDiseases.length > 0 && (
+        <p class="muted">
+          UniProt links {record.gene} to{' '}
+          {linkedDiseases.map((disease, k) => (
+            <>
+              {k > 0 && (k === linkedDiseases.length - 1 ? ' and ' : ', ')}
+              <a href={diseaseHref(disease)}>{disease.name}</a>
+            </>
+          ))}
+          .
+        </p>
+      )
+    }
+    {
       (explorerGene || explorerIsoforms) && (
         <p class="muted">
           Interface explorer shows{' '}
@@ -219,7 +235,7 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
     }
   </div>
   <div class="legend">
-    <span><span class="swatch kept"></span>carried over</span>
+    <span><span class="swatch kept"></span>present</span>
     <span>gap: missing</span>
     <span><span class="swatch replaced-swatch"></span>replaced by other residues</span>
     <span><span class="swatch inserted"></span>residues the canonical lacks</span>

@@ -1,0 +1,48 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { diseases } from '../lib/data.ts'
+import { diseaseHref } from '../lib/diseases.ts'
+
+const all = diseases()
+const proteins = new Set(all.flatMap(d => d.genes.map(g => g.page))).size
+---
+
+<Layout
+  title="Diseases"
+  nav="diseases"
+  description="Diseases UniProt links to proteins with a described alternative isoform, each with the isoforms of those proteins."
+>
+  <h1>Diseases</h1>
+  <p class="lede">
+    UniProt links {proteins.toLocaleString()} of the proteins on this site to {all.length.toLocaleString()} diseases. A
+    disease page shows the isoforms of those proteins on the canonical sequence, with what each one lacks.
+  </p>
+  <p>
+    <label>
+      Filter by disease or gene
+      <input type="search" class="disease-filter" placeholder="cystic fibrosis, CFTR" autocomplete="off" />
+    </label>
+  </p>
+  <ul class="disease-list">
+    {
+      all.map(disease => (
+        <li data-text={`${disease.name} ${disease.acronym} ${disease.genes.map(g => g.gene).join(' ')}`.toLowerCase()}>
+          <a href={diseaseHref(disease)}>{disease.name}</a>{' '}
+          <span class="muted">· {disease.genes.map(g => g.gene).join(', ')}</span>
+        </li>
+      ))
+    }
+  </ul>
+</Layout>
+
+<script>
+  const input = document.querySelector<HTMLInputElement>('.disease-filter')
+  const items = [...document.querySelectorAll<HTMLLIElement>('.disease-list li')]
+  input?.addEventListener('input', () => {
+    const words = input.value.toLowerCase().split(/\s+/).filter(Boolean)
+    for (const item of items) {
+      const text = item.dataset.text ?? ''
+      item.hidden = !words.every(word => text.includes(word))
+    }
+  })
+</script>

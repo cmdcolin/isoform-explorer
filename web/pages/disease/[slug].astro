@@ -1,0 +1,69 @@
+---
+import '../../styles/gene.css'
+import Layout from '../../layouts/Layout.astro'
+import { diseases, gene } from '../../lib/data.ts'
+import { answer, maneIsoform } from '../../lib/loss.ts'
+import { isoformMap } from '../../lib/maps.ts'
+import { INTERFACE_EXPLORER, geneHref, href } from '../../lib/site.ts'
+
+export function getStaticPaths() {
+  const only = (process.env.PAGES ?? '').split(',').filter(Boolean)
+  return diseases()
+    .filter(disease => !only.length || disease.genes.some(g => only.includes(g.page)))
+    .map(disease => ({ params: { slug: disease.slug }, props: { disease } }))
+}
+
+const { disease } = Astro.props
+const genes = disease.genes.map(link => {
+  const record = gene(link.page)
+  return { link, record, map: isoformMap(record, maneIsoform(record)?.accession) }
+})
+const names = genes.map(g => g.record.gene).join(', ')
+---
+
+<Layout
+  title={disease.name}
+  nav="diseases"
+  description={`${disease.name}: the ${genes.length === 1 ? 'protein' : 'proteins'} UniProt links to it (${names}) and what each of their isoforms lacks compared with the canonical protein.`}
+>
+  <p><a href={href('diseases/')}>← All diseases</a></p>
+  <h1>{disease.name}</h1>
+  <p class="muted">
+    {disease.acronym && <>{disease.acronym} · </>}
+    {disease.omim && <><a href={`https://omim.org/entry/${disease.omim}`}>OMIM {disease.omim}</a> · </>}
+    <a href={`https://www.uniprot.org/diseases/${disease.id}`}>UniProt {disease.id}</a>
+  </p>
+  <figure class="disease-quote">
+    <blockquote>{disease.description}</blockquote>
+    <figcaption class="muted small">UniProt's description of the disease.</figcaption>
+  </figure>
+  {
+    genes.map(({ link, record, map }) => (
+      <section class="disease-gene">
+        <h2>
+          <a href={geneHref(record.page)}>{record.gene}</a> <span class="muted">· {record.protein}</span>
+        </h2>
+        <p class="muted">UniProt's note: “{link.note}”.</p>
+        <div class="map-wrap">
+          <Fragment set:html={map} />
+        </div>
+        <ul class="disease-isoforms">
+          {record.isoforms.map(isoform => (
+            <li>
+              <a href={geneHref(record.page, isoform.accession)}>{`Isoform ${isoform.name} (${isoform.accession})`}</a>:{' '}
+              {answer(record, isoform)}
+            </li>
+          ))}
+        </ul>
+        {record.explorer.gene && (
+          <p class="muted">
+            <a href={`${INTERFACE_EXPLORER}gene/${encodeURIComponent(record.explorer.gene)}/`}>
+              {record.gene}'s ClinVar variants on its predicted interfaces
+            </a>{' '}
+            are on Interface explorer; this site shows no variants.
+          </p>
+        )}
+      </section>
+    ))
+  }
+</Layout>

@@ -21,7 +21,8 @@
     "check-links": "node src/checkLinks.ts dist",
     "heroes": "node src/heroes.ts",
     "illustration": "node src/illustration.ts",
-    "expression": "node src/expression.ts"
+    "expression": "node src/expression.ts",
+    "diseases": "node src/diseases.ts"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",

@@ -217,6 +217,24 @@ export interface Totals {
  */
 export type Lookup = Record<string, string[]>
 
+export interface DiseaseGene {
+  page: string
+  gene: string
+  /** UniProt's note on how the gene is involved, verbatim. */
+  note: string
+}
+
+/** A UniProt disease linked to at least one protein on the site. */
+export interface Disease {
+  id: string
+  slug: string
+  name: string
+  acronym: string
+  description: string
+  omim: string
+  genes: DiseaseGene[]
+}
+
 export const SEARCH = {
   genes: 'search/genes.json',
   accessions: 'search/accessions.json',

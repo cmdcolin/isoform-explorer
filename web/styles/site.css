@@ -890,3 +890,42 @@ table.browse .protein {
 .share-table th:not(:first-child) {
   text-align: right;
 }
+
+.disease-quote {
+  margin: 16px 0 24px;
+}
+
+.disease-quote blockquote {
+  margin: 0 0 6px;
+  padding: 10px 16px;
+  border-left: 3px solid var(--border);
+  background: var(--surface-2);
+  border-radius: 4px;
+}
+
+.disease-gene {
+  margin-top: 28px;
+}
+
+.disease-isoforms li {
+  margin-bottom: 6px;
+}
+
+.disease-filter {
+  display: block;
+  width: min(100%, 420px);
+  margin-top: 6px;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.disease-list {
+  columns: 2 320px;
+  column-gap: 32px;
+  padding-left: 18px;
+}
+
+.disease-list li {
+  break-inside: avoid;
+  margin-bottom: 4px;
+}

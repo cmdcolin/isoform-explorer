@@ -60,8 +60,12 @@ const references = [
     <h2>Related data</h2>
     <ul>
       <li>
-        Expression by tissue: <a href="https://gtexportal.org/">GTEx</a>, whose per-transcript numbers can mislead; check the
-        isoform's splice junction first, as <a href={href('blog/2026-11-16-where-isoforms-are-made/')}>this post</a> explains.
+        Expression by tissue: <a href="https://gtexportal.org/">GTEx</a>. Before using its per-transcript numbers, check the
+        reads across the isoform's splice junction, as <a href={href('blog/2026-11-16-where-isoforms-are-made/')}>this post</a> explains.
+      </li>
+      <li>
+        Diseases: UniProt's disease annotations, with the proteins UniProt links to each, on the
+        <a href={href('diseases/')}>Diseases</a> pages.
       </li>
       <li>ClinVar variants on predicted interfaces: <a href={INTERFACE_EXPLORER}>Interface explorer</a>.</li>
       <li>Transcripts without a UniProt isoform: the GENCODE and RefSeq tracks in <a href={JBROWSE}>JBrowse 2</a>.</li>

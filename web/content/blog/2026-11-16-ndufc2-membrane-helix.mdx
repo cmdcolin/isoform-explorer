@@ -17,6 +17,7 @@ heroAlt:
 ---
 
 import Shot from '../../components/Shot.astro'
+import { diseaseHref } from '../../lib/diseases.ts'
 import { expressionOf } from '../../lib/expression.ts'
 import { story } from '../../lib/stories.ts'
 import geneView from './figures/ndufc2-gene-view.jpg'
@@ -24,11 +25,17 @@ import geneView from './figures/ndufc2-gene-view.jpg'
 export const s = story('NDUFC2', 'O95298-2')
 export const canonical = s.record.canonical.transcripts.ensembl[0]
 export const e = expressionOf('O95298-2')
+export const disorder = s.diseases[0]
+export const disorderName = (disorder?.name ?? '').replace(/^M/, 'm')
 
 NDUFC2 is a {s.record.length}-residue subunit of complex I, the first enzyme of
-the mitochondrial respiratory chain. UniProt annotates one transmembrane helix
-in it, residues 56–75. The gene page sums up isoform {s.isoform.accession}
-(UniProt's isoform {s.isoform.name}) in one sentence:
+the mitochondrial respiratory chain. Variants in both copies of the gene cause
+<a href={disorder ? diseaseHref(disorder) : s.href}>{disorderName}</a>, a
+disorder that begins in infancy or early childhood, according to UniProt.
+
+UniProt annotates one transmembrane helix in NDUFC2, residues 56–75. The gene
+page sums up isoform {s.isoform.accession} (UniProt's isoform {s.isoform.name})
+in one sentence:
 
 > {s.answer}
 
@@ -71,7 +78,7 @@ junction that defines it has {e.isoformReads} reads in {e.isoformSamples} of{' '
 splice site. No peptide unique to it has been reported.
 
 GTEx's transcript TPM gives isoform 4 over a third of the gene in every tissue.
-[Where is an isoform made?](../2026-11-16-where-isoforms-are-made/)
+[Exploring tissue-specific splicing](../2026-11-16-where-isoforms-are-made/)
 compares the two measures.
 
 <a href={s.href}>Open isoform 4 on the NDUFC2 page</a>.

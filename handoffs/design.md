@@ -78,7 +78,7 @@ story. The same standard applies here.
   when after trimming the ends it shares with the canonical it adds at least
   half as many residues as it removes (`SWAP_SHARE` in `src/isoforms.ts`);
   otherwise they are `missing` and the added ones only `novel`. A swap (mutually exclusive exons, an alternative terminus of
-  similar length) reads "replaced by N different residues"; the lost-feature
+  similar length) reads "has N different residues in place of M residues"; the lost-feature
   counts on the home page and browse table use `missing` only.
 - **Counts by confidence, never "no fold".** pLDDT is the prediction's
   confidence, not a measurement of folding. For the residues an isoform lacks,
@@ -164,6 +164,16 @@ story. The same standard applies here.
   about 39% of the gene by TPM, 49 junction reads in all of GTEx; PKM M1 the
   other way, 95% of junction reads in skeletal muscle and under 4% by TPM). The
   junction tallies are our count of public data, and posts say so.
+- **Diseases (`/diseases/`, `/disease/<slug>/`):** UniProt's disease
+  comments for the proteins on the site, from `pnpm diseases`
+  (`site/data/diseases.json`). A disease page quotes UniProt's description
+  and, for each protein UniProt links to it, UniProt's note on the link
+  verbatim ("The disease is caused by variants affecting…", "may be
+  caused…", "susceptibility…"), the gene map and each isoform's answer
+  sentence. The site says nothing about whether an isoform matters for the
+  disease; ClinVar variants stay on Interface explorer. Gene pages link their
+  diseases, and posts may name a disease to explain a gene to a lay reader,
+  attributed to UniProt.
 - **About:** scope, sources, each rule above, and what is left out.
 
 ## Data

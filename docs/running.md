@@ -68,6 +68,10 @@ static files), with the base path `/isoform-explorer/`.
 - `pnpm dev`: development server at <http://localhost:4321/isoform-explorer/>.
 - `pnpm build`: writes the static site to `dist/`, one page per protein.
 - `pnpm preview`: serves `dist/` as it will be deployed.
+- `pnpm diseases`: after `pnpm isoforms`, fetches UniProt's disease comments
+  for reviewed human entries (cached in `data/uniprot_diseases.json`) and
+  writes `site/data/diseases.json`, one entry per disease linked to a protein
+  on the site.
 - `pnpm expression`: for each isoform in `CASES` in `src/expression.ts`, finds
   the splice junction its GENCODE transcript has and the canonical's lacks,
   counts reads across it and across the canonical junction from the same splice

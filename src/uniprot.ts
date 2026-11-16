@@ -88,6 +88,14 @@ export function isoformEntries() {
   )
 }
 
+export function diseaseEntries() {
+  return stream(
+    `${HUMAN} AND cc_disease:*`,
+    'accession,cc_disease',
+    join(DATA, 'uniprot_diseases.json'),
+  )
+}
+
 export function accessionOf(entry: UniProtEntry) {
   return text(entry.primaryAccession) ?? ''
 }
