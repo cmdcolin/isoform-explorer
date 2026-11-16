@@ -1,11 +1,11 @@
 ---
-title: 'Where is an isoform made? Check the reads that splice it'
+title: 'Where is an isoform made? Count the reads across its splice junction'
 date: '2026-11-16'
 order: 0
 description:
-  "GTEx's transcript estimates put APP695 in brain, matching decades of work.
-  They also credit NDUFC2 isoform 4 with over a third of the gene, though its
-  splice junction is almost never seen."
+  "In GTEx's transcript estimates, APP695 is highest in brain, as decades of
+  work found, and NDUFC2 isoform 4 has over a third of the gene, though reads
+  across its splice junction are almost never seen."
 hero: './heroes/expression.jpg'
 heroAlt:
   'Two dot plots of an isoform’s share of its gene across twelve GTEx tissues,
@@ -60,7 +60,7 @@ reproduces it.
 In the chart above, blue circles are the junction share and orange diamonds the
 TPM share.
 
-## APP695: both measures put it in brain
+## APP695: highest in brain by TPM and by junction reads
 
 APP770, the canonical amyloid precursor protein, has a Kunitz protease inhibitor
 domain encoded by exon 7 and an OX-2 motif encoded by exon 8.
@@ -84,7 +84,7 @@ had about three times more Kunitz-containing APP protein
 
 <Html html={shareTable(app, FIGURE_TISSUES)} />
 
-## NDUFC2 isoform 4: the measures disagree
+## NDUFC2 isoform 4: a third of the gene by TPM, almost no junction reads
 
 <a href={geneHref('NDUFC2', 'O95298-2')}>NDUFC2 isoform 4</a> lacks the
 protein's only transmembrane helix, through a splice acceptor 69 bases inside
@@ -123,10 +123,10 @@ The other worked examples each get the same check:
 - [CEBPB LIP](../2026-11-16-cebpb-start-codons/) has no junction to check: it
   is made from a later start codon on the same mRNA as the other two forms.
 
-## Public sources that measure isoforms
+## Public data on isoform expression
 
 - **Transcript expression by tissue:** [GTEx](https://gtexportal.org/) has an
-  API (`medianTranscriptExpression`) and bulk files, under its own terms of use.
+  API (`medianTranscriptExpression`) and bulk files, under GTEx's terms of use.
   The [Human Protein Atlas](https://www.proteinatlas.org/) shows RNA by isoform
   on each gene's Isoform tab and offers a transcript download under CC BY 4.0.
 - **Whether a splice is made at all:** [Snaptron](https://snaptron.cs.jhu.edu/)

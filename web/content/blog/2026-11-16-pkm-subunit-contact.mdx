@@ -3,9 +3,9 @@ title: 'Two versions of a glycolysis enzyme, one exon apart'
 date: '2026-11-16'
 order: 4
 description:
-  'PKM makes pyruvate kinase M1 or M2 by using one of two exons. The 45 residues
-  they encode sit where the four subunits meet, beside the pocket for fructose
-  1,6-bisphosphate.'
+  'Pyruvate kinase M1 and M2 differ by which of two PKM exons their mRNA
+  includes. The 45 residues the exons encode sit where the four subunits meet,
+  beside the pocket for fructose 1,6-bisphosphate.'
 hero: './heroes/tetramer.jpg'
 heroAlt:
   'An illustration of the pyruvate kinase M2 tetramer from the crystal structure
@@ -41,7 +41,7 @@ canonical sequence is M2, so M1 appears on the PKM page as isoform{' '}
 
 > {s.answer}
 
-## One exon or the other
+## Mutually exclusive exons
 
 The two exons have the same length, so the reading frame holds either way, and
 residues {swapStart}–{swapEnd} of M2 become as many different residues in M1.
@@ -50,8 +50,8 @@ missing. The features in the replaced stretch are listed all the same, and one
 of them is part of the binding site for fructose 1,6-bisphosphate (FBP), M2's
 allosteric activator.
 
-UniProt's note on M1 says it is active by itself, with no need for FBP, and that
-it replaces M2 in adult tissues after birth.
+According to UniProt's note on M1, it is active by itself, with no need for
+FBP, and it replaces M2 in adult tissues after birth.
 
 ## Where the stretch sits
 
@@ -69,7 +69,7 @@ predicts PKM only as a dimer, and most of that pair's interface lies outside the
 stretch. Of its {contacts.length} interface residues, {inSwap.length} fall in
 the swapped stretch.
 
-## Which tissues use M1's exon
+## Where M1's exon is included
 
 The two exons splice into the same exon downstream, so the reads crossing each
 junction can be compared. In GTEx v8, the reads from M1's exon make up{' '}
