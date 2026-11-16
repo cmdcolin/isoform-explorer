@@ -11,8 +11,13 @@ import {
   text,
   writeJson,
 } from './json.ts'
-import { locusOf, transcriptPlaces } from './ensembl.ts'
-import type { Place } from './ensembl.ts'
+import {
+  canonicalExons,
+  locusOf,
+  transcriptLayouts,
+  transcriptPlaces,
+} from './ensembl.ts'
+import type { Layout, Place } from './ensembl.ts'
 import { explorerPages } from './explorer.ts'
 import { pythonRound } from './numeric.ts'
 import { DATA, OUT, SITE_DATA } from './paths.ts'
@@ -441,12 +446,13 @@ export interface Sources {
   alphaFold: AlphaFoldDb
   explorer: (accession: string) => GeneRecord['explorer']
   places: Map<string, Place | null>
+  layouts: Map<string, Layout | null>
 }
 
 export async function geneRecord(
   entry: UniProtEntry,
   page: string,
-  { interfaces: predicted, alphaFold, explorer, places }: Sources,
+  { interfaces: predicted, alphaFold, explorer, places, layouts }: Sources,
 ) {
   const accession = accessionOf(entry)
   const sequence = sequenceOf(entry)
@@ -483,7 +489,7 @@ export async function geneRecord(
       console.log(`${isoform}: edits outside or overlapping the sequence`)
     }
   }
-  const canonicalAccession = displayed?.[0] ?? `${accession}-1`
+  const canonicalAccession = canonicalAccessionOf(entry)
   const canonicalTranscripts = transcripts.of(canonicalAccession)
   const shown = [canonicalTranscripts, ...built.map(i => i.transcripts)]
   return {
@@ -511,6 +517,11 @@ export async function geneRecord(
     explorer: explorer(accession),
     locus: locusOf(
       shown.flatMap(t => t.ensembl).map(id => places.get(unversioned(id))),
+    ),
+    exons: canonicalExons(
+      canonicalTranscripts.ensembl,
+      layouts,
+      sequence.length,
     ),
   } satisfies GeneRecord
 }
@@ -814,6 +825,13 @@ export function pageNames(entries: UniProtEntry[]) {
   )
 }
 
+export function canonicalAccessionOf(entry: UniProtEntry) {
+  const displayed = [...editsByIsoform(entry)].find(
+    ([, info]) => info.displayed,
+  )
+  return displayed?.[0] ?? `${accessionOf(entry)}-1`
+}
+
 export function hasAlternative(entry: UniProtEntry) {
   return [...editsByIsoform(entry).values()].some(info => !info.displayed)
 }
@@ -832,11 +850,18 @@ async function main(workers = '8', ...accessions: string[]) {
     ),
   )
   const places = await transcriptPlaces(mapped)
+  const canonicalIds = wanted.flatMap(entry =>
+    (ensemblByIsoform(entry).get(canonicalAccessionOf(entry)) ?? []).map(
+      unversioned,
+    ),
+  )
+  const layouts = await transcriptLayouts(canonicalIds)
   const sources = {
     interfaces,
     alphaFold,
     explorer: await explorerPages(),
     places,
+    layouts,
   } satisfies Sources
   const failed: string[] = []
   const genes = (
@@ -885,6 +910,9 @@ async function main(workers = '8', ...accessions: string[]) {
   )
   console.log(
     `Ensembl transcript places pending (rerun): ${new Set(mapped.filter(id => !places.has(id))).size}`,
+  )
+  console.log(
+    `Ensembl exon layouts pending (rerun): ${new Set(canonicalIds.filter(id => !layouts.has(id))).size}; ${genes.filter(gene => gene.exons).length} of ${genes.length} proteins have exons`,
   )
 }
 

@@ -98,6 +98,7 @@ function record(overrides: Partial<GeneRecord>): GeneRecord {
     unmapped: { ensembl: [], refseq: [], refseqProteins: [] },
     explorer: { gene: null, isoforms: null },
     locus: null,
+    exons: null,
     ...overrides,
   }
 }

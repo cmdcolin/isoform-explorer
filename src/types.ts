@@ -139,6 +139,18 @@ export interface GeneRecord {
   explorer: { gene: string | null; isoforms: string | null }
   /** GRCh38 span of the isoforms' Ensembl transcripts, `chr17:7661779-7687546`. */
   locus: string | null
+  /**
+   * Exon junctions of an Ensembl transcript encoding the canonical sequence, in
+   * coding nucleotides from the start codon; `first` numbers the first coding
+   * exon along the transcript.
+   */
+  exons: Exons | null
+}
+
+export interface Exons {
+  transcript: string
+  first: number
+  junctions: number[]
 }
 
 export interface IndexRow {

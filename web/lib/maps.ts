@@ -1,4 +1,5 @@
 import type {
+  Exons,
   Feature,
   FeatureGroup,
   FeatureType,
@@ -297,6 +298,39 @@ interface Row {
   isoform: Pick<Isoform, 'edits' | 'segments'>
 }
 
+function exonRow(s: Scale, exons: Exons, length: number, top: number) {
+  const edges = [0, ...exons.junctions, length * 3]
+  const at = (nucleotides: number) => s.left + (nucleotides / 3) * s.step
+  return `<g class="exons"><text class="label" x="0" y="${top + 9}">Exons<title>${esc(`Exons of ${exons.transcript}, which encodes the canonical sequence, numbered along the transcript`)}</title></text>${edges
+    .slice(1)
+    .map((end, i) => {
+      const start = edges[i] ?? 0
+      const first = Math.floor(start / 3) + 1
+      const last = Math.ceil(end / 3)
+      const x = at(start)
+      const width = at(end) - x
+      const number = exons.first + i
+      return `<g class="f ex ex${i % 2}" data-span="${first}-${last}"><title>${esc(`Exon ${number}: residues ${span(first, last)}`)}</title><rect x="${fixed(x)}" y="${top + 1}" width="${fixed(width)}" height="10"/>${width > 6 + String(number).length * CHARACTER_WIDTH ? `<text x="${fixed(x + width / 2)}" y="${top + 9}" text-anchor="middle">${number}</text>` : ''}</g>`
+    })
+    .join('')}</g>`
+}
+
+function junctionCuts(
+  s: Scale,
+  exons: Exons | null,
+  top: number,
+  bottom: number,
+) {
+  return exons
+    ? `<g class="junctions">${exons.junctions
+        .map(nucleotides => {
+          const x = fixed(s.left + (nucleotides / 3) * s.step)
+          return `<line x1="${x}" x2="${x}" y1="${top}" y2="${bottom}"/>`
+        })
+        .join('')}</g>`
+    : ''
+}
+
 function isoformBar(s: Scale, row: Row, y: number, length: number) {
   const effects = editEffects(row.isoform)
   const kept = carriedRuns(row.isoform.segments)
@@ -349,6 +383,11 @@ export function isoformMap(
           return rect(s, run, plddtTop + 1, 10, ` class="b${band}"`)
         })
         .join('')}</g>`
+    : ''
+  const exonTop = y
+  y += record.exons ? TRACK + 2 : 0
+  const exonSvg = record.exons
+    ? exonRow(s, record.exons, record.length, exonTop)
     : ''
   const tracksTop = y
   y += tracks.length * TRACK + (tracks.length ? 4 : 0)
@@ -407,7 +446,7 @@ export function isoformMap(
   const rowsBottom = rowsTop + isoformRows.length * ROW
   const axisY = rowsBottom + 2
   const height = axisY + 18
-  return `<div class="map-wrap"><svg class="map track" viewBox="0 0 ${width} ${height}" style="min-width:${Math.round(width * 0.76)}px" data-left="${LEFT}" data-step="${Number(s.step.toFixed(5))}" data-top="${rowsTop - 4}" data-bottom="${rowsBottom}" role="img" aria-label="${esc(`${record.gene}: features of the canonical protein above ${isoformRows.length} isoforms drawn on its ${record.length} residues`)}">${featureSvg}${plddtSvg}${trackSvg}${headers}${isoformSvg}${axis(s, record.length, axisY)}</svg></div>`
+  return `<div class="map-wrap"><svg class="map track" viewBox="0 0 ${width} ${height}" style="min-width:${Math.round(width * 0.76)}px" data-left="${LEFT}" data-step="${Number(s.step.toFixed(5))}" data-top="${rowsTop - 4}" data-bottom="${rowsBottom}" role="img" aria-label="${esc(`${record.gene}: features of the canonical protein above ${isoformRows.length} isoforms drawn on its ${record.length} residues`)}">${featureSvg}${plddtSvg}${exonSvg}${trackSvg}${headers}${isoformSvg}${junctionCuts(s, record.exons, rowsTop - 3, rowsBottom - 3)}${axis(s, record.length, axisY)}</svg></div>`
 }
 
 function axis(
@@ -434,5 +473,5 @@ export function isoformStrip(record: GeneRecord, isoform: Isoform) {
     top: number,
   ) =>
     `<text class="label" x="0" y="${top + 11}">${esc(label)}</text>${isoformBar(s, { accession: '', label, name: '', title: '', tag: '', isoform: value }, top, record.length)}`
-  return `<svg class="strip track" viewBox="0 0 ${width} 86" data-left="${left}" data-step="${Number(s.step.toFixed(5))}" data-top="0" data-bottom="52" role="img" aria-label="${esc(`${isoform.accession} drawn on the ${record.length} residues of the canonical protein`)}">${row('Canonical', { edits: [], segments: [[1, 1, record.length]] }, 6)}${row('Isoform', isoform, 34)}${axis(s, record.length, 56, [1, record.length])}</svg>`
+  return `<svg class="strip track" viewBox="0 0 ${width} 86" data-left="${left}" data-step="${Number(s.step.toFixed(5))}" data-top="0" data-bottom="52" role="img" aria-label="${esc(`${isoform.accession} drawn on the ${record.length} residues of the canonical protein`)}">${row('Canonical', { edits: [], segments: [[1, 1, record.length]] }, 6)}${row('Isoform', isoform, 34)}${junctionCuts(s, record.exons, 4, 48)}${axis(s, record.length, 56, [1, record.length])}</svg>`
 }

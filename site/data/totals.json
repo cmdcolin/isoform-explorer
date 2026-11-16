@@ -4,15 +4,15 @@
   "withTranscript": 16142,
   "withModel": 21820,
   "canonicalModels": 10396,
-  "interfaceProteins": 2796,
-  "modelsPending": 9699,
+  "interfaceProteins": 0,
+  "modelsPending": 6152,
   "maneSelectNotCanonical": 1005,
   "lacking": {
-    "targeting": 2477,
+    "targeting": 2421,
     "domains": 5514,
     "sites": 2597,
     "modifications": 7501,
-    "interface": 995,
-    "folded": 13959
+    "interface": 0,
+    "folded": 13960
   }
 }

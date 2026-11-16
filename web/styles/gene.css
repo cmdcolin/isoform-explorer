@@ -126,6 +126,22 @@
   stroke: none;
 }
 
+.track .f.ex0 rect {
+  fill: color-mix(in srgb, var(--chain) 70%, var(--surface));
+  stroke: none;
+}
+
+.track .f.ex1 rect {
+  fill: color-mix(in srgb, var(--chain) 30%, var(--surface));
+  stroke: none;
+}
+
+.track .junctions line {
+  stroke: var(--surface);
+  stroke-width: 1.6;
+  pointer-events: none;
+}
+
 .track .f:hover rect {
   stroke: var(--link);
   stroke-width: 1.5;
@@ -194,6 +210,14 @@
 .change > .muted {
   font-size: 14px;
   margin: 4px 0 0;
+}
+
+.swatch.exon {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--chain) 70%, var(--surface)) 50%,
+    color-mix(in srgb, var(--chain) 30%, var(--surface)) 50%
+  );
 }
 
 .swatch.b90 {

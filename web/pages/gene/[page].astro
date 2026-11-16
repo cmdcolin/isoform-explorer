@@ -218,6 +218,13 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
     <span><span class="swatch replaced-swatch"></span>replaced by other residues</span>
     <span><span class="swatch inserted"></span>residues the canonical lacks</span>
     {
+      record.exons && (
+        <span>
+          <span class="swatch exon"></span>exons of {record.exons.transcript}; a white cut marks each junction
+        </span>
+      )
+    }
+    {
       canonical.model?.plddt && (
         <span>
           canonical pLDDT <span class="swatch b90"></span>≥ 90 <span class="swatch b70"></span>≥ {FOLDED_PLDDT}

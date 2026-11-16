@@ -135,7 +135,12 @@ story. The same standard applies here.
   holds `explorer` (Interface explorer gene and isoform page names, matched by
   accession from that site's published `genes.json` and `isoforms.json`),
   `locus` (GRCh38 span of the isoforms' Ensembl transcripts, from one batched
-  Ensembl REST lookup; null without them or across chromosomes),
+  Ensembl REST lookup; null without them or across chromosomes), `exons`
+  (junctions of the first Ensembl transcript UniProt maps to the canonical
+  isoform whose GENCODE 49 coding length is the canonical length, plus or
+  minus a stop codon, in coding nucleotides; `first` is the exon number of
+  the first coding exon; null otherwise; the map draws an Exons row and cuts
+  each isoform bar at the junctions),
   `ensemblGenes`, and `unmapped`: the ENST, NM and NP ids UniProt lists for the
   entry without naming an isoform. A model whose pLDDT is not cached yet keeps
   its entry and CIF link with null pLDDT fields.
