@@ -235,6 +235,16 @@ export interface Disease {
   genes: DiseaseGene[]
 }
 
+/** Disease name, UniProt acronym, page slug and gene symbols, for search. */
+export type DiseaseEntry = [
+  name: string,
+  acronym: string,
+  slug: string,
+  genes: string,
+]
+
+export const DISEASE_SEARCH = 'search/diseases.json'
+
 export const SEARCH = {
   genes: 'search/genes.json',
   accessions: 'search/accessions.json',

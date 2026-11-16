@@ -1,6 +1,6 @@
 import { SEARCH } from '../../src/types.ts'
-import type { Lookup } from '../../src/types.ts'
-import { geneHref } from './site.ts'
+import type { DiseaseEntry, Lookup } from '../../src/types.ts'
+import { geneHref, href } from './site.ts'
 
 export type Source = keyof typeof SEARCH
 export type Lookups = Partial<Record<Source, Lookup>>
@@ -151,4 +151,46 @@ export async function lookupsFor(
     }
   }
   return lookups
+}
+
+export interface DiseaseChoice {
+  href: string
+  name: string
+  genes: string
+}
+
+function wordsOf(text: string) {
+  return text
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+}
+
+export function diseaseMatches(
+  raw: string,
+  entries: DiseaseEntry[],
+  limit = 8,
+) {
+  const query = wordsOf(raw)
+  const whole = raw.trim().toLowerCase()
+  return query.length === 0
+    ? []
+    : entries
+        .filter(([name, acronym, , genes]) => {
+          const words = wordsOf(`${name} ${acronym} ${genes}`)
+          return query.every(q => words.some(word => word.startsWith(q)))
+        })
+        .toSorted(
+          ([a], [b]) =>
+            Number(!a.toLowerCase().startsWith(whole)) -
+              Number(!b.toLowerCase().startsWith(whole)) ||
+            a.length - b.length ||
+            a.localeCompare(b),
+        )
+        .slice(0, limit)
+        .map(([name, , slug, genes]): DiseaseChoice => ({
+          href: href(`disease/${slug}/`),
+          name,
+          genes,
+        }))
 }

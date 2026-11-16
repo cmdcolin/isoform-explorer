@@ -944,3 +944,11 @@ table.browse .protein {
   border-radius: 999px;
   background: var(--surface-2);
 }
+
+.disease-note summary {
+  cursor: pointer;
+}
+
+.disease-note p {
+  margin: 6px 0 0;
+}

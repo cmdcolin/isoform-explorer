@@ -1,6 +1,13 @@
 import { describe, expect, test } from 'vitest'
 
-import { lookupsFor, outcome, parseQuery, suggestions } from './search.ts'
+import type { DiseaseEntry } from '../../src/types.ts'
+import {
+  diseaseMatches,
+  lookupsFor,
+  outcome,
+  parseQuery,
+  suggestions,
+} from './search.ts'
 import { href } from './site.ts'
 
 const lookups = {
@@ -219,4 +226,19 @@ test('a transcript UniProt lists under an entry but ties to no isoform says so',
       },
     ],
   })
+})
+
+test('a disease matches when every word starts a word of its name, acronym or genes', () => {
+  const entries: DiseaseEntry[] = [
+    ['Polycystic kidney disease 1', 'PKD1', 'pkd-1', 'PKD1'],
+    ['Cystic fibrosis', 'CF', 'cystic-fibrosis', 'CFTR'],
+    ['Fibrosis of extraocular muscles', 'CFEOM', 'feom', 'KIF21A'],
+  ]
+  expect(diseaseMatches('cystic fib', entries).map(d => d.name)).toEqual(['Cystic fibrosis'])
+  expect(diseaseMatches('fibrosis', entries).map(d => d.name)).toEqual([
+    'Fibrosis of extraocular muscles',
+    'Cystic fibrosis',
+  ])
+  expect(diseaseMatches('cftr', entries)[0]?.href).toContain('disease/cystic-fibrosis/')
+  expect(diseaseMatches('  ', entries)).toEqual([])
 })

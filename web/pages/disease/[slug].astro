@@ -43,7 +43,17 @@ const names = genes.map(g => g.record.gene).join(', ')
         <h2>
           <a href={geneHref(record.page)}>{record.gene}</a> <span class="muted">· {record.protein}</span>
         </h2>
-        <p class="muted">UniProt's note: “{link.note}”.</p>
+        {(() => {
+          const [lead = '', ...rest] = link.note.split(/(?<=\.)\s+(?=[A-Z])/)
+          return rest.length ? (
+            <details class="disease-note muted">
+              <summary>UniProt's note: “{lead.replace(/\.$/, '')}”. More</summary>
+              <p>“{rest.join(' ')}”</p>
+            </details>
+          ) : (
+            <p class="muted">UniProt's note: “{lead.replace(/\.$/, '')}”.</p>
+          )
+        })()}
         <div class="map-wrap">
           <Fragment set:html={map} />
         </div>

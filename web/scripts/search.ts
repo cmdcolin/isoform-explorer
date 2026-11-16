@@ -1,13 +1,15 @@
-import type { Lookup } from '../../src/types.ts'
+import { DISEASE_SEARCH } from '../../src/types.ts'
+import type { DiseaseEntry, Lookup } from '../../src/types.ts'
 import { esc } from '../lib/html.ts'
 import {
   dataPath,
+  diseaseMatches,
   lookupsFor,
   outcome,
   parseQuery,
   suggestions,
 } from '../lib/search.ts'
-import type { Choice, Source } from '../lib/search.ts'
+import type { Choice, DiseaseChoice, Source } from '../lib/search.ts'
 import { href } from '../lib/site.ts'
 
 const loading = new Map<Source, Promise<Lookup>>()
@@ -27,6 +29,32 @@ function load(source: Source) {
   loading.set(source, pending)
   pending.catch(() => loading.delete(source))
   return pending
+}
+
+let diseaseList: Promise<DiseaseEntry[]> | undefined
+
+function isDiseaseList(value: unknown): value is DiseaseEntry[] {
+  return Array.isArray(value)
+}
+
+function loadDiseases() {
+  diseaseList ??= fetch(href(`data/${DISEASE_SEARCH}`))
+    .then(response => (response.ok ? response.json() : undefined))
+    .then((value: unknown) => (isDiseaseList(value) ? value : []))
+    .catch(() => [])
+  return diseaseList
+}
+
+async function diseaseHtml(value: string) {
+  const found = diseaseMatches(value, await loadDiseases())
+  return found.length
+    ? `<p class="muted">Diseases matching ${esc(value.trim())}</p><ul>${found
+        .map(
+          (d: DiseaseChoice) =>
+            `<li><a href="${esc(d.href)}">${esc(d.name)}</a> <span class="muted">${esc(d.genes)}</span></li>`,
+        )
+        .join('')}</ul>`
+    : ''
 }
 
 function namesOf(form: HTMLFormElement) {
@@ -84,12 +112,15 @@ function wire(form: HTMLFormElement) {
     const query = parseQuery(value)
     if (query.kind === 'gene') {
       const genes = await load('genes').catch(() => undefined)
-      if (ticket === latest && genes) {
-        const found = suggestions(value, genes)
+      const diseases = await diseaseHtml(value)
+      if (ticket === latest) {
+        const found = genes ? suggestions(value, genes) : []
         show(
-          found.length
-            ? `<p class="muted">Gene symbols starting ${esc(query.key)}</p>${listHtml(found, names)}`
-            : '',
+          `${
+            found.length
+              ? `<p class="muted">Gene symbols starting ${esc(query.key)}</p>${listHtml(found, names)}`
+              : ''
+          }${diseases}`,
         )
       }
     } else {
@@ -107,6 +138,7 @@ function wire(form: HTMLFormElement) {
     const query = parseQuery(value)
     show('sources' in query ? '<p class="muted">Looking up…</p>' : '')
     const lookups = await lookupsFor(query, load).catch(() => undefined)
+    const diseases = query.kind === 'gene' ? await diseaseHtml(value) : ''
     if (ticket === latest) {
       if (lookups) {
         const result = outcome(query, lookups)
@@ -121,13 +153,15 @@ function wire(form: HTMLFormElement) {
           show(
             result.kind === 'choose'
               ? `<p>${esc(result.intro)}</p>${listHtml(result.choices, names)}`
-              : result.kind === 'miss'
-                ? `<p>${esc(result.reason)} <a href="${esc(about)}">About</a> lists what is covered.</p>${
-                    nearby.length
-                      ? `<p class="muted">Gene symbols starting ${esc(query.kind === 'gene' ? query.key : '')}</p>${listHtml(nearby, names)}`
-                      : ''
-                  }`
-                : '',
+              : result.kind === 'miss' && diseases
+                ? diseases
+                : result.kind === 'miss'
+                  ? `<p>${esc(result.reason)} <a href="${esc(about)}">About</a> lists what is covered.</p>${
+                      nearby.length
+                        ? `<p class="muted">Gene symbols starting ${esc(query.kind === 'gene' ? query.key : '')}</p>${listHtml(nearby, names)}`
+                        : ''
+                    }`
+                  : '',
           )
         }
       } else {

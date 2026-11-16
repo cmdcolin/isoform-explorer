@@ -6,14 +6,14 @@ const shared = Object.fromEntries(indexRows().flatMap(row => (row.page === row.g
 ---
 
 <form class="search" role="search" action={href('browse/')} data-names={JSON.stringify(shared)} data-about={href('about/')}>
-  <label class="visually-hidden" for="search">Search by gene symbol, UniProt accession, Ensembl transcript or RefSeq transcript</label>
+  <label class="visually-hidden" for="search">Search by gene symbol, disease, UniProt accession, Ensembl transcript or RefSeq transcript</label>
   <input
     id="search"
     type="search"
     name="q"
-    placeholder="TP53, P04637-2, ENST00000420246 or NM_001126114"
+    placeholder="TP53, cystic fibrosis, P04637-2 or ENST00000420246"
     autocomplete="off"
-    autocapitalize="characters"
+    autocapitalize="none"
     spellcheck="false"
     aria-describedby="search-results"
   />

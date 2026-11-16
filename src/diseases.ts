@@ -2,7 +2,8 @@ import { join } from 'node:path'
 
 import { list, readJson, record, records, text, writeJson } from './json.ts'
 import { SITE_DATA } from './paths.ts'
-import type { Disease, IndexRow } from './types.ts'
+import { DISEASE_SEARCH } from './types.ts'
+import type { Disease, DiseaseEntry, IndexRow } from './types.ts'
 import { type UniProtEntry, accessionOf, diseaseEntries } from './uniprot.ts'
 
 export function slugOf(name: string) {
@@ -68,6 +69,15 @@ export function diseasesOf(
   })
 }
 
+export function searchEntries(diseases: Disease[]) {
+  return diseases.map((d): DiseaseEntry => [
+    d.name,
+    d.acronym,
+    d.slug,
+    d.genes.map(g => g.gene).join(' '),
+  ])
+}
+
 if (import.meta.main) {
   const rows = list(readJson(join(SITE_DATA, 'index.json')))
     .map(record)
@@ -78,6 +88,7 @@ if (import.meta.main) {
     }))
   const diseases = diseasesOf(await diseaseEntries(), rows)
   writeJson(join(SITE_DATA, 'diseases.json'), diseases)
+  writeJson(join(SITE_DATA, DISEASE_SEARCH), searchEntries(diseases))
   console.log(
     `${diseases.length} diseases over ${new Set(diseases.flatMap(d => d.genes.map(g => g.page))).size} proteins`,
   )

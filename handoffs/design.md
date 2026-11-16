@@ -175,7 +175,10 @@ story. The same standard applies here.
   verbatim ("The disease is caused by variants affecting…", "may be
   caused…", "susceptibility…"), the gene map and each isoform's answer
   sentence. The site says nothing about whether an isoform matters for the
-  disease; ClinVar variants stay on Interface explorer. Gene pages link their
+  disease; ClinVar variants stay on Interface explorer. A note longer than one
+  sentence shows its first sentence and opens to the rest. Search matches
+  disease names, acronyms and genes by word (`search/diseases.json`), so a
+  visitor can type "cystic fibrosis". Gene pages link their
   diseases, and posts may name a disease to explain a gene to a lay reader,
   attributed to UniProt.
 - **About:** scope, sources, each rule above, and what is left out.
