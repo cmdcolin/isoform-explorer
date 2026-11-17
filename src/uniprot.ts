@@ -180,14 +180,18 @@ const NOTE_TOPICS: Record<string, string> = {
   CAUTION: 'Caution',
 }
 
+function commentText(comment: Record<string, unknown>) {
+  return records(comment.texts)
+    .flatMap(t => text(t.value) ?? [])
+    .join(' ')
+}
+
 export function notesByMolecule(entry: UniProtEntry) {
   const notes = new Map<string, Note[]>()
   for (const comment of records(entry.comments)) {
     const molecule = text(comment.molecule)
     const topic = NOTE_TOPICS[text(comment.commentType) ?? '']
-    const note = records(comment.texts)
-      .flatMap(t => text(t.value) ?? [])
-      .join(' ')
+    const note = commentText(comment)
     if (molecule && topic && note) {
       notes.set(molecule, [
         ...(notes.get(molecule) ?? []),
@@ -203,16 +207,16 @@ export function notesByMolecule(entry: UniProtEntry) {
  * order. They are about the entry, so they belong nowhere near a single
  * isoform's section; `notesByMolecule` keeps the ones that do name an isoform
  * and these would otherwise be dropped. Nothing is filtered, including the
- * "(Microbial infection)" paragraphs some entries carry.
+ * "(Microbial infection)" paragraphs some entries carry and the comments whose
+ * text is about a partner rather than a subunit.
  */
 export function subunitNotes(entry: UniProtEntry) {
   return records(entry.comments).flatMap((comment): Note[] => {
-    const note = records(comment.texts)
-      .flatMap(t => text(t.value) ?? [])
-      .join(' ')
-    return comment.commentType === 'SUBUNIT' && !text(comment.molecule) && note
-      ? [{ topic: 'Subunit', text: note }]
-      : []
+    const note =
+      comment.commentType === 'SUBUNIT' && !text(comment.molecule)
+        ? commentText(comment)
+        : ''
+    return note ? [{ topic: NOTE_TOPICS.SUBUNIT ?? 'Subunit', text: note }] : []
   })
 }
 

@@ -94,12 +94,24 @@ story. The same standard applies here.
   heading above the isoform sections and never inside one, because they are
   about the entry: "Homodimer" is not a statement about a particular isoform.
   `subunitNotes` in `src/uniprot.ts` takes only the comments without a
-  `molecule`, which `notesByMolecule` drops; the isoform-specific ones keep
+  `molecule`, which `notesByMolecule` drops; the ones naming an isoform keep
   going where they already went. Nothing is filtered, the
   "(Microbial infection)" paragraphs included, and the site adds no reading of
   its own — where UniProt names an isoform (CD22's "heterodimer of isoform
   CD22-beta and a shorter isoform"), that is UniProt's words, not a claim the
-  site computed.
+  site computed. The heading names the contents, "UniProt on subunits and
+  partners", because 3,125 of the notes carry no assembly or stoichiometry
+  word at all and 1,947 of those are an "Interacts with" line; a heading
+  promising assembly would claim what the quote does not say. Over
+  `SUBUNIT_WORDS` the block collapses: TP53's note is about a thousand italic
+  words, and it should not stand between the reader and what the site computes.
+  Two things this bullet does not cover. A comment whose `molecule` names a
+  processed chain rather than `Isoform N` reaches neither path and is on no
+  page (56 of them; APP's notes on amyloid-beta 40 and 42, C83 and C99),
+  because `src/isoforms.ts` looks notes up by `Isoform ${name}` — longstanding,
+  not new here. And the site does not deduplicate across the two paths, so
+  where UniProt files the same sentence both ways it appears twice (SLC4A8
+  Q2Y0W8, "Homodimer.", on the entry and on isoform 4; the only one).
 - **Losing confidence is a model's opinion.** pLDDT is the prediction's
   confidence, not a measurement of folding. Say so beside the number.
 - **Not expression.** The site computes and asserts nothing about expression:
@@ -186,8 +198,12 @@ story. The same standard applies here.
     exists so splicing that cuts inside an exon (an alternative acceptor or
     donor) can be seen rather than explained.
   - `#subunit`, above the isoform sections: UniProt's entry-level SUBUNIT
-    comments, where the entry has any. The nearest the site comes to the
-    multimer question, and it comes no nearer than quoting.
+    comments, where the entry has any (7,481 pages). The nearest the site comes
+    to the multimer question, and it comes no nearer than quoting. It carries
+    no modelling disclaimer of its own: the interface rows further down say
+    "Each isoform was modelled alone" where that applies, and repeating it here
+    would have been false on the 2,353 pages that do show predicted
+    interfaces, since those come from AlphaFold DB complexes of the canonical.
   - Per isoform, the answer first as a sentence, then the losses grouped under
     the edit that causes them, then transcripts, UniProt's note and links
     (UniProt, Ensembl, RefSeq, AlphaFold DB, isoform superposed on canonical in

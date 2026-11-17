@@ -42,7 +42,9 @@ export function getStaticPaths() {
 }
 
 const COLLAPSE = 12
+const SUBUNIT_WORDS = 120
 const record = gene(Astro.params.page ?? '')
+const subunitText = record.subunit.flatMap(n => n.text.split(/\s+/))
 const canonical = record.canonical
 const mane = maneIsoform(record)
 const maneElsewhere = mane && mane.accession !== canonical.accession ? mane : undefined
@@ -276,17 +278,20 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
   {
     record.subunit.length > 0 && (
       <div class="shared-notes" id="subunit">
-        <h2>UniProt on how the protein assembles</h2>
+        <h2>UniProt on subunits and partners</h2>
         <p class="muted">
-          UniProt attaches these to {record.accession} as a whole rather than to an isoform, and this site assigns them
-          to none: an entry reading “Homodimer” is not a statement about any one isoform below. Where UniProt does name
-          an isoform, the quote names it. No isoform here was modelled with a partner.
+          UniProt attaches {plural(record.subunit.length, 'Subunit comment')} to {record.accession} as a whole, not to
+          an isoform, so what it says here is not a statement about any one isoform below. Where UniProt names an
+          isoform, the quote names it.
         </p>
-        {record.subunit.map(n => (
-          <p class="quote">
-            “{n.text}.” <cite>UniProt, {n.topic}; on the entry</cite>
-          </p>
-        ))}
+        {subunitText.length > SUBUNIT_WORDS ? (
+          <details>
+            <summary>UniProt’s wording, {plural(subunitText.length, 'word')}</summary>
+            {record.subunit.map(n => <p class="quote">“{n.text}.”</p>)}
+          </details>
+        ) : (
+          record.subunit.map(n => <p class="quote">“{n.text}.”</p>)
+        )}
       </div>
     )
   }
