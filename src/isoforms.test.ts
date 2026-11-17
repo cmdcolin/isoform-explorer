@@ -82,7 +82,7 @@ function gene(overrides: Partial<GeneRecord>): GeneRecord {
     subunit: [],
     isoforms: [],
     ensemblGenes: [],
-    coding: { genes: 0, gencode: 0, mapped: 0 },
+    coding: { genes: [], gencode: 0, mapped: 0 },
     unmapped: { ensembl: [], refseq: [], refseqProteins: [] },
     explorer: { gene: null, isoforms: null },
     locus: null,
@@ -476,7 +476,17 @@ describe('summaries', () => {
   })
 
   it('counts the gene’s coding transcripts UniProt maps to an isoform', () => {
-    const coding = new Map([['ENSG1', ['ENST1', 'ENST2', 'ENST3']]])
+    const coding = new Map([
+      [
+        'ENSG1',
+        {
+          name: 'GENE1',
+          chromosome: 'chr1',
+          readthrough: false,
+          transcripts: ['ENST1', 'ENST2', 'ENST3'],
+        },
+      ],
+    ])
     const named = (ensembl: string[]) => ({
       ensembl,
       refseq: [],
@@ -487,19 +497,35 @@ describe('summaries', () => {
     })
     expect(
       codingCoverage(coding, ['ENSG1.4'], [named(['ENST1.2']), named([])]),
-    ).toEqual({ genes: 1, gencode: 3, mapped: 1 })
+    ).toEqual({
+      genes: [
+        { id: 'ENSG1', name: 'GENE1', chromosome: 'chr1', readthrough: false },
+      ],
+      gencode: 3,
+      mapped: 1,
+    })
   })
 
   it('counts nothing for an entry whose Ensembl gene GENCODE has no coding transcript for', () => {
     expect(codingCoverage(new Map(), ['ENSG9.1'], [])).toEqual({
-      genes: 0,
+      genes: [],
       gencode: 0,
       mapped: 0,
     })
   })
 
   it('does not count a transcript UniProt maps but GENCODE does not list', () => {
-    const coding = new Map([['ENSG1', ['ENST1']]])
+    const coding = new Map([
+      [
+        'ENSG1',
+        {
+          name: 'GENE1',
+          chromosome: 'chr1',
+          readthrough: false,
+          transcripts: ['ENST1'],
+        },
+      ],
+    ])
     expect(
       codingCoverage(
         coding,
@@ -515,7 +541,13 @@ describe('summaries', () => {
           },
         ],
       ),
-    ).toEqual({ genes: 1, gencode: 1, mapped: 1 })
+    ).toEqual({
+      genes: [
+        { id: 'ENSG1', name: 'GENE1', chromosome: 'chr1', readthrough: false },
+      ],
+      gencode: 1,
+      mapped: 1,
+    })
   })
 
   it('does not count an isoform whose other domain is wholly replaced', () => {

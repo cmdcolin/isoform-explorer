@@ -44,6 +44,7 @@ import type {
   Feature,
   FeatureGroup,
   FeatureLoss,
+  GencodeGene,
   GeneRecord,
   IndexRow,
   InterfaceLoss,
@@ -469,20 +470,28 @@ export function withinSequence(
 
 /**
  * How many of the gene's GENCODE 49 protein-coding transcripts UniProt maps to
- * an isoform on this page. `genes` is 0 when UniProt lists no ENSG, and the
- * counts are then 0 too: a page without an Ensembl gene has nothing to count
- * against.
+ * an isoform on this page, and the genes counted. `genes`
+ * is empty when UniProt lists no ENSG, and the counts are then 0 too: a page
+ * without an Ensembl gene has nothing to count against.
  */
 export function codingCoverage(
-  coding: Map<string, string[]>,
+  coding: Sources['coding'],
   ensembl: string[],
   transcripts: Transcripts[],
 ) {
-  const genes = ensembl.map(unversioned).filter(id => coding.has(id))
-  const all = new Set(genes.flatMap(id => coding.get(id) ?? []))
+  const genes = ensembl.map(unversioned).flatMap(id => {
+    const gene = coding.get(id)
+    return gene ? [{ id, gene }] : []
+  })
+  const all = new Set(genes.flatMap(({ gene }) => gene.transcripts))
   const named = new Set(transcripts.flatMap(t => t.ensembl).map(unversioned))
   return {
-    genes: genes.length,
+    genes: genes.map(({ id, gene: { name, chromosome, readthrough } }) => ({
+      id,
+      name,
+      chromosome,
+      readthrough,
+    })),
     gencode: all.size,
     mapped: [...all].filter(id => named.has(id)).length,
   }
@@ -495,7 +504,7 @@ export interface Sources {
   places: Map<string, Place | null>
   layouts: Map<string, Layout | null>
   types: Map<string, TranscriptType | null>
-  coding: Map<string, string[]>
+  coding: Map<string, Omit<GencodeGene, 'id'> & { transcripts: string[] }>
 }
 
 export async function geneRecord(

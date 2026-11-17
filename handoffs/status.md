@@ -120,15 +120,13 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
   predicted β-catenin contact; a Wnt pathway cartoon) and NDUFV3 (MANE encodes
   473 residues against UniProt's 108; a ruler drawn to scale).
 
-## Next, in order (planned 2026-11-16, nothing built)
+## Next, in order (planned 2026-11-16)
 
-- **Name the genes on multi-gene pages.** `web/lib/labels.ts` writes "these
-  genes" when an entry has more than one Ensembl gene, without naming them
-  (FXYD6 and 98 other pages). Pass the gene names in, not the count. Small, and
-  it is wrong copy on live pages, so it goes first. The same `codingNote`
-  writes "The other one has no page here …; they are in JBrowse's GENCODE
-  track" when one transcript is left over: "they are" should follow the
-  count too.
+- **Done: multi-gene pages name their genes** (`codingNote`; the rule is in
+  `design.md` under "Not novel transcripts"), and one leftover transcript
+  reads "it is". `data/gencode_v49_genes.json` replaces
+  `gencode_v49_gene_transcripts.json`, adding each gene's name, chromosome
+  and readthrough tag; the old file is unused and can go.
 - **Epitope spike: CD22 with two structures, about a day.** Checked against
   RCSB's `data.rcsb.org/rest/v1/core/polymer_entity/<pdb>/<entity>` on
   2026-11-16:
@@ -149,13 +147,21 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
     Still to write: the entity-to-UniProt residue mapping, the 5 Å contact
     call and the projection onto each isoform. Show the collaborator the
     result before generalising.
-- **Agree the wording before the code.** Say "contact residues present in this
-  isoform: 14 of 17". Never "epitope intact" or "binds". Each isoform's
-  residues are in one of three states: present, missing, or not covered by the
-  structure (an isoform that differs only outside a structure's window
-  cannot be assessed from it). Carry a fixed caveat that a crystal contact set
-  is not the epitope and that retained residues imply neither fold nor
-  binding. Decide how to describe present residues that abut a deletion.
+- **Wording, agreed with the owner on 2026-11-16, before any code:**
+  - The line is "Contact residues present in this isoform: 14 of 17", where
+    the 17 counts only contact residues the structure covers. Never "epitope
+    intact" or "binds".
+  - Each residue is present, missing, or not covered by the structure.
+  - An isoform that differs from the canonical only outside the structure's
+    window gets its count plus a note: "This isoform differs from the
+    canonical only outside the structure (residues 504–687)."
+  - Present residues beside an edit are counted separately: "14 of 17
+    present; 2 of those within 3 residues of a missing stretch." This says
+    where the edge is without claiming the fold changes.
+  - Fixed caveat beside every count: "A crystal contact set is not the
+    epitope: these are residues within 5 Å of the antibody in one structure.
+    That an isoform keeps them says nothing about whether it folds the same
+    way or binds."
 - **CD19 scope post,** framed as above: the count does not rescue it. Prose
   only, so it can run alongside the spike. Write it from main, where the
   posts live (`web/content/blog/`).

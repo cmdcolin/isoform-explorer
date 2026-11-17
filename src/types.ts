@@ -150,11 +150,11 @@ export interface GeneRecord {
   /** ENSG ids, with versions. */
   ensemblGenes: string[]
   /**
-   * GENCODE 49's protein-coding transcripts of this entry's Ensembl genes, and
-   * how many of them UniProt maps to an isoform here. A fact about annotation,
-   * like the MANE Select mark; the unmapped ones have no page.
+   * This entry's Ensembl genes as GENCODE 49 has them, their protein-coding
+   * transcripts, and how many of them UniProt maps to an isoform here. A fact
+   * about annotation, like the MANE Select mark; the unmapped ones have no page.
    */
-  coding: { genes: number; gencode: number; mapped: number }
+  coding: { genes: GencodeGene[]; gencode: number; mapped: number }
   /** Transcripts UniProt lists for the entry without naming an isoform. */
   unmapped: { ensembl: string[]; refseq: string[]; refseqProteins: string[] }
   /** Interface explorer page names for this accession, if it has them. */
@@ -169,6 +169,14 @@ export interface GeneRecord {
   exons: Exons | null
   /** By isoform accession, canonical included; isoforms without one are absent. */
   structures: Record<string, Structure>
+}
+
+/** A gene as GENCODE 49 names, places and tags it; `id` is versionless. */
+export interface GencodeGene {
+  id: string
+  name: string
+  chromosome: string
+  readthrough: boolean
 }
 
 /** Exons and coding span of a transcript, in GRCh38 coordinates. */

@@ -1,8 +1,13 @@
 import { FOLDED_PLDDT, INTERFACE_LOST_SHARE } from '../../src/isoforms.ts'
 import { FEATURE_GROUPS } from '../../src/types.ts'
-import type { FeatureGroup, GeneRecord, Totals } from '../../src/types.ts'
+import type {
+  FeatureGroup,
+  GencodeGene,
+  GeneRecord,
+  Totals,
+} from '../../src/types.ts'
 import { GROUPS, GROUP_MISSING } from './features.ts'
-import { count, plural } from './loss.ts'
+import { count, listText, plural } from './loss.ts'
 
 const SHARES: Record<number, string> = { 0.5: 'half' }
 
@@ -16,6 +21,39 @@ export function groupMissing(group: FeatureGroup) {
 
 export const INTERFACE_MISSING = `missing at least ${share(INTERFACE_LOST_SHARE)} of a predicted partner interface`
 
+function genesText(genes: GencodeGene[], page: string) {
+  const byName = Map.groupBy(genes, gene => gene.name)
+  const own = [...byName]
+    .toSorted(([a], [b]) =>
+      (a === page) === (b === page) ? a.localeCompare(b) : a === page ? -1 : 1,
+    )
+    .flatMap(([name, same]) => {
+      const kept = same.filter(gene => !gene.readthrough)
+      const places = new Set(kept.map(gene => gene.chromosome))
+      return kept.length === 0
+        ? []
+        : kept.length === 1
+          ? [name]
+          : places.size === kept.length
+            ? [`${name} on ${listText([...places])}`]
+            : kept.map(gene => `${name} (${gene.id})`)
+    })
+  const readthrough = genes
+    .filter(gene => gene.readthrough)
+    .map(gene => (byName.get(gene.name)?.length === 1 ? gene.name : gene.id))
+    .toSorted()
+  return genes.length > 1
+    ? listText([
+        ...own,
+        ...(readthrough.length > 0
+          ? [
+              `the readthrough ${readthrough.length === 1 ? 'gene' : 'genes'} ${listText(readthrough)}`,
+            ]
+          : []),
+      ])
+    : 'this gene'
+}
+
 /**
  * What GENCODE 49 lists for the gene against what UniProt describes, or '' when
  * every one of its complete coding transcripts is mapped. "Complete" and "of
@@ -24,28 +62,29 @@ export const INTERFACE_MISSING = `missing at least ${share(INTERFACE_LOST_SHARE)
  * UniProt sometimes maps to an isoform shown here, so a reader comparing it
  * with the Transcripts lists on the page is told why they differ.
  */
-export function codingNote({ genes, gencode, mapped }: GeneRecord['coding']) {
+export function codingNote(
+  { genes, gencode, mapped }: GeneRecord['coding'],
+  page: string,
+) {
   const rest = gencode - mapped
-  const subject =
+  const one = rest === 1
+  const has =
     rest === gencode
-      ? gencode === 1
-        ? ['It has', 'it is']
-        : ['They have', 'they are']
-      : [
-          `The other ${rest === 1 ? 'one has' : `${count(rest)} have`}`,
-          'they are',
-        ]
+      ? one
+        ? 'It has'
+        : 'They have'
+      : `The other ${one ? 'one has' : `${count(rest)} have`}`
   return rest <= 0
     ? ''
     : [
         `GENCODE 49 lists ${plural(gencode, 'complete protein-coding transcript')}`,
-        ` of ${genes > 1 ? 'these genes' : 'this gene'}, `,
+        ` of ${genesText(genes, page)}, `,
         gencode === 1
           ? 'mapped to no isoform above. '
           : mapped === 0
             ? 'none of them mapped to an isoform above. '
-            : `${count(mapped)} of them mapped to an isoform above. `,
-        `${subject[0]} no page here, since the site covers the isoforms UniProt describes; ${subject[1]} in JBrowse's GENCODE track.`,
+            : `${mapped === 1 ? 'one' : count(mapped)} of them mapped to an isoform above. `,
+        `${has} no page here, since the site covers the isoforms UniProt describes; ${one ? 'it is' : 'they are'} in JBrowse's GENCODE track.`,
         " Transcripts of GENCODE's other types are outside the count, including any UniProt maps to an isoform here.",
       ].join('')
 }

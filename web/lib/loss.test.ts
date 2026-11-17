@@ -100,7 +100,7 @@ function record(overrides: Partial<GeneRecord>): GeneRecord {
     subunit: [],
     isoforms: [],
     ensemblGenes: [],
-    coding: { genes: 0, gencode: 0, mapped: 0 },
+    coding: { genes: [], gencode: 0, mapped: 0 },
     unmapped: { ensembl: [], refseq: [], refseqProteins: [] },
     explorer: { gene: null, isoforms: null },
     locus: null,

@@ -22,7 +22,7 @@ import {
 } from './json.ts'
 import { DATA } from './paths.ts'
 import { unversioned } from './sequences.ts'
-import type { Layout, Structure, TranscriptType } from './types.ts'
+import type { GencodeGene, Layout, Structure, TranscriptType } from './types.ts'
 
 const LOOKUP = 'https://rest.ensembl.org/lookup/id'
 const BATCH = 1000
@@ -32,12 +32,15 @@ const LOW = 100
 const PATH = join(DATA, 'ensembl_transcripts.json')
 const LAYOUTS = join(DATA, 'gencode_exons.json')
 const TYPES = join(DATA, 'gencode_types.json')
-const GENE_TRANSCRIPTS = join(DATA, 'gencode_v49_gene_transcripts.json')
+const GENE_TRANSCRIPTS = join(DATA, 'gencode_v49_genes.json')
 const GENCODE = join(DATA, 'gencode.v49.annotation.gff3.gz')
 const GENCODE_URL =
   'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/gencode.v49.annotation.gff3.gz'
 const GFF_TRANSCRIPT = /transcript_id=(ENST\d+)\.\d+;/
 const GFF_GENE = /(?:^|;)gene_id=(ENSG\d+)\.\d+/
+const GFF_GENE_NAME = /(?:^|;)gene_name=([^;]+)/
+const GFF_TAG = /(?:^|;)tag=([^;]+)/
+const READTHROUGH = 'readthrough_gene'
 const CODING = 'protein_coding'
 const PRIMARY = /^([1-9]|1\d|2[0-2]|X|Y|MT)$/
 
@@ -342,20 +345,31 @@ async function readTypes(wanted: Set<string>) {
 }
 
 /**
- * Versionless ENSG to the versionless ENST ids GENCODE 49 types
- * `protein_coding` for it with a complete coding sequence, from one pass over
- * the GFF3. A transcript tagged `cds_start_NF` or `cds_end_NF` is left out: its
- * ends are unknown, so it is not an alternative protein to count. Read whole
- * rather than by a wanted set, since a gene's count only means something when
- * every transcript of it is counted.
+ * Versionless ENSG to the gene's GENCODE 49 name, chromosome and readthrough
+ * tag, and the versionless ENST ids GENCODE types `protein_coding` for it with
+ * a complete coding sequence, from one pass over the GFF3. A transcript tagged
+ * `cds_start_NF` or `cds_end_NF` is left out: its ends are unknown, so it is
+ * not an alternative protein to count. Read whole rather than by a wanted set,
+ * since a gene's count only means something when every transcript of it is
+ * counted.
  */
 export async function codingTranscripts() {
   if (existsSync(GENE_TRANSCRIPTS)) {
     return new Map(
-      Object.entries(record(readJson(GENE_TRANSCRIPTS))).map(([gene, ids]) => [
-        gene,
-        Array.isArray(ids) ? ids.map(id => String(id)) : [],
-      ]),
+      Object.entries(record(readJson(GENE_TRANSCRIPTS))).map(
+        ([gene, value]) => {
+          const { name, chromosome, readthrough, transcripts } = record(value)
+          return [
+            gene,
+            {
+              name: text(name) ?? gene,
+              chromosome: text(chromosome) ?? '',
+              readthrough: readthrough === true,
+              transcripts: list(transcripts).map(id => String(id)),
+            },
+          ]
+        },
+      ),
     )
   }
   if (!(await gencodeFile())) {
@@ -363,23 +377,45 @@ export async function codingTranscripts() {
       "GENCODE's GFF3 is neither cached nor downloadable, so no gene's coding transcripts can be counted. Rerun with the network: carrying on would write every gene file with a count of zero and drop the note from every page.",
     )
   }
+  const genes = new Map<string, Omit<GencodeGene, 'id'>>()
   const found = new Map<string, string[]>()
   const lines = createInterface({
     input: createReadStream(GENCODE).pipe(createGunzip()),
     crlfDelay: Infinity,
   })
   for await (const line of lines) {
-    const [, , type, , , , , , attributes = ''] = line.split('\t')
+    const [chromosome = '', , type, , , , , , attributes = ''] =
+      line.split('\t')
+    const gene = GFF_GENE.exec(attributes)?.[1]
     const transcript =
       type === 'transcript' ? GFF_TRANSCRIPT.exec(attributes)?.[1] : undefined
-    const gene = transcript ? GFF_GENE.exec(attributes)?.[1] : undefined
     const typed = transcript ? gencodeType(attributes) : null
-    if (transcript && gene && typed?.type === CODING && typed.complete) {
+    if (type === 'gene' && gene) {
+      genes.set(gene, {
+        name: GFF_GENE_NAME.exec(attributes)?.[1] ?? gene,
+        chromosome,
+        readthrough: (GFF_TAG.exec(attributes)?.[1] ?? '')
+          .split(',')
+          .includes(READTHROUGH),
+      })
+    } else if (transcript && gene && typed?.type === CODING && typed.complete) {
       found.get(gene)?.push(transcript) ?? found.set(gene, [transcript])
     }
   }
-  writeJson(GENE_TRANSCRIPTS, Object.fromEntries(found))
-  return found
+  const coding = new Map(
+    [...found].map(([gene, transcripts]) => [
+      gene,
+      {
+        name: gene,
+        chromosome: '',
+        readthrough: false,
+        ...genes.get(gene),
+        transcripts,
+      },
+    ]),
+  )
+  writeJson(GENE_TRANSCRIPTS, Object.fromEntries(coding))
+  return coding
 }
 
 export async function transcriptTypes(ids: string[]) {

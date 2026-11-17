@@ -159,7 +159,14 @@ story. The same standard applies here.
   (About defines the term); and that GENCODE's other types are outside the
   count, since UniProt maps an NMD or retained-intron transcript to a shown
   isoform on 1,592 pages, which would otherwise read as a contradiction of the
-  Transcripts lists on the same page.
+  Transcripts lists on the same page. Where UniProt lists more than one
+  Ensembl gene (99 pages show the note), the genes are named as GENCODE names
+  them, the page's own first: genes sharing a name on different chromosomes
+  once with both places ("AKAP17A on chrX and chrY", the pseudoautosomal
+  copies), and genes GENCODE tags `readthrough_gene` as "the readthrough gene
+  FXYD6-FXYD2", by ENSG id when GENCODE gives them no symbol of their own or
+  one another gene has (PDE4C). "Readthrough" is GENCODE's tag on the other
+  gene and says nothing about the page's protein.
 
 ## Pages
 

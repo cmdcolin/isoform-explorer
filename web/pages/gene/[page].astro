@@ -158,7 +158,7 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
         <p class="muted">UniProt maps no MANE Select transcript to any isoform of this protein.</p>
       )
     }
-    {codingNote(record.coding) && <p class="muted">{codingNote(record.coding)}</p>}
+    {codingNote(record.coding, record.gene) && <p class="muted">{codingNote(record.coding, record.gene)}</p>}
     {
       linkedDiseases.length > 0 && (
         <p class="muted">
