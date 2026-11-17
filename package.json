@@ -22,7 +22,9 @@
     "heroes": "node src/heroes.ts",
     "illustration": "node src/illustration.ts",
     "expression": "node src/expression.ts",
-    "diseases": "node src/diseases.ts"
+    "diseases": "node src/diseases.ts",
+    "epitopes": "node src/epitopes.ts",
+    "gene-transcripts": "node src/gene-transcripts.ts"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",

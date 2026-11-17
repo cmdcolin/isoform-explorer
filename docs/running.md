@@ -29,14 +29,14 @@ committed). `pnpm all` runs the first two in order.
   49's GFF3, downloaded once to `data/`, about 120 MB, into
   `data/gencode_exons.json`, and their GENCODE transcript types into
   `data/gencode_types.json`, and every gene's complete protein-coding
-  transcripts into `data/gencode_gene_transcripts.json` in one further pass,
-  about 11 seconds), so a rerun needs no network. The canonical's exons number
-  the map's Exons row; one transcript per isoform, the one closest to the
-  canonical's, is drawn in the gene view. Writes `site/data/genes/`,
-  `index.json`, `totals.json` and the search maps in `site/data/search/`. With
-  accessions it rewrites only those gene files, not the totals. It ends by
-  saying how many proteins' model lists and how many models' pLDDT are still
-  pending.
+  transcripts, with GENCODE's name, chromosome and readthrough tag for each
+  gene, into `data/gencode_v49_genes.json` in one further pass, about 11
+  seconds), so a rerun needs no network. The canonical's exons number the map's
+  Exons row; one transcript per isoform, the one closest to the canonical's, is
+  drawn in the gene view. Writes `site/data/genes/`, `index.json`, `totals.json`
+  and the search maps in `site/data/search/`. With accessions it rewrites only
+  those gene files, not the totals. It ends by saying how many proteins' model
+  lists and how many models' pLDDT are still pending.
 - `pnpm proteome`: downloads AlphaFold DB's human proteome archive (a single
   large tar, fetched in eight resumable parts into `data/proteome/`) and
   extracts the pLDDT of every canonical full-length model the site needs,
@@ -97,6 +97,16 @@ static files), with the base path `/isoform-explorer/`.
   shots use. A new post's hero must exist before the site builds, so take its
   first copy from `pnpm dev` (the `figures/` page at the same path), then retake
   it with `pnpm heroes <name>` after a build.
+- `pnpm epitopes`: for each entry in `STRUCTURES` in `src/epitopes.ts`, asks
+  RCSB which polymer entity aligns to the accession, downloads the structure
+  (cached in `data/pdb/`) and writes the residues within 5 Å of each binder, its
+  modelled sugars and the crystallised sequence to
+  `web/content/blog/data/cd22-contacts.json`. `handoffs/epitopes.md` has the
+  rules.
+- `pnpm gene-transcripts`: for each entry in `GENES` in
+  `src/gene-transcripts.ts`, writes every transcript GENCODE 49 lists for that
+  gene, of every type, with its exons and coding span, to
+  `web/content/blog/data/<name>-transcripts.json`.
 - `pnpm check-links`: after a build, checks that every internal link in `dist/`
   points at a file that exists.
 - `pnpm test` and `pnpm typecheck`: unit tests (Vitest) and type checks of the

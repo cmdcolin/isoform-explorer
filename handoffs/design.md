@@ -1,6 +1,9 @@
 ---
 name: design
-description: "What Isoform explorer is for, what each page says, where every number comes from, and what the site refuses to claim. Read before adding a page, a column or a sentence."
+description:
+  "What Isoform explorer is for, the one question it answers, what counts as a
+  loss, and the rules a session works by. The entry point to the other handoff
+  files. Read first."
 ---
 
 # Isoform explorer: design
@@ -10,6 +13,19 @@ A sibling of Interface explorer (`~/src/interface-atlas`, deployed at
 proteins with a disease annotation, about a third of those that have any. This
 one covers every reviewed human UniProt entry with a described alternative
 isoform: 10,649 proteins and 22,131 alternative isoforms on 2026-11-15.
+
+The rest of the handoffs, each written to be read on its own:
+
+- `claims.md`: what the site refuses to claim, and why. Read before writing any
+  sentence a visitor will see.
+- `pages.md`: what each page shows and how it is laid out.
+- `data.md`: the files the pipeline writes and the site reads.
+- `reviewed-out.md`: what the site was asked to show and does not.
+- `open-questions.md`: what is still open.
+- `build-server.md`: where downloads, full builds and the full suite run.
+- `deploy.md`: how the site is published and how its JBrowse links load.
+- `epitopes.md`: antibody contact residues across isoforms.
+- `ig-collaboration.md`: the Ig-domain collaboration and what came out of it.
 
 ## The one question
 
@@ -64,295 +80,15 @@ first three, so they cover every described isoform, not only the modelled ones.
 - **The isoform's own model**, when AlphaFold DB has one: its pLDDT, and how
   many shared residues fall from ≥ 70 on the canonical to < 50 on the isoform.
 
-## What the site does not claim
-
-Interface explorer withheld a 3D distance from pathogenic sites to interfaces
-because the sites sat in pLDDT < 50 regions and the number invited a proximity
-story. The same standard applies here.
-
-- **No consequence.** The site lists what the sequence lacks. It never says an
-  isoform is non-functional, mislocalised, secreted, soluble, degraded or
-  dominant negative, except by quoting UniProt's note.
-- **Replaced is not lost.** An isoform's abutting UniProt edits are first
-  joined into one; each edit is then a swap, its removed residues `replaced`,
-  when after trimming the ends it shares with the canonical it adds at least
-  half as many residues as it removes (`SWAP_SHARE` in `src/isoforms.ts`);
-  otherwise they are `missing` and the added ones only `novel`. A swap (mutually exclusive exons, an alternative terminus of
-  similar length) reads "has N different residues in place of M residues"; the lost-feature
-  counts on the home page and browse table use `missing` only.
-- **Counts by confidence, never "no fold".** pLDDT is the prediction's
-  confidence, not a measurement of folding. For the residues an isoform lacks,
-  give the counts: of the M missing (or replaced) residues, N are confidently
-  modelled (pLDDT ≥ 70) in the canonical model and K are below pLDDT 50. Never
-  summarise a stretch as folded or unfolded: a majority below 50 can sit beside
-  a confidently modelled domain that is lost with it (BRCA1 isoform 2 lacks
-  both BRCT domains).
-- **A kept interface is not binding.** No isoform was modelled with a partner.
-  A full circle means the residues are present, nothing more.
-- **An entry's subunit note is the entry's.** UniProt's SUBUNIT comments that
-  name no isoform are quoted verbatim on 7,481 gene pages, under their own
-  heading above the isoform sections and never inside one, because they are
-  about the entry: "Homodimer" is not a statement about a particular isoform.
-  `subunitNotes` in `src/uniprot.ts` takes only the comments without a
-  `molecule`, which `notesByMolecule` drops; the ones naming an isoform keep
-  going where they already went. Nothing is filtered, the
-  "(Microbial infection)" paragraphs included, and the site adds no reading of
-  its own — where UniProt names an isoform (CD22's "heterodimer of isoform
-  CD22-beta and a shorter isoform"), that is UniProt's words, not a claim the
-  site computed. The heading names the contents, "UniProt on subunits and
-  partners", because 3,125 of the notes carry no assembly or stoichiometry
-  word at all and 1,947 of those are an "Interacts with" line; a heading
-  promising assembly would claim what the quote does not say. Over
-  `SUBUNIT_WORDS` the block collapses: TP53's note is about a thousand italic
-  words, and it should not stand between the reader and what the site computes.
-  Two things this bullet does not cover. A comment whose `molecule` names a
-  processed chain rather than `Isoform N` reaches neither path and is on no
-  page (56 of them; APP's notes on amyloid-beta 40 and 42, C83 and C99),
-  because `src/isoforms.ts` looks notes up by `Isoform ${name}` — longstanding,
-  not new here. And the site does not deduplicate across the two paths, so
-  where UniProt files the same sentence both ways it appears twice (SLC4A8
-  Q2Y0W8, "Homodimer.", on the entry and on isoform 4; the only one).
-- **An antibody contact is a residue, not an epitope.** The CD22 post (and any
-  later page) counts the canonical residues with a protein atom within 5 Å of
-  a Fab's protein atoms in a crystal structure, and says "contact residues
-  present in this isoform: N of M", never "epitope intact" or "binds". Sugars
-  are not in the count; `src/epitopes.ts` reports separately which modelled
-  sugars (each attached to the Asn whose ND2 lies within 2 Å) come within 5 Å
-  of the Fab. With several copies in the asymmetric unit, each target copy
-  is paired with the Fab touching it most and the count uses the residues every
-  copy has; contacts with a neighbouring copy's Fab are crystal packing. An
-  isoform whose edits fall outside the residues a structure resolves gets
-  "differs from the canonical only outside the structure", and every count
-  carries the caveat agreed in `status.md`.
-- **Losing confidence is a model's opinion.** pLDDT is the prediction's
-  confidence, not a measurement of folding. Say so beside the number.
-- **Not expression.** The site computes and asserts nothing about expression:
-  no GTEx, no tissue claims, no "major isoform" of its own. UniProt's notes are
-  quoted verbatim and attributed, including where UniProt mentions expression
-  ("A major isoform"). The MANE Select transcript is marked because it is a
-  fact about annotation; when it encodes a non-canonical isoform, the page says
-  so, since "loses" is measured against UniProt's canonical.
-- **GENCODE's decay type is GENCODE's.** Each Ensembl transcript GENCODE 49
-  types `nonsense_mediated_decay` carries that term, verbatim and attributed,
-  as MANE Select is marked. Only when every Ensembl transcript of an isoform is
-  in GENCODE 49, of that type and with a complete coding sequence (no
-  `cds_start_NF` or `cds_end_NF` tag) does the isoform's Transcripts entry say
-  so in a sentence, with GENCODE's rule (coding sequence ending more than 50
-  bases before a downstream splice site). Never paraphrase it as degraded, not
-  made or predicted NMD. A mixed isoform gets the inline marks only: there the
-  type often reflects a spliced 3′ UTR, not the protein (ADARB1).
-- **A whole domain is a span, not a brick.** "Domains lost whole, none cut"
-  compares the isoform's missing residues with UniProt's feature spans, and
-  UniProt's edges are one source's call: Pfam and InterPro place the same
-  domain a few residues either way. It says only that no domain or region is
-  left partly missing — not where the deletion falls. Most isoforms it counts
-  have an edit reaching a terminus, so they are truncations, and over half lose
-  no `Domain` feature at all, qualifying on a Region, Motif, Coiled coil,
-  Repeat or Zinc finger. Many cut a targeting feature partway (ABCC6 O95255-2
-  loses 19 of a 21-residue transmembrane segment and is still counted). Browse
-  carries the classification because a filter is a search aid; the gene page
-  keeps the numbers ("missing in full: Ig-like V-type (domain, 19–135)"). Never
-  read it as a deletion that falls between units, or as a protein that still
-  works.
-- **Not novel transcripts.** Only isoforms UniProt describes. A transcript not
-  mapped to one has no page; About says so, and a gene page gives the size of
-  the gap (`codingNote` in `web/lib/labels.ts`, 8,824 of 10,587 pages): GENCODE
-  49 lists N complete protein-coding transcripts of the entry's Ensembl genes
-  and UniProt maps M of them to an isoform there. A count of GENCODE's
-  annotation, like the MANE Select mark, and no more than that: the unmapped
-  transcripts are not named, not drawn and not claimed to encode a distinct
-  protein. Many differ only outside the coding sequence, and GENCODE 49 is deep
-  for some genes (LRRFIP2 has 306 against 29 mapped), so a wide gap is not
-  evidence of missing biology. Three things the sentence has to keep saying,
-  because each was wrong in a first draft: "no page here" rather than "not on
-  this site", since `site/data/search/` finds those ids and the site's own
-  JBrowse draws them; "complete", since `cds_start_NF` and `cds_end_NF`
-  transcripts are left out and a reader checking Ensembl sees a larger number
-  (About defines the term); and that GENCODE's other types are outside the
-  count, since UniProt maps an NMD or retained-intron transcript to a shown
-  isoform on 1,592 pages, which would otherwise read as a contradiction of the
-  Transcripts lists on the same page. Where UniProt lists more than one
-  Ensembl gene (99 pages show the note), the genes are named as GENCODE names
-  them, the page's own first: genes sharing a name on different chromosomes
-  once with both places ("AKAP17A on chrX and chrY", the pseudoautosomal
-  copies), and genes GENCODE tags `readthrough_gene` as "the readthrough gene
-  FXYD6-FXYD2", by ENSG id when GENCODE gives them no symbol of their own or
-  one another gene has (PDE4C). "Readthrough" is GENCODE's tag on the other
-  gene and says nothing about the page's protein.
-
-## Pages
-
-- **Home:** modelled on Interface explorer's hero: a short headline, one
-  sentence saying what the site shows, and a simple diagram (a canonical
-  protein, and an isoform with its domain missing), then a screenshot of a
-  gene page's map (`site/preview.png`, ZDHHC16 with its DHHC domain hovered),
-  linked to that page and hidden on phones. Search (gene, UniProt accession,
-  ENST, NM) has its own page, linked from the header: the owner found a search
-  box front and center discouraging to visitors who first want to know what
-  the site is about. Then "Start from a disease": eight familiar disease
-  names (`FAMILIAR` in `web/pages/index.astro`, checked against
-  `diseases.json` at build) and a link to the full list. Then a card per blog
-  post with its hero, cropped to 7:4 (`heroPosition: 'left'` in a post's
-  frontmatter keeps a wide drawing's title in the crop), and a closing
-  note that the site compares sequences and points to the expression post
-  rather than straight to GTEx, whose per-transcript numbers that post shows
-  can mislead. The home page has no tiles of counts: the owner found them
-  noisy and visitors prefer pictures; About and Browse keep the totals.
-- **Browse:** one sortable, filterable row per protein from `index.json`. The
-  "Domains lost whole, none cut" column counts the protein's isoforms missing
-  at least one whole domain or region while leaving none partly missing, which
-  narrows a search to losses that stop at a unit's edge. It covers the
-  `domains` group alone, which is a scope choice rather than a claim that the
-  distinction is empty elsewhere: `targeting` spans a signal peptide and a
-  transmembrane segment, where whole against cut means as much, and a counted
-  isoform may well cut one. What the column does not say is under "What the
-  site does not claim".
-- **Gene page (`/gene/<page>/`):** one per protein, one anchored section per
-  isoform (`#P04637-2`), so a transcript search lands on its isoform.
-  - A map: canonical feature rows, pLDDT band and partner-interface rows above
-    one row per isoform drawn on canonical coordinates.
-  - A Protein / Gene + protein toggle (CSS only; Protein by default). The gene
-    view draws each isoform's transcript, introns at a fixed width, above the
-    map, with a band joining the canonical's coding exons to its residues; it
-    exists so splicing that cuts inside an exon (an alternative acceptor or
-    donor) can be seen rather than explained.
-  - `#subunit`, above the isoform sections: UniProt's entry-level SUBUNIT
-    comments, where the entry has any (7,481 pages). The nearest the site comes
-    to the multimer question, and it comes no nearer than quoting. It carries
-    no modelling disclaimer of its own: the interface rows further down say
-    "Each isoform was modelled alone" where that applies, and repeating it here
-    would have been false on the 2,353 pages that do show predicted
-    interfaces, since those come from AlphaFold DB complexes of the canonical.
-  - Per isoform, the answer first as a sentence, then the losses grouped under
-    the edit that causes them, then transcripts, UniProt's note and links
-    (UniProt, Ensembl, RefSeq, AlphaFold DB, isoform superposed on canonical in
-    JBrowse, transcripts on the genome).
-  - A link to Interface explorer for proteins with a disease annotation
-    (`https://cmdcolin.github.io/interface-explorer/genes/?q=<gene>`), which is
-    where ClinVar variants live. This site does not show variants.
-- **Blog (`/blog/<id>/`):** worked examples, one isoform per post, written in
-  MDX in `web/content/blog/`. Numbers and the quoted answer sentence come from
-  the gene record through `web/lib/stories.ts`, so they follow the data. Each
-  post has a hero of a different kind, drawn for it and retaken by
-  `pnpm heroes` from a `figures/` page: a topology drawing generated from
-  UniProt features (`web/lib/topology.ts`), the bases of an exon with its two
-  splice acceptors and the codons between them (`web/lib/acceptor-figure.ts`,
-  bases from `pnpm illustration`), a bead chain with the active-site
-  palmitate as a skeletal formula (`web/lib/active-site-figure.ts`), an mRNA
-  with ribosomes on its start codons and the proteins they make
-  (`web/lib/start-codons-figure.ts`, coordinates from RefSeq in
-  `web/lib/posts-data.ts`), an anatomical drawing of a motor neuron from
-  spinal cord to muscle (`web/lib/motor-neuron-figure.ts`), a chart of
-  GTEx data, and an illustration of a PDB structure in David Goodsell's style
-  (`src/illustration.ts` extracts the atoms, `web/scripts/illustrate.ts` draws
-  them), and a grid of antibody contact residues per isoform under CD22's
-  domain map (`web/lib/contact-grid-figure.ts`, contacts from
-  `src/epitopes.ts`), and an Euler diagram of CD19's transcripts in GENCODE
-  and UniProt, each drawn as an exon glyph from GENCODE coordinates, with the
-  exon 2-skipped mRNA outside both (`web/lib/transcript-sets-figure.ts`,
-  transcripts from `src/gene-transcripts.ts`). Screenshots of the gene page and of JBrowse appear inside posts as
-  figures, never as heroes. A new post needs a hero unlike all of these; the
-  owner drops a post whose hero would not be new. A post may cite literature and public expression data to say
-  where an isoform is made, attributed to its source; the rules above still
-  hold for every sentence the site generates. GTEx transcript TPM is never
-  quoted alone: `pnpm expression` also counts reads across the isoform's own
-  splice junction, because the two can disagree completely (NDUFC2 isoform 4:
-  about 39% of the gene by TPM, 49 junction reads in all of GTEx; PKM M1 the
-  other way, 95% of junction reads in skeletal muscle and under 4% by TPM). The
-  junction tallies are our count of public data, and posts say so.
-- **Diseases (`/diseases/`, `/disease/<slug>/`):** UniProt's disease
-  comments for the proteins on the site, from `pnpm diseases`
-  (`site/data/diseases.json`). A disease page quotes UniProt's description
-  and, for each protein UniProt links to it, UniProt's note on the link
-  verbatim ("The disease is caused by variants affecting…", "may be
-  caused…", "susceptibility…"), the gene map and each isoform's answer
-  sentence. The site says nothing about whether an isoform matters for the
-  disease; ClinVar variants stay on Interface explorer. Diseases are grouped by
-  body system or process (`SYSTEMS` in `src/types.ts`: a label per MONDO
-  class, matched through the disease's OMIM id and every MONDO ancestor), as
-  chips that filter the list (`/diseases/?group=brain`); a disease page lists
-  its groups and the other diseases in its OMIM phenotypic series, as
-  Interface explorer does. A note longer than one
-  sentence shows its first sentence and opens to the rest. Search matches
-  disease names, acronyms and genes by word (`search/diseases.json`), so a
-  visitor can type "cystic fibrosis". Gene pages link their
-  diseases, and posts may name a disease to explain a gene to a lay reader,
-  attributed to UniProt.
-- **About:** scope, sources, each rule above, and what is left out.
-
-## Data
-
-- `site/data/genes/<page>.json`: `GeneRecord`. `page` is the gene symbol, or
-  `<gene>_<accession>` when two entries share a symbol. Besides the isoforms it
-  holds `explorer` (Interface explorer gene and isoform page names, matched by
-  accession from that site's published `genes.json` and `isoforms.json`),
-  `locus` (GRCh38 span of the isoforms' Ensembl transcripts, from one batched
-  Ensembl REST lookup; null without them or across chromosomes), `exons`
-  (junctions of the first Ensembl transcript UniProt maps to the canonical
-  isoform whose GENCODE 49 coding length is the canonical length, plus or
-  minus a stop codon, in coding nucleotides; `first` is the exon number of
-  the first coding exon; null otherwise; the map draws an Exons row and cuts
-  each isoform bar at the junctions), `structures` (by isoform accession, the
-  GRCh38 exons and coding span of one GENCODE 49 transcript whose coding
-  length fits the isoform: for the canonical the first such, for the others
-  the one differing from the canonical's in the fewest bases; isoforms with
-  none are absent),
-  `ensemblGenes`, and `unmapped`: the ENST, NM and NP ids UniProt lists for the
-  entry without naming an isoform. A model whose pLDDT is not cached yet keeps
-  its entry and CIF link with null pLDDT fields.
-- `site/data/index.json`: `IndexRow[]`; `mostMissing` and `foldedMissing` are
-  the missing-only maxima over the isoforms, `mostAbsent` and `foldedAbsent`
-  also count replaced residues. `site/data/totals.json`: `Totals`,
-  counting alternative isoforms (the canonical is never counted) unless a
-  line says proteins:
-  - `proteins`: reviewed human entries with at least one Described isoform;
-    `isoforms`: their Described isoforms.
-  - `withTranscript`: isoforms with at least one ENST or NM cross-reference.
-  - `withModel`: isoforms whose own AlphaFold DB model has exactly the
-    rebuilt isoform sequence; `canonicalModels`: proteins whose canonical has
-    one full-length `-F1-` model of exactly its sequence.
-  - `interfaceProteins`: proteins with at least one confident predicted
-    partner interface.
-  - `modelsPending`: canonical and isoform models whose pLDDT is not cached.
-  - `maneSelectNotCanonical`: proteins whose MANE Select transcript encodes a
-    Described isoform rather than the canonical.
-  - `lacking.<group>`: isoforms missing in full at least one feature of the
-    group: every residue of a range, or either residue of a disulfide bond or
-    cross-link. Missing only: residues of a swap (an edit adding at least
-    half as many residues as it removes) never count.
-  - `lacking.excised`: isoforms missing in full at least one `domains` feature
-    and leaving none of them partly missing. An isoform whose other domain is
-    wholly inside a swap is left out: `lacksInFull` counts missing residues
-    only, so a swapped domain is neither lost nor intact (LMO7 Q8WWI1-5).
-  - `lacking.interface`: isoforms missing at least half of the interface
-    residues of at least one predicted partner.
-  - `lacking.folded`: isoforms missing at least one canonical residue with
-    pLDDT ≥ 70 in the canonical model.
-- `site/data/search/`: lookups from gene, accession, ENST and NM (versions
-  dropped) to `<page>#<isoform accession>`. Split so the browser loads the
-  transcript maps only when the query looks like a transcript: `genes.json`
-  (upper-case symbol → pages), `accessions.json` (entry accession → page,
-  isoform accession → `page#isoform`), `ensembl.json` (ENST, and ENSG to the
-  page) and `refseq.json` (NM and NP); a transcript tied to no isoform leads
-  to the page. Each
-  value is a list, since a symbol or transcript can name more than one target
-  (`SEARCH` and `Lookup` in `src/types.ts`).
-- `out/interfaces.json`: per accession, partner → confident interface residues.
-  Written by `src/interfaces.ts`, read by `src/isoforms.ts`, absent partners
-  simply give no interface rows.
-- Regeneration is deterministic: `pnpm isoforms` run twice from the same
-  `data/` and `out/` leaves `site/data` byte-identical.
-- `src/types.ts` is the contract between pipeline and site. The pipeline owns
-  it; pages import types from it and never restate them.
-
 ## House rules
 
 - **The bar:** add something only if it makes the answer to the one question
   clearer to a biologist, a curator or someone with a transcript in hand.
   Before adding a feature, get a skeptical subagent review that sees the site,
   not your conclusion, and may answer "none".
-- **Review every new sentence a reader will see,** against the built output.
-  Three reviews on 2026-11-16 each found the computation right and the copy
+- **Review every new sentence a reader will see,** against the built output,
+  with a skeptical subagent that is given the sources and not your conclusion.
+  Each such review so far has found the computation right and some of the copy
   claiming more than it showed.
 - **Numbers in prose come from the pipeline,** never typed by hand.
 - **Plain browsing.** No headline findings; statistics are there to say what
@@ -364,7 +100,9 @@ story. The same standard applies here.
 - Worktree branch under `.claude/worktrees/`, fast-forward onto main. Commit;
   don't push. The owner opens PRs and creates the GitHub repository.
 - Run only the tests for the files you touched while iterating; run the full
-  suite and typecheck once at the end. Repeat this rule in any subagent brief.
+  suite, typecheck, a full build and `pnpm check-links` once at the end, on the
+  build server. Repeat this rule in any subagent brief. `build-server.md` says
+  where and how.
 - Self-explanatory code with minimal or no comments; no `any` or type casts,
   inferred return types; nested ifs or ternaries instead of early returns;
   bullet lists, not numbered ones, in markdown and tests.
