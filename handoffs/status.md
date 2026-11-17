@@ -101,7 +101,9 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
   `pnpm check-links` with 0 broken of 257,527, `astro check` clean and 239
   tests passing. Main is ahead of origin and unpushed; pushing is the owner's.
   The `domain-excision` and `subunit-notes` worktrees are merged and clean and
-  can be deleted. `blog` and `gtex-post-retitle` are unmerged; leave them.
+  can be deleted. `blog` and `gtex-post-retitle` hold commits that are not on
+  main by patch id, though main already has the posts and the retitle they
+  describe; ask the owner before deleting or building on either.
 - Ruled out: folding isoform-partner complexes here, and any escape-risk
   score.
 - `cc_subcellular_location` is the other half of the multimer-and-location
@@ -123,30 +125,43 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
 - **Name the genes on multi-gene pages.** `web/lib/labels.ts` writes "these
   genes" when an entry has more than one Ensembl gene, without naming them
   (FXYD6 and 98 other pages). Pass the gene names in, not the count. Small, and
-  it is wrong copy on live pages, so it goes first.
-- **Epitope spike: 7O52 and CD22 only, about half a day.** Checked against
-  RCSB on 2026-11-16: 7O52 is "CD22 d6-d7 in complex with Fab m971" at 2.41 Å;
-  `data.rcsb.org/rest/v1/core/polymer_entity/7O52/3` aligns entity residue 2
-  to P20273 position 504 for 184 residues; the two Fab entities carry no
-  UniProt id, which is enough to tell antibody from target here.
-  `illustration.ts` already downloads and caches mmCIF, `atomsByChain` in
-  `interfaces.ts` parses it, and `contacts.ts` holds the distance helpers.
-  Still to write: the entity-to-UniProt residue mapping, the 5 Å contact call
-  and the projection onto each CD22 isoform. Show the collaborator the result
-  before generalising.
+  it is wrong copy on live pages, so it goes first. The same `codingNote`
+  writes "The other one has no page here …; they are in JBrowse's GENCODE
+  track" when one transcript is left over: "they are" should follow the
+  count too.
+- **Epitope spike: CD22 with two structures, about a day.** Checked against
+  RCSB's `data.rcsb.org/rest/v1/core/polymer_entity/<pdb>/<entity>` on
+  2026-11-16:
+  - 7O52, "CD22 d6-d7 in complex with Fab m971", 2.41 Å, covers P20273
+    504–687. None of CD22's four alternative isoforms differs there (their
+    edits are 1–175, 241–417, 330–417 and 737–847), so on its own it reads
+    "all present" for every isoform and never exercises a loss.
+  - 5VL3, "CD22 d1-d3 in complex with therapeutic Fab Epratuzumab", 3.1 Å,
+    covers 22–330, which isoform 5 (lacks 1–175) and CD22-alpha (lacks
+    241–417) both cut into. Do both: the pair is the contrast the collaborator
+    asked about, a membrane-proximal binder every isoform keeps beside a
+    distal one some isoforms lose part of.
+  - Pick the target as the entity aligned to the page's accession and treat
+    the other chains as the binder. "No UniProt id means antibody" holds for
+    7O52 and fails on 5VL3, whose Fab chains map to S6B291 and Q8TCD0.
+  - `illustration.ts` already downloads and caches mmCIF, `atomsByChain` in
+    `interfaces.ts` parses it, and `contacts.ts` holds the distance helpers.
+    Still to write: the entity-to-UniProt residue mapping, the 5 Å contact
+    call and the projection onto each isoform. Show the collaborator the
+    result before generalising.
 - **Agree the wording before the code.** Say "contact residues present in this
   isoform: 14 of 17". Never "epitope intact" or "binds". Each isoform's
   residues are in one of three states: present, missing, or not covered by the
-  structure (7O52 covers only 504–687, so an isoform differing elsewhere
+  structure (an isoform that differs only outside a structure's window
   cannot be assessed from it). Carry a fixed caveat that a crystal contact set
   is not the epitope and that retained residues imply neither fold nor
   binding. Decide how to describe present residues that abut a deletion.
 - **CD19 scope post,** framed as above: the count does not rescue it. Prose
-  only, so it can run alongside the spike. Write it on the `blog` branch or
-  after that branch lands, not on a third line of history.
+  only, so it can run alongside the spike. Write it from main, where the
+  posts live (`web/content/blog/`).
 - **Epitope rollout,** only if the spike answers the collaborator's question.
-  The hard part is knowing which chains are antibody across PDB; "no UniProt
-  id" will not generalise. Start from a curated list of therapeutic-antibody
+  The hard part is knowing which entries are antibody complexes at all. Start
+  from a curated list of therapeutic-antibody
   complexes (SAbDab or Thera-SAbDab) rather than detecting them.
 
 ## Deployment
