@@ -17,7 +17,7 @@ const groups = SYSTEMS.map(s => ({ ...s, count: all.filter(d => d.systems.some(k
   <h1>Diseases</h1>
   <p class="lede">
     UniProt links {proteins.toLocaleString()} of the proteins on this site to {all.length.toLocaleString()} diseases. A
-    disease page shows the isoforms of those proteins on the canonical sequence, with what each one lacks.
+    disease page draws the isoforms of those proteins on the canonical sequence, residue by residue.
   </p>
   <div class="disease-groups" role="group" aria-label="Disease groups">
     {

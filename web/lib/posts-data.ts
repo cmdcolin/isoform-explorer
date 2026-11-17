@@ -1,5 +1,5 @@
 import type { Mrna } from './start-codons-figure.ts'
-import type { Reported } from './transcript-sets-figure.ts'
+import type { Reported } from './exon-figures.ts'
 
 export const CEBPB_MRNA: Mrna = {
   refseq: 'NM_001285879.1',

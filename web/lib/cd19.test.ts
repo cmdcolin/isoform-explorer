@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { skipping, skipsExon } from './transcript-sets-figure.ts'
+import { skipping, skipsExon } from './exon-figures.ts'
 
 const transcript = (exons: [number, number][]) => ({
   id: 'ENST1.1',

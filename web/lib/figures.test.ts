@@ -15,7 +15,7 @@ import {
   exonSkipFigure,
   residuesOfExon,
   transcriptSetsFigure,
-} from './transcript-sets-figure.ts'
+} from './exon-figures.ts'
 
 const window = JSON.parse(
   readFileSync(

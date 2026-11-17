@@ -106,8 +106,8 @@ residues can be counted in each isoform. This post does so for two antibodies.
 
 A contact residue is a CD22 residue with a protein atom within 5 Å of the Fab,
 numbered on UniProt's canonical sequence through RCSB's alignment. In 5VL3 each
-copy is paired with the Fab it touches most, so crystal-packing contacts are
-left out, and the post counts the {epratuzumab.contacts.length} residues all
+copy is paired with the Fab it has the most residues within 5 Å of, so
+crystal-packing contacts are left out, and the post counts the {epratuzumab.contacts.length} residues all
 four copies share ({epratuzumab.any} appear in at least one). Each is then
 present or missing in each isoform, from the same UniProt edits the gene page
 draws. An isoform that differs from the canonical only outside a structure's
@@ -120,8 +120,9 @@ them says nothing about folding or binding.
 
 ## m971 and epratuzumab across the isoforms
 
-All {m971.contacts.length} m971 contact residues are in every isoform; their
-edits all fall outside the stretch 7O52 covers ({span(...m971Span)}).
+All {m971.contacts.length} m971 contact residues are in every isoform, and
+every isoform's edits fall outside the stretch 7O52 covers
+({span(...m971Span)}).
 
 The {epratuzumab.contacts.length} epratuzumab contact residues,{' '}
 {positionsText(epratuzumab.contacts)}, are in d2 and d3 except{' '}

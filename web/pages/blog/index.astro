@@ -10,11 +10,11 @@ const all = await posts()
 
 <Layout
   title="Blog"
-  description="Worked examples of what an alternative isoform lacks, one protein at a time."
+  description="Worked examples of alternative isoforms, one protein at a time, each compared with UniProt's canonical protein."
   nav="blog"
 >
   <h1>Blog</h1>
-  <p class="lede">Worked examples of what an alternative isoform lacks, one protein at a time.</p>
+  <p class="lede">Worked examples of alternative isoforms, one protein at a time.</p>
   <ul class="posts">
     {
       all.map(post => (

@@ -111,7 +111,7 @@ files a page reads.
   `src/epitopes.ts`), and CD19's canonical transcript above the mRNA that
   skips exon 2, both drawn as exon glyphs from GENCODE coordinates, over the
   protein bar the skip shortens (`exonSkipFigure` in
-  `web/lib/transcript-sets-figure.ts`, transcripts from
+  `web/lib/exon-figures.ts`, transcripts from
   `src/gene-transcripts.ts`). A hero carries the post's point on its own: the
   same module's `transcriptSetsFigure` nests GENCODE's transcripts and
   UniProt's isoforms, which is context rather than the point, so it is inline

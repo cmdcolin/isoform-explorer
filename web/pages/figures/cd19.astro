@@ -3,7 +3,7 @@ import Layout from '../../layouts/Layout.astro'
 import { cd19Transcripts } from '../../lib/cd19.ts'
 import { gene } from '../../lib/data.ts'
 import { CD19_REPORTED } from '../../lib/posts-data.ts'
-import { exonSkipFigure } from '../../lib/transcript-sets-figure.ts'
+import { exonSkipFigure } from '../../lib/exon-figures.ts'
 
 const figure = exonSkipFigure(
   gene('CD19'),
