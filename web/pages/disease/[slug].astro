@@ -1,5 +1,6 @@
 ---
 import '../../styles/gene.css'
+import { geneName } from '../../../src/diseases.ts'
 import { SYSTEMS } from '../../../src/types.ts'
 import Layout from '../../layouts/Layout.astro'
 import { diseases, gene } from '../../lib/data.ts'
@@ -20,7 +21,7 @@ const genes = disease.genes.map(link => {
   const record = gene(link.page)
   return { link, record, map: isoformMap(record, maneIsoform(record)?.accession) }
 })
-const names = genes.map(g => g.record.gene).join(', ')
+const names = disease.genes.map(geneName).join(', ')
 const groups = SYSTEMS.filter(s => disease.systems.some(k => k === s.key))
 const series = disease.series
 const relatives = series
@@ -33,7 +34,7 @@ const relatives = series
 <Layout
   title={disease.name}
   nav="diseases"
-  description={`${disease.name}: the ${genes.length === 1 ? 'protein' : 'proteins'} UniProt links to it (${names}), with ${genes.length === 1 ? 'its' : 'their'} isoforms drawn on the canonical sequence, residue by residue.`}
+  description={`${disease.name}: ${names}, the ${genes.length === 1 ? 'protein' : 'proteins'} UniProt links to it, with ${genes.length === 1 ? 'its' : 'their'} isoforms drawn on the canonical sequence, residue by residue.`}
 >
   <p><a href={href('diseases/')}>← All diseases</a></p>
   <h1>{disease.name}</h1>
@@ -68,7 +69,7 @@ const relatives = series
         <p class="series-chips">
           {relatives.map(d => (
             <a class="chip" href={diseaseHref(d)} title={d.name}>
-              {d.genes.map(g => g.gene).join(', ')}
+              {d.genes.map(geneName).join(', ')}
             </a>
           ))}
         </p>
@@ -79,7 +80,7 @@ const relatives = series
     genes.map(({ link, record, map }) => (
       <section class="disease-gene">
         <h2>
-          <a href={geneHref(record.page)}>{record.gene}</a> <span class="muted">· {record.protein}</span>
+          <a href={geneHref(record.page)}>{geneName(record)}</a> <span class="muted">· {record.protein}</span>
         </h2>
         {(() => {
           const [lead = '', ...rest] = link.note.split(/(?<=\.)\s+(?=[A-Z])/)

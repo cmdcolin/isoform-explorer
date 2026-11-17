@@ -60,6 +60,10 @@ export function choiceOf(target: string): Choice {
   return { href: geneHref(page, isoform), gene, accession, isoform }
 }
 
+function nameOf({ gene, accession }: Choice) {
+  return accession ? `${gene} (${accession})` : gene
+}
+
 export type Outcome =
   | { kind: 'none' }
   | { kind: 'go'; href: string }
@@ -104,7 +108,7 @@ export function outcome(query: Query, lookups: Lookups): Outcome {
     : untied
       ? {
           kind: 'choose',
-          intro: `UniProt lists ${query.key} under ${hit.map(t => choiceOf(t).gene).join(' and ')} but ties it to no described isoform.`,
+          intro: `UniProt lists ${query.key} under ${hit.map(t => nameOf(choiceOf(t))).join(' and ')} but ties it to no described isoform.`,
           choices: hit.map(choiceOf),
         }
       : hit?.length === 1 && hit[0] !== undefined

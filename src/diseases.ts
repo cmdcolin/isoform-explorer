@@ -76,12 +76,22 @@ export function diseasesOf(
   })
 }
 
+/**
+ * A gene symbol, with the accession where two UniProt entries share the
+ * symbol: those pages are identified as `SYMBOL_ACCESSION`.
+ */
+export function geneName({ page, gene }: { page: string; gene: string }) {
+  return page.startsWith(`${gene}_`)
+    ? `${gene} (${page.slice(gene.length + 1)})`
+    : gene
+}
+
 export function searchEntries(diseases: Disease[]) {
   return diseases.map((d): DiseaseEntry => [
     d.name,
     d.acronym,
     d.slug,
-    d.genes.map(g => g.gene).join(' '),
+    d.genes.map(geneName).join(' '),
   ])
 }
 

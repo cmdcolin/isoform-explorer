@@ -3,6 +3,7 @@ import { Image } from 'astro:assets'
 
 import Layout from '../layouts/Layout.astro'
 import { diseases } from '../lib/data.ts'
+import { geneName } from '../../src/diseases.ts'
 import { diseaseHref } from '../lib/diseases.ts'
 import { isoformDiagram } from '../lib/isoform-diagram.ts'
 import { posts } from '../lib/posts.ts'
@@ -67,7 +68,7 @@ const familiar = FAMILIAR.map(name => {
         familiar.map(disease => (
           <li>
             <a href={diseaseHref(disease)}>{disease.name}</a>
-            <span class="muted"> · {disease.genes.map(g => g.gene).join(', ')}</span>
+            <span class="muted"> · {disease.genes.map(geneName).join(', ')}</span>
           </li>
         ))
       }

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { diseasesOf, slugOf } from './diseases.ts'
+import { diseasesOf, geneName, slugOf } from './diseases.ts'
 
 const comment = (id: string, name: string, note: string) => ({
   commentType: 'DISEASE',
@@ -69,4 +69,9 @@ test('a slug keeps letters and digits only', () => {
   expect(slugOf('Cerebral amyloid angiopathy, APP-related')).toBe(
     'cerebral-amyloid-angiopathy-app-related',
   )
+})
+
+test('a gene symbol two UniProt entries share is named with its accession', () => {
+  expect(geneName({ page: 'GNAS_P63092', gene: 'GNAS' })).toBe('GNAS (P63092)')
+  expect(geneName({ page: 'STX16', gene: 'STX16' })).toBe('STX16')
 })

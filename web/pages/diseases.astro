@@ -1,4 +1,5 @@
 ---
+import { geneName } from '../../src/diseases.ts'
 import { SYSTEMS } from '../../src/types.ts'
 import Layout from '../layouts/Layout.astro'
 import { diseases } from '../lib/data.ts'
@@ -43,11 +44,11 @@ const groups = SYSTEMS.map(s => ({ ...s, count: all.filter(d => d.systems.some(k
     {
       all.map(disease => (
         <li
-          data-text={`${disease.name} ${disease.acronym} ${disease.genes.map(g => g.gene).join(' ')}`.toLowerCase()}
+          data-text={`${disease.name} ${disease.acronym} ${disease.genes.map(geneName).join(' ')}`.toLowerCase()}
           data-groups={disease.systems.join(' ')}
         >
           <a href={diseaseHref(disease)}>{disease.name}</a>{' '}
-          <span class="muted">· {disease.genes.map(g => g.gene).join(', ')}</span>
+          <span class="muted">· {disease.genes.map(geneName).join(', ')}</span>
         </li>
       ))
     }
