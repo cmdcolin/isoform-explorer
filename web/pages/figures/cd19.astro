@@ -2,9 +2,15 @@
 import Layout from '../../layouts/Layout.astro'
 import { cd19Transcripts } from '../../lib/cd19.ts'
 import { gene } from '../../lib/data.ts'
+import { CD19_REPORTED } from '../../lib/posts-data.ts'
 import { transcriptSetsFigure } from '../../lib/transcript-sets-figure.ts'
 
-const figure = transcriptSetsFigure(gene('CD19'), cd19Transcripts().transcripts, 2)
+const figure = transcriptSetsFigure(
+  gene('CD19'),
+  cd19Transcripts().transcripts,
+  2,
+  CD19_REPORTED,
+)
 ---
 
 <Layout title="CD19 transcripts" indexed={false}>

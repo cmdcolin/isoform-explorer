@@ -8,11 +8,13 @@ description:
 hero: './heroes/transcript-sets.jpg'
 heroPosition: 'left'
 heroAlt:
-  'CD19 transcripts as exon glyphs. GENCODE 49 has 5, of which the 2 complete
-  protein-coding ones match UniProt’s 2 isoforms. A dashed box below, listed in
-  neither, holds CD19 without exon 2, with a dashed ghost of exon 2 and an arc
-  from exon 1 to exon 3. Under it, the protein bar loses residues 30 to 119,
-  most of the first Ig-like domain.'
+  'At the top, the MANE Select transcript CD19-202 with exon 2 in orange, and
+  under it the same exons with exon 2 left out: a dashed ghost where it was,
+  and an arc joining exon 1 to exon 3. Below them the CD19 protein bar, 556
+  residues with 30 to 119 orange inside the first Ig-like domain, over a
+  shorter bar of 466 residues. A second panel holds the annotation lists:
+  GENCODE 49’s 5 transcripts, of which the 2 complete protein-coding ones match
+  UniProt P15391’s 2 isoforms, and 3 with a retained intron.'
 ---
 
 import { cd19Transcripts, skipsExon } from '../../lib/cd19.ts'

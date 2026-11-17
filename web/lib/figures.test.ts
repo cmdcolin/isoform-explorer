@@ -7,11 +7,14 @@ import { acceptorFigure, acceptors } from './acceptor-figure.ts'
 import { activeSiteFigure } from './active-site-figure.ts'
 import { gene } from './data.ts'
 import { expressionOf } from './expression.ts'
-import { CEBPB_MRNA, CEBPB_NAMES } from './posts-data.ts'
+import { CD19_REPORTED, CEBPB_MRNA, CEBPB_NAMES } from './posts-data.ts'
 import { cd19Transcripts } from './cd19.ts'
 import { sashimiFigure } from './sashimi-figure.ts'
 import { startCodons } from './start-codons-figure.ts'
-import { residuesOfExon, transcriptSetsFigure } from './transcript-sets-figure.ts'
+import {
+  residuesOfExon,
+  transcriptSetsFigure,
+} from './transcript-sets-figure.ts'
 
 const window = JSON.parse(
   readFileSync(
@@ -136,8 +139,16 @@ test('exon 2 of CD19 encodes residues 30 to 119, and the figure draws them lost'
   const record = gene('CD19')
   const [from, to] = residuesOfExon(record.exons?.junctions ?? [], 2)
   expect([from, to]).toEqual([30, 119])
-  const svg = transcriptSetsFigure(record, cd19Transcripts().transcripts, 2)
+  const svg = transcriptSetsFigure(
+    record,
+    cd19Transcripts().transcripts,
+    2,
+    CD19_REPORTED,
+  )
   expect(svg).toContain('exon 2: 267 nt, in frame, left out')
   expect(svg).toContain('556 residues, 90 lost without exon 2')
   expect(svg).toContain('466 residues, in frame')
+  expect(svg.indexOf('without exon 2')).toBeLessThan(
+    svg.indexOf('What the lists hold'),
+  )
 })
