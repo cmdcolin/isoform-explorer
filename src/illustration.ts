@@ -1,8 +1,10 @@
 import { join } from 'node:path'
 
 import { getJson, getText } from './cache.ts'
+import type { Point } from './contacts.ts'
 import { record, text, writeJson } from './json.ts'
 import { DATA, ROOT } from './paths.ts'
+import { centre, cross, dot, largestAxis } from './structure.ts'
 
 export const KIND = { protein: 0, highlight: 1, ligand: 2 } as const
 
@@ -22,10 +24,8 @@ export const ILLUSTRATIONS: Illustration[] = [
   },
 ]
 
-type Vector = [number, number, number]
-
 interface Atom {
-  coord: Vector
+  coord: Point
   chain: string
   kind: number
 }
@@ -73,68 +73,9 @@ export function parseAtoms(cif: string, { highlight, ligand }: Illustration) {
   return atoms
 }
 
-function centre(points: Vector[]) {
-  const [x, y, z] = points.reduce<Vector>(
-    (total, p) => [total[0] + p[0], total[1] + p[1], total[2] + p[2]],
-    [0, 0, 0],
-  )
-  const n = points.length || 1
-  const middle: Vector = [x / n, y / n, z / n]
-  return middle
-}
-
-function dot(a: Vector, b: Vector) {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-}
-
-function normalise(v: Vector): Vector {
-  const length = Math.hypot(...v) || 1
-  return [v[0] / length, v[1] / length, v[2] / length]
-}
-
-function cross(a: Vector, b: Vector): Vector {
-  return [
-    a[1] * b[2] - a[2] * b[1],
-    a[2] * b[0] - a[0] * b[2],
-    a[0] * b[1] - a[1] * b[0],
-  ]
-}
-
-function largestAxis(points: Vector[], orthogonalTo: Vector[]) {
-  const project = (v: Vector) =>
-    orthogonalTo.reduce<Vector>((w, axis) => {
-      const along = dot(w, axis)
-      return [
-        w[0] - along * axis[0],
-        w[1] - along * axis[1],
-        w[2] - along * axis[2],
-      ]
-    }, v)
-  const step = (axis: Vector) =>
-    normalise(
-      project(
-        points.reduce<Vector>(
-          (total, p) => {
-            const along = dot(p, axis)
-            return [
-              total[0] + along * p[0],
-              total[1] + along * p[1],
-              total[2] + along * p[2],
-            ]
-          },
-          [0, 0, 0],
-        ),
-      ),
-    )
-  return Array.from({ length: 50 }).reduce<Vector>(
-    axis => step(axis),
-    normalise(project([0.6, 0.7, 0.4])),
-  )
-}
-
 export function flatten(atoms: Atom[]) {
   const middle = centre(atoms.map(a => a.coord))
-  const points = atoms.map(({ coord }): Vector => [
+  const points = atoms.map(({ coord }): Point => [
     coord[0] - middle[0],
     coord[1] - middle[1],
     coord[2] - middle[2],

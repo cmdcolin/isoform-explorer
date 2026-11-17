@@ -13,9 +13,22 @@ files a page reads.
 
 - **Home:** modelled on Interface explorer's hero: a short headline, one
   sentence saying what the site shows, and a simple diagram (a canonical
-  protein, and an isoform with its domain missing), then a screenshot of a
-  gene page's map (`site/preview.png`, ZDHHC16 with its DHHC domain hovered),
-  linked to that page and hidden on phones. Search (gene, UniProt accession,
+  protein, and an isoform with its domain missing), then a picture of one gene
+  (`site/preview.png`: RAD51C, `figures/home-hero/`, linked to its page and
+  hidden on phones). It is a three-row schematic (the residues that contact
+  XRCC3, the canonical bar, isoform 2's bar) above two AlphaFold backbone
+  models, with the same three colours in both: dark for residues isoform 2 has,
+  pale for residues it lacks, blue for contacts. The full gene-page map was
+  tried first and dropped, because its pLDDT, exon and domain rows gave the
+  reader too much to map onto the 3D. The isoform's panel has no partner,
+  because its model is of the isoform alone, and the picture says "keeps 5 of
+  those 60 contacts", never that it does not bind (see
+  [CLAIMS.md](CLAIMS.md)). Isoform 2's model is aligned to the canonical's
+  on residues 90–134, beside the interface, where they agree to 1.1 Å; over
+  residues 1–134 they differ by 10 Å (checked 2026-11-17), because the
+  N-terminal lobe sits differently in the isoform's own model.
+  `pnpm home-hero` writes the data and
+  `pnpm heroes preview` takes the picture. Search (gene, UniProt accession,
   ENST, NM) has its own page, linked from the header: the owner found a search
   box front and center discouraging to visitors who first want to know what
   the site is about. Then "Start from a disease": eight familiar disease
@@ -39,7 +52,10 @@ files a page reads.
 - **Gene page (`/gene/<page>/`):** one per protein, one anchored section per
   isoform (`#P04637-2`), so a transcript search lands on its isoform.
   - A map: canonical feature rows, pLDDT band and partner-interface rows above
-    one row per isoform drawn on canonical coordinates.
+    one row per isoform drawn on canonical coordinates. The pLDDT band is a
+    grey ramp, darker where the model is more confident, with the same four
+    thresholds as before. Its original blue-to-orange colours outshouted the
+    isoform bars, which are what the page is about.
   - A Protein / Gene + protein toggle (CSS only; Protein by default). The gene
     view draws each isoform's transcript, introns at a fixed width, above the
     map, with a band joining the canonical's coding exons to its residues; it

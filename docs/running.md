@@ -82,6 +82,13 @@ static files), with the base path `/isoform-explorer/`.
   site in every GTEx v8 sample (Snaptron's `gtexv2`), and fetches GTEx's median
   transcript TPM. Writes `web/content/blog/data/expression.json`, which the blog
   posts read; responses are cached in `data/expression/`.
+- `pnpm home-hero`: for `HOME_HERO` in `src/home-hero.ts`, reads the gene's
+  `site/data/genes/<gene>.json`, downloads the AlphaFold DB complex of the
+  canonical and the isoform's model (cached in `data/cif/`), aligns the
+  isoform's alpha carbons onto the canonical's, turns both into the frame where
+  the partner lies to the right, and writes
+  `web/content/blog/data/home-hero.json`, which `figures/home-hero/` draws.
+  `pnpm heroes preview` then writes `site/preview.png` for the home page.
 - `pnpm illustration`: for each entry in `ILLUSTRATIONS` in
   `src/illustration.ts`, downloads the PDB structure (cached in `data/pdb/`),
   keeps the heavy atoms of the protein and one ligand, turns them so the

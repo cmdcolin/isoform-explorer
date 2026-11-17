@@ -1,14 +1,18 @@
 :root {
-  --b90: #0053d6;
-  --b70: #65cbf3;
-  --b50: #ffdb13;
-  --b0: #ff7d45;
+  --b90: #838d97;
+  --b70: #a8b0b8;
+  --b50: #c8cdd2;
+  --b0: #e3e6e9;
   --kept: #8f8a7d;
   --tint: #fff7e8;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
+    --b90: #8d96a0;
+    --b70: #6e767e;
+    --b50: #525860;
+    --b0: #3b4047;
     --kept: #9a958a;
     --tint: #2c2619;
   }

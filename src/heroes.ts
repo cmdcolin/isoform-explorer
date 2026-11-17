@@ -5,7 +5,7 @@ import { extname, join, normalize } from 'node:path'
 import { type Locator, type Page, chromium } from 'playwright-core'
 
 import { jbrowseUrl, REFSEQ_TRACK, sessionUrl } from './links.ts'
-import { ROOT } from './paths.ts'
+import { ROOT, SITE } from './paths.ts'
 
 const BASE = '/isoform-explorer/'
 const DIST = join(ROOT, 'dist')
@@ -26,7 +26,7 @@ const GENOME_VIEW = '[data-testid^="linear-genome-view-"]'
 
 interface Shot {
   name: string
-  dir: 'heroes' | 'figures'
+  dir: 'heroes' | 'figures' | 'home'
   path: string
   follow?: string
   click?: string
@@ -39,6 +39,14 @@ interface Shot {
 }
 
 const SHOTS: Shot[] = [
+  {
+    name: 'preview',
+    dir: 'home',
+    path: 'figures/home-hero/',
+    clip: ['.home-hero'],
+    height: 900,
+    wait: 1,
+  },
   {
     name: 'signal-peptide',
     dir: 'heroes',
@@ -362,7 +370,10 @@ async function capture(page: Page, shot: Shot, origin: string) {
   }
   await shot.prepare?.(page)
   await page.waitForTimeout(shot.wait * 1000)
-  const file = join(BLOG, shot.dir, `${shot.name}.jpg`)
+  const home = shot.dir === 'home'
+  const file = home
+    ? join(SITE, `${shot.name}.png`)
+    : join(BLOG, shot.dir, `${shot.name}.jpg`)
   const boxes = await Promise.all(
     (shot.clip ?? []).map(selector =>
       page.locator(selector).first().boundingBox(),
@@ -373,8 +384,8 @@ async function capture(page: Page, shot: Shot, origin: string) {
   const top = Math.min(...found.map(b => b.y))
   await page.screenshot({
     path: file,
-    type: 'jpeg',
-    quality: 85,
+    type: home ? 'png' : 'jpeg',
+    quality: home ? undefined : 85,
     fullPage: true,
     clip: found.length
       ? {

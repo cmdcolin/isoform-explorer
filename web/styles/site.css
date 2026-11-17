@@ -995,3 +995,66 @@ a.chip {
   padding: 3px 10px;
   font-size: 14px;
 }
+
+.home-hero {
+  width: 1076px;
+  background: #fcfcfb;
+  color: #22211f;
+  font-family: Roboto, 'Open Sans', sans-serif;
+}
+
+.home-hero-schematic {
+  display: block;
+}
+
+.home-hero-panels {
+  display: flex;
+  border-top: 1px solid #dedbd4;
+}
+
+.home-hero-panel {
+  position: relative;
+  width: 538px;
+}
+
+.home-hero-panel canvas {
+  display: block;
+  width: 538px;
+  height: 340px;
+}
+
+.home-hero-title {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 21px;
+}
+
+.home-hero-title small {
+  display: block;
+  color: #5f5b54;
+  font-size: 13px;
+}
+
+.home-hero-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  max-width: none;
+  margin: 0;
+  padding: 9px 14px 10px;
+  border-top: 1px solid #dedbd4;
+  color: #4a4843;
+  font-size: 13px;
+}
+
+.home-hero-key i {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 5px;
+  border-radius: 6px;
+  vertical-align: -1px;
+}

@@ -1,0 +1,45 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { HERO_COLOURS } from '../../lib/home-hero-colours.ts'
+import { heroSchematic, isoformName, keptContacts, loadHomeHero } from '../../lib/home-hero.ts'
+
+const hero = loadHomeHero()
+const kept = Math.max(...hero.kept.map(([, end]) => end))
+const swatch = (colour: string, border = false) =>
+  `background:${colour}${border ? ';border:1px solid #bdb7ab' : ''}`
+---
+
+<Layout title="Home hero" indexed={false}>
+  <div class="hero-figure home-hero">
+    <Fragment set:html={heroSchematic(hero)} />
+    <div class="home-hero-panels">
+      <div class="home-hero-panel">
+        <canvas data-panel="canonical"></canvas>
+        <p class="home-hero-title">
+          <b>{hero.accession}-1</b>
+          {hero.gene}, canonical: {hero.contacts.length} residues contact {hero.partnerGene}
+          <small>AlphaFold complex, {hero.partnerGene} drawn pulled apart</small>
+        </p>
+      </div>
+      <div class="home-hero-panel">
+        <canvas data-panel="isoform"></canvas>
+        <p class="home-hero-title">
+          <b>{hero.isoformId}</b>
+          keeps {keptContacts(hero)} of those {hero.contacts.length} contacts
+          <small>AlphaFold model of the isoform alone</small>
+        </p>
+      </div>
+    </div>
+    <p class="home-hero-key">
+      <span><i style={swatch(HERO_COLOURS.present)}></i>residues {isoformName(hero)} has (1–{kept})</span>
+      <span><i style={swatch(HERO_COLOURS.lost, true)}></i>residues it lacks ({kept + 1}–{hero.length})</span>
+      <span><i style={swatch(HERO_COLOURS.contact)}></i>contacts {hero.partnerGene}</span>
+      <span><i style={swatch(HERO_COLOURS.partner)}></i>{hero.partnerGene}, the partner protein</span>
+    </p>
+    <script is:inline type="application/json" id="home-hero-data" set:html={JSON.stringify(hero)} />
+  </div>
+</Layout>
+
+<script>
+  import '../../scripts/backbone.ts'
+</script>
