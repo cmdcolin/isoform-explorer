@@ -223,6 +223,15 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
         </fieldset>
       )
     }
+    {
+      canonical.model?.plddt && (
+        <fieldset class="view-toggle">
+          <legend class="visually-hidden">Model confidence colours</legend>
+          <label><input type="radio" name="plddt-colours" value="grey" checked /> pLDDT in grey</label>
+          <label><input type="radio" name="plddt-colours" value="alphafold" /> pLDDT in AlphaFold colours</label>
+        </fieldset>
+      )
+    }
     <p class="scroll-hint">Scroll the map sideways to see all {count(record.length)} residues →</p>
     <div class="map-wrap">
       <Fragment set:html={structures} />

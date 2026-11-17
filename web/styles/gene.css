@@ -18,6 +18,13 @@
   }
 }
 
+:root:has(input[name='plddt-colours'][value='alphafold']:checked) {
+  --b90: #0053d6;
+  --b70: #65cbf3;
+  --b50: #ffdb13;
+  --b0: #ff7d45;
+}
+
 .gene-head h1 .muted {
   font-weight: 450;
 }
@@ -420,6 +427,10 @@
   border-radius: 8px;
   overflow: hidden;
   font-size: 14px;
+}
+
+.view-toggle + .view-toggle {
+  margin-left: 8px;
 }
 
 .view-toggle label {

@@ -57,7 +57,12 @@ files a page reads.
     one row per isoform drawn on canonical coordinates. The pLDDT band is a
     grey ramp, darker where the model is more confident, with the same four
     thresholds as before. Its original blue-to-orange colours outshouted the
-    isoform bars, which are what the page is about.
+    isoform bars, which are what the page is about, so they are one click away:
+    a second CSS-only toggle beside Protein / Gene + protein ("pLDDT in grey",
+    "pLDDT in AlphaFold colours") swaps the `--b*` variables on `:root`, which
+    repaints the band and the legend swatches together. It is not remembered
+    between visits, and there is no "hidden" option because the row would
+    leave a gap in the map.
   - A Protein / Gene + protein toggle (CSS only; Protein by default). The gene
     view draws each isoform's transcript, introns at a fixed width, above the
     map, with a band joining the canonical's coding exons to its residues; it
