@@ -20,22 +20,3 @@ export function cd19Transcripts() {
     )
   return data
 }
-
-/**
- * Whether any transcript splices the canonical's exon before `exon` straight
- * to the one after it.
- */
-export function skipsExon(
-  transcripts: GeneTranscript[],
-  canonical: GeneTranscript,
-  exon: number,
-) {
-  const before = canonical.exons[exon - 2]
-  const after = canonical.exons[exon]
-  return transcripts.filter(t =>
-    t.exons.some(
-      (piece, i) =>
-        piece[1] === before?.[1] && t.exons[i + 1]?.[0] === after?.[0],
-    ),
-  )
-}

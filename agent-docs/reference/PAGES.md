@@ -108,10 +108,14 @@ files a page reads.
   (`src/illustration.ts` extracts the atoms, `web/scripts/illustrate.ts` draws
   them), and a grid of antibody contact residues per isoform under CD22's
   domain map (`web/lib/contact-grid-figure.ts`, contacts from
-  `src/epitopes.ts`), and an Euler diagram of CD19's transcripts in GENCODE
-  and UniProt, each drawn as an exon glyph from GENCODE coordinates, with the
-  exon 2-skipped mRNA outside both (`web/lib/transcript-sets-figure.ts`,
-  transcripts from `src/gene-transcripts.ts`). Screenshots of the gene page and
+  `src/epitopes.ts`), and CD19's canonical transcript above the mRNA that
+  skips exon 2, both drawn as exon glyphs from GENCODE coordinates, over the
+  protein bar the skip shortens (`exonSkipFigure` in
+  `web/lib/transcript-sets-figure.ts`, transcripts from
+  `src/gene-transcripts.ts`). A hero carries the post's point on its own: the
+  same module's `transcriptSetsFigure` nests GENCODE's transcripts and
+  UniProt's isoforms, which is context rather than the point, so it is inline
+  SVG inside the post instead. Screenshots of the gene page and
   of JBrowse appear inside posts as figures, never as heroes. A new post needs a
   hero unlike all of these; the owner drops a post whose hero would not be new.
   A post may cite literature and public expression data to say where an isoform

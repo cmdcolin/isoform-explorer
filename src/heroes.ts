@@ -112,7 +112,7 @@ const SHOTS: Shot[] = [
     wait: 1,
   },
   {
-    name: 'transcript-sets',
+    name: 'exon-skip',
     dir: 'heroes',
     path: 'figures/cd19/',
     clip: ['.hero-figure'],

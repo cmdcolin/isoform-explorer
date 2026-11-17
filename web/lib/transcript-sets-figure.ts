@@ -9,6 +9,18 @@ const ROW = 58
 const UTR = 14
 const CODING = 28
 
+const STYLE = `
+.exon-figure text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+.exon-figure .title { font-size: 30px; font-weight: 650; fill: var(--text); }
+.exon-figure .subtitle { font-size: 18px; fill: var(--text-2); }
+.exon-figure .subset { font-size: 18px; font-weight: 650; }
+.exon-figure .name { font-size: 18px; font-weight: 600; fill: var(--text); }
+.exon-figure .small { font-size: 15px; fill: var(--text-2); }
+.exon-figure .bar-label { font-size: 13px; font-weight: 600; text-anchor: middle; fill: var(--surface); }
+.exon-figure .mid { text-anchor: middle; fill: var(--caution); font-weight: 600; }
+.exon-figure .note { font-size: 17px; font-weight: 600; fill: var(--caution); }
+`
+
 export interface Reported {
   summary: string
   cite: string
@@ -49,11 +61,26 @@ export function residuesOfExon(junctions: number[], exon: number) {
   return [Math.ceil((from + 1) / 3), Math.ceil(to / 3)] as const
 }
 
-export function transcriptSetsFigure(
+/** Transcripts whose exon before `exon` is spliced straight to the one after. */
+export function skipsExon(
+  transcripts: GeneTranscript[],
+  canonical: GeneTranscript,
+  exon: number,
+) {
+  const before = canonical.exons[exon - 2]
+  const after = canonical.exons[exon]
+  return transcripts.filter(t =>
+    t.exons.some(
+      (piece, i) =>
+        piece[1] === before?.[1] && t.exons[i + 1]?.[0] === after?.[0],
+    ),
+  )
+}
+
+function geometry(
   record: GeneRecord,
   transcripts: GeneTranscript[],
   exon: number,
-  reported: Reported,
 ) {
   const forms = [
     {
@@ -133,6 +160,25 @@ export function transcriptSetsFigure(
     ].join(' · ')
     return `${label(t.name, detail, y)}${glyph(t.exons, t.cds, y, false)}`
   }
+  return { coding, others, canonical, skip, highlight, x, glyph, label, row }
+}
+
+function svg(height: number, label: string, body: string) {
+  return `<svg class="exon-figure" viewBox="0 0 ${WIDTH} ${height}" role="img" aria-label="${esc(label)}"><style>${STYLE}</style>${body}</svg>`
+}
+
+/** The canonical mRNA, the one that skips `exon`, and what the protein loses. */
+export function exonSkipFigure(
+  record: GeneRecord,
+  transcripts: GeneTranscript[],
+  exon: number,
+  reported: Reported,
+) {
+  const { canonical, skip, highlight, x, glyph, label, row } = geometry(
+    record,
+    transcripts,
+    exon,
+  )
   const [lostFrom, lostTo] = residuesOfExon(record.exons?.junctions ?? [], exon)
   const lost = lostTo - lostFrom + 1
   const domain = record.features.find(
@@ -152,63 +198,69 @@ export function transcriptSetsFigure(
     const place = shifted ? shiftedX : proteinX
     return `<rect x="${place(from)}" y="${y - 9}" width="${place(to + 1) - place(from)}" height="18" fill="${fill}" />`
   }
-  const bracket = (
-    y: number,
-    from: number,
-    to: number,
-    shifted: boolean,
-    text: string,
-  ) => {
-    const place = shifted ? shiftedX : proteinX
-    return `<path d="M${place(from)} ${y - 8} V${y - 14} H${place(to + 1)} V${y - 8}" fill="none" stroke="var(--text)" stroke-width="1.5" />${text ? `<text x="${place(from)}" y="${y - 20}" class="small">${esc(text)}</text>` : ''}`
-  }
-  const leadTop = 116
-  const canonicalY = leadTop + 64
+  const bracket = (y: number, from: number, to: number, text: string) =>
+    `<path d="M${proteinX(from)} ${y - 8} V${y - 14} H${proteinX(to + 1)} V${y - 8}" fill="none" stroke="var(--text)" stroke-width="1.5" /><text x="${proteinX(from)}" y="${y - 20}" class="small">${esc(text)}</text>`
+  const top = 116
+  const canonicalY = top + 64
   const skipY = canonicalY + 112
-  const proteinTop = skipY + 104
-  const leadBottom = proteinTop + 78
-  const setsTop = leadBottom + 38
-  const codingTop = setsTop + 62
-  const codingBottom = codingTop + 66 + coding.length * ROW
-  const otherTop = codingBottom + 26
-  const otherBottom = otherTop + 60 + others.length * ROW
-  const height = otherBottom + 42
-  const proteinRows = (y: number) => {
-    const grey = 'var(--text-2)'
-    const orange = 'var(--caution)'
-    return `<line x1="64" y1="${y - 46}" x2="${WIDTH - 64}" y2="${y - 46}" stroke="var(--caution)" stroke-opacity="0.4" stroke-width="1.5" />${label(`${record.gene} protein`, `${record.length} residues, ${lost} lost without exon ${exon}`, y + 4)}${domain ? bracket(y, domain.start, domain.end, false, `${domain.description} (${domain.start}–${domain.end})`) : ''}${bar(y, 1, lostFrom - 1, grey, false)}${bar(y, lostFrom, lostTo, orange, false)}${bar(y, lostTo + 1, record.length, grey, false)}<text x="${(proteinX(lostFrom) + proteinX(lostTo + 1)) / 2}" y="${y + 4.5}" class="bar-label">residues ${lostFrom}–${lostTo}</text>${bar(y + 42, 1, lostFrom - 1, grey, true)}${bar(y + 42, lostTo + 1, record.length, grey, true)}<line x1="${shiftedX(lostTo + 1)}" x2="${shiftedX(lostTo + 1)}" y1="${y + 30}" y2="${y + 54}" stroke="${orange}" stroke-width="2.5" /><text x="${shiftedX(record.length + 1) + 10}" y="${y + 47}" class="small">${record.length - lost} residues, in frame</text>`
-  }
+  const proteinY = skipY + 104
+  const bottom = proteinY + 78
+  const grey = 'var(--text-2)'
+  const orange = 'var(--caution)'
   const arc =
     skip && canonical && highlight
       ? (() => {
           const before = canonical.exons[exon - 2]
           const after = canonical.exons[exon]
           return before && after
-            ? `<path d="M${x(before[1])} ${skipY - CODING / 2} Q ${(x(before[1]) + x(after[0])) / 2} ${skipY - 56} ${x(after[0])} ${skipY - CODING / 2}" fill="none" stroke="var(--caution)" stroke-width="2.5" /><text x="${(x(highlight[0]) + x(highlight[1])) / 2}" y="${skipY - 60}" class="small mid">exon ${exon - 1} joins exon ${exon + 1}</text>`
+            ? `<path d="M${x(before[1])} ${skipY - CODING / 2} Q ${(x(before[1]) + x(after[0])) / 2} ${skipY - 56} ${x(after[0])} ${skipY - CODING / 2}" fill="none" stroke="${orange}" stroke-width="2.5" /><text x="${(x(highlight[0]) + x(highlight[1])) / 2}" y="${skipY - 60}" class="small mid">exon ${exon - 1} joins exon ${exon + 1}</text>`
             : ''
         })()
       : ''
   const ghost = highlight
-    ? `<rect x="${x(highlight[0])}" y="${skipY - CODING / 2}" width="${x(highlight[1] + 1) - x(highlight[0])}" height="${CODING}" fill="none" stroke="var(--caution)" stroke-width="2" stroke-dasharray="4 3" /><text x="${(x(highlight[0]) + x(highlight[1])) / 2}" y="${skipY + 34}" class="small mid">exon ${exon}: ${highlight[1] - highlight[0] + 1} nt, ${skip?.inFrame ? 'in frame' : 'out of frame'}, left out</text>`
+    ? `<rect x="${x(highlight[0])}" y="${skipY - CODING / 2}" width="${x(highlight[1] + 1) - x(highlight[0])}" height="${CODING}" fill="none" stroke="${orange}" stroke-width="2" stroke-dasharray="4 3" /><text x="${(x(highlight[0]) + x(highlight[1])) / 2}" y="${skipY + 34}" class="small mid">exon ${exon}: ${highlight[1] - highlight[0] + 1} nt, ${skip?.inFrame ? 'in frame' : 'out of frame'}, left out</text>`
     : ''
-  const lead =
+  const proteins = `<line x1="64" y1="${proteinY - 46}" x2="${WIDTH - 64}" y2="${proteinY - 46}" stroke="${orange}" stroke-opacity="0.4" stroke-width="1.5" />${label(`${record.gene} protein`, `${record.length} residues, ${lost} lost without exon ${exon}`, proteinY + 4)}${domain ? bracket(proteinY, domain.start, domain.end, `${domain.description} (${domain.start}–${domain.end})`) : ''}${bar(proteinY, 1, lostFrom - 1, grey, false)}${bar(proteinY, lostFrom, lostTo, orange, false)}${bar(proteinY, lostTo + 1, record.length, grey, false)}<text x="${(proteinX(lostFrom) + proteinX(lostTo + 1)) / 2}" y="${proteinY + 4.5}" class="bar-label">residues ${lostFrom}–${lostTo}</text>${bar(proteinY + 42, 1, lostFrom - 1, grey, true)}${bar(proteinY + 42, lostTo + 1, record.length, grey, true)}<line x1="${shiftedX(lostTo + 1)}" x2="${shiftedX(lostTo + 1)}" y1="${proteinY + 30}" y2="${proteinY + 54}" stroke="${orange}" stroke-width="2.5" /><text x="${shiftedX(record.length + 1) + 10}" y="${proteinY + 47}" class="small">${record.length - lost} residues, in frame</text>`
+  const panel =
     skip && canonical
-      ? `<rect x="40" y="${leadTop}" width="${WIDTH - 70}" height="${leadBottom - leadTop}" rx="28" fill="var(--caution)" fill-opacity="0.06" stroke="var(--caution)" stroke-width="2.5" />${row(canonical, canonicalY)}${label(`${record.gene} without exon ${exon}`, reported.cite, skipY)}${ghost}${glyph(skip.exons, skip.cds, skipY, true)}${arc}${proteinRows(proteinTop)}`
+      ? `<rect x="40" y="${top}" width="${WIDTH - 70}" height="${bottom - top}" rx="28" fill="${orange}" fill-opacity="0.06" stroke="${orange}" stroke-width="2.5" />${row(canonical, canonicalY)}${label(`${record.gene} without exon ${exon}`, reported.cite, skipY)}${ghost}${glyph(skip.exons, skip.cds, skipY, true)}${arc}${proteins}`
       : ''
-  const sets = `<rect x="40" y="${setsTop}" width="${WIDTH - 70}" height="${otherBottom + 22 - setsTop}" rx="28" fill="none" stroke="var(--text-2)" stroke-width="2" /><text x="64" y="${setsTop + 34}" class="set">What the lists hold: GENCODE 49's ${transcripts.length} transcripts of ${esc(record.gene)}</text><text x="${64 + 1}" y="${setsTop + 56}" class="small">To scale on ${esc(record.locus?.split(':')[0] ?? '')}; tall boxes are coding, short boxes are UTR, exon ${exon} in orange</text><rect x="66" y="${codingTop}" width="${WIDTH - 122}" height="${codingBottom - codingTop}" rx="22" fill="var(--interface)" fill-opacity="0.08" stroke="var(--interface)" stroke-width="2.5" /><rect x="72" y="${codingTop + 6}" width="${WIDTH - 134}" height="${codingBottom - codingTop - 12}" rx="18" fill="none" stroke="var(--partner)" stroke-width="2.5" stroke-dasharray="10 6" /><text x="96" y="${codingTop + 36}" class="subset"><tspan fill="var(--interface)">Complete protein-coding: ${coding.length}</tspan><tspan fill="var(--text-2)"> = </tspan><tspan fill="var(--partner)">UniProt ${esc(record.accession)}'s ${record.isoforms.length + 1} isoforms</tspan></text><rect x="66" y="${otherTop}" width="${WIDTH - 122}" height="${otherBottom - otherTop}" rx="22" fill="var(--chain)" fill-opacity="0.15" stroke="var(--chain)" stroke-width="2" /><text x="96" y="${otherTop + 36}" class="subset" fill="var(--text-2)">${esc(sentenceCase([...new Set(others.map(t => t.type.replace(/_/g, ' ')))].join(', ')))}: ${others.length}</text>`
+  return svg(
+    bottom + 20,
+    `${record.gene} drawn twice: the canonical transcript with exon ${exon}, and the mRNA without it, which leaves ${lost} residues out of the protein`,
+    `<text x="40" y="52" class="title">${esc(record.gene)} without exon ${exon}: ${lost} residues fewer, ${skip?.inFrame ? 'in frame' : 'out of frame'}</text><text x="40" y="86" class="subtitle">${esc(reported.summary)}</text>${panel}`,
+  )
+}
+
+/** Every transcript the annotation lists hold, and which are UniProt isoforms. */
+export function transcriptSetsFigure(
+  record: GeneRecord,
+  transcripts: GeneTranscript[],
+  exon: number,
+) {
+  const { coding, others, canonical, row } = geometry(record, transcripts, exon)
+  const across = canonical ? skipsExon(transcripts, canonical, exon) : []
+  const frameTop = 58
+  const codingTop = frameTop + 36
+  const codingBottom = codingTop + 66 + coding.length * ROW
+  const otherTop = codingBottom + 26
+  const otherBottom = otherTop + 60 + others.length * ROW
+  const frameBottom = otherBottom + 22
+  const types = sentenceCase(
+    [...new Set(others.map(t => t.type.replace(/_/g, ' ')))].join(', '),
+  )
+  const sets = `<rect x="40" y="${frameTop}" width="${WIDTH - 70}" height="${frameBottom - frameTop}" rx="28" fill="none" stroke="var(--text-2)" stroke-width="2" /><rect x="66" y="${codingTop}" width="${WIDTH - 122}" height="${codingBottom - codingTop}" rx="22" fill="var(--interface)" fill-opacity="0.08" stroke="var(--interface)" stroke-width="2.5" /><rect x="72" y="${codingTop + 6}" width="${WIDTH - 134}" height="${codingBottom - codingTop - 12}" rx="18" fill="none" stroke="var(--partner)" stroke-width="2.5" stroke-dasharray="10 6" /><text x="96" y="${codingTop + 36}" class="subset"><tspan fill="var(--interface)">Complete protein-coding: ${coding.length}</tspan><tspan fill="var(--text-2)"> = </tspan><tspan fill="var(--partner)">UniProt ${esc(record.accession)}'s ${record.isoforms.length + 1} isoforms</tspan></text><rect x="66" y="${otherTop}" width="${WIDTH - 122}" height="${otherBottom - otherTop}" rx="22" fill="var(--chain)" fill-opacity="0.15" stroke="var(--chain)" stroke-width="2" /><text x="96" y="${otherTop + 36}" class="subset" fill="var(--text-2)">${esc(types)}: ${others.length}</text>`
   const rows = [
     ...coding.map((t, i) => row(t, codingTop + 78 + i * ROW)),
     ...others.map((t, i) => row(t, otherTop + 78 + i * ROW)),
   ].join('')
-  return `<svg class="transcript-sets-figure" viewBox="0 0 ${WIDTH} ${height}" role="img" aria-label="${esc(`${record.gene} without exon ${exon}, drawn above the ${transcripts.length} transcripts GENCODE 49 lists: the skipped exon leaves ${lost} residues out of the protein, and neither GENCODE nor UniProt lists the mRNA`)}"><style>
-.transcript-sets-figure text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
-.transcript-sets-figure .title { font-size: 30px; font-weight: 650; fill: var(--text); }
-.transcript-sets-figure .subtitle { font-size: 18px; fill: var(--text-2); }
-.transcript-sets-figure .set { font-size: 21px; font-weight: 700; fill: var(--text); }
-.transcript-sets-figure .subset { font-size: 18px; font-weight: 650; }
-.transcript-sets-figure .name { font-size: 18px; font-weight: 600; fill: var(--text); }
-.transcript-sets-figure .small { font-size: 15px; fill: var(--text-2); }
-.transcript-sets-figure .bar-label { font-size: 13px; font-weight: 600; text-anchor: middle; fill: var(--surface); }
-.transcript-sets-figure .mid { text-anchor: middle; fill: var(--caution); font-weight: 600; }
-</style><text x="40" y="52" class="title">${esc(record.gene)} without exon ${exon}: ${lost} residues fewer, ${skip?.inFrame ? 'in frame' : 'out of frame'}</text><text x="40" y="86" class="subtitle">${esc(reported.summary)}</text>${lead}${sets}${rows}</svg>`
+  const footer =
+    across.length === 0
+      ? `None of the ${transcripts.length} joins exon ${exon - 1} to exon ${exon + 1}`
+      : `${across.map(t => t.name).join(', ')} joins exon ${exon - 1} to exon ${exon + 1}`
+  return svg(
+    frameBottom + 56,
+    `The ${transcripts.length} transcripts GENCODE 49 lists for ${record.gene}, of which the ${coding.length} complete protein-coding ones are UniProt's isoforms, the rest typed ${types.toLowerCase()}`,
+    `<text x="40" y="36" class="subtitle">GENCODE 49's ${transcripts.length} transcripts of ${esc(record.gene)}, to scale on ${esc(record.locus?.split(':')[0] ?? '')}; tall boxes are coding, short boxes are UTR, exon ${exon} in orange</text>${sets}${rows}<text x="40" y="${frameBottom + 38}" class="note">${esc(footer)}</text>`,
+  )
 }

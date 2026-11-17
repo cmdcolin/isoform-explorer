@@ -1,33 +1,34 @@
 ---
-title: 'CD19 without exon 2, a CAR T escape transcript outside UniProt and GENCODE'
+title: 'CD19 without exon 2, a CAR T relapse mRNA outside UniProt and GENCODE'
 date: '2026-11-16'
 order: 8
 description:
   'In B-cell leukaemia, CD19 mRNA without exon 2 makes a CD19 that CAR T cells
   fail to kill. Neither UniProt nor GENCODE 49 lists it.'
-hero: './heroes/transcript-sets.jpg'
+hero: './heroes/exon-skip.jpg'
 heroPosition: 'left'
 heroAlt:
-  'At the top, the MANE Select transcript CD19-202 with exon 2 in orange, and
-  under it the same exons with exon 2 left out: a dashed ghost where it was,
-  and an arc joining exon 1 to exon 3. Below them the CD19 protein bar, 556
-  residues with 30 to 119 orange inside the first Ig-like domain, over a
-  shorter bar of 466 residues. A second panel holds the annotation lists:
-  GENCODE 49’s 5 transcripts, of which the 2 complete protein-coding ones match
-  UniProt P15391’s 2 isoforms, and 3 with a retained intron.'
+  'The MANE Select transcript CD19-202 with exon 2 in orange, and under it the
+  same exons with exon 2 left out: a dashed ghost where it was, and an arc
+  joining exon 1 to exon 3. Below them the CD19 protein bar, 556 residues with
+  30 to 119 orange inside the first Ig-like domain, over a shorter bar of 466
+  residues.'
 ---
 
-import { cd19Transcripts, skipsExon } from '../../lib/cd19.ts'
+import Html from '../../components/Html.astro'
+import { cd19Transcripts } from '../../lib/cd19.ts'
 import { span } from '../../lib/loss.ts'
 import { story } from '../../lib/stories.ts'
-import { skipping } from '../../lib/transcript-sets-figure.ts'
+import {
+  skipping,
+  transcriptSetsFigure,
+} from '../../lib/transcript-sets-figure.ts'
 
 export const s = story('CD19', 'P15391-2')
 export const record = s.record
 export const transcripts = cd19Transcripts().transcripts
 export const canonical = transcripts.find(t => t.tags.includes('MANE_Select'))
 export const skip = skipping(canonical, 2)
-export const skipped = skipsExon(transcripts, canonical, 2)
 export const [, first, second] = [0, ...record.exons.junctions]
 export const residues = [Math.ceil((first + 1) / 3), Math.ceil(second / 3)]
 export const domain = record.features.find(f => f.type === 'Domain')
@@ -48,11 +49,8 @@ the reading frame.
 
 ## Missing from the CD19 page
 
-UniProt lists {record.isoforms.length + 1} isoforms and GENCODE 49 lists{' '}
-{transcripts.length} transcripts.{' '}
-{skipped.length === 0
-  ? 'None joins exon 1 directly to exon 3.'
-  : `${skipped.map(t => t.name).join(', ')} join exon 1 directly to exon 3.`}{' '}
+<Html html={transcriptSetsFigure(record, transcripts, 2)} />
+
 The <a href={s.href.replace(/#.*$/, '')}>CD19 page</a>'s Exons row shows what
 each exon encodes, and <a href={s.genome}>its JBrowse link</a> adds RefSeq and
 GENCODE tracks, where reads can be added.

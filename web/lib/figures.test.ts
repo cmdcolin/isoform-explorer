@@ -12,6 +12,7 @@ import { cd19Transcripts } from './cd19.ts'
 import { sashimiFigure } from './sashimi-figure.ts'
 import { startCodons } from './start-codons-figure.ts'
 import {
+  exonSkipFigure,
   residuesOfExon,
   transcriptSetsFigure,
 } from './transcript-sets-figure.ts'
@@ -135,11 +136,11 @@ test('the F2RL2 sashimi plot marks both start codons and draws exon 2 in part', 
   expect(svg.match(/class="absent"/g)).toHaveLength(3)
 })
 
-test('exon 2 of CD19 encodes residues 30 to 119, and the figure draws them lost', () => {
+test('exon 2 of CD19 encodes residues 30 to 119, and the hero draws them lost', () => {
   const record = gene('CD19')
   const [from, to] = residuesOfExon(record.exons?.junctions ?? [], 2)
   expect([from, to]).toEqual([30, 119])
-  const svg = transcriptSetsFigure(
+  const svg = exonSkipFigure(
     record,
     cd19Transcripts().transcripts,
     2,
@@ -148,7 +149,14 @@ test('exon 2 of CD19 encodes residues 30 to 119, and the figure draws them lost'
   expect(svg).toContain('exon 2: 267 nt, in frame, left out')
   expect(svg).toContain('556 residues, 90 lost without exon 2')
   expect(svg).toContain('466 residues, in frame')
-  expect(svg.indexOf('without exon 2')).toBeLessThan(
-    svg.indexOf('What the lists hold'),
+})
+
+test('no GENCODE 49 transcript of CD19 joins exon 1 to exon 3', () => {
+  const svg = transcriptSetsFigure(
+    gene('CD19'),
+    cd19Transcripts().transcripts,
+    2,
   )
+  expect(svg).toContain('None of the 5 joins exon 1 to exon 3')
+  expect(svg).toContain("UniProt P15391's 2 isoforms")
 })
