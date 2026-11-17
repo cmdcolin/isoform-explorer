@@ -19,10 +19,13 @@ const { title, description = DEFAULT_DESCRIPTION, nav, indexed = true, image } =
 const preview = image ? (await getImage({ src: image, width: 1400, format: 'jpg' })).src : href('preview.png')
 const fullTitle = title ? `${title} · Isoform explorer` : 'Isoform explorer'
 const canonical = new URL(Astro.url.pathname, Astro.site)
-const links = [
+const explore = [
   ['browse', 'Browse', 'browse/'],
   ['diseases', 'Diseases', 'diseases/'],
   ['search', 'Search', 'search/'],
+] as const
+const exploreActive = explore.some(([key]) => key === nav)
+const links = [
   ['blog', 'Blog', 'blog/'],
   ['architecture', 'How it works', 'architecture/'],
   ['about', 'About', 'about/'],
@@ -53,6 +56,18 @@ const links = [
         Isoform explorer
       </a>
       <nav>
+        <details class="nav-menu">
+          <summary aria-current={exploreActive ? 'true' : undefined}>Explore</summary>
+          <div class="nav-menu-items">
+            {
+              explore.map(([key, label, path]) => (
+                <a href={href(path)} aria-current={nav === key ? 'page' : undefined}>
+                  {label}
+                </a>
+              ))
+            }
+          </div>
+        </details>
         {
           links.map(([key, label, path]) => (
             <a href={href(path)} aria-current={nav === key ? 'page' : undefined}>
@@ -79,6 +94,18 @@ const links = [
     </footer>
     <script>
       import '../scripts/guides.ts'
+
+      const menu = document.querySelector<HTMLDetailsElement>('.nav-menu')
+      document.addEventListener('click', event => {
+        if (event.target instanceof Node && !menu?.contains(event.target)) {
+          menu?.removeAttribute('open')
+        }
+      })
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          menu?.removeAttribute('open')
+        }
+      })
     </script>
   </body>
 </html>
