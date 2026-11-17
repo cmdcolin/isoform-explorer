@@ -127,26 +127,19 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
   reads "it is". `data/gencode_v49_genes.json` replaces
   `gencode_v49_gene_transcripts.json`, adding each gene's name, chromosome
   and readthrough tag; the old file is unused and can go.
-- **Epitope spike: CD22 with two structures, about a day.** Checked against
-  RCSB's `data.rcsb.org/rest/v1/core/polymer_entity/<pdb>/<entity>` on
-  2026-11-16:
-  - 7O52, "CD22 d6-d7 in complex with Fab m971", 2.41 Å, covers P20273
-    504–687. None of CD22's four alternative isoforms differs there (their
-    edits are 1–175, 241–417, 330–417 and 737–847), so on its own it reads
-    "all present" for every isoform and never exercises a loss.
-  - 5VL3, "CD22 d1-d3 in complex with therapeutic Fab Epratuzumab", 3.1 Å,
-    covers 22–330, which isoform 5 (lacks 1–175) and CD22-alpha (lacks
-    241–417) both cut into. Do both: the pair is the contrast the collaborator
-    asked about, a membrane-proximal binder every isoform keeps beside a
-    distal one some isoforms lose part of.
-  - Pick the target as the entity aligned to the page's accession and treat
-    the other chains as the binder. "No UniProt id means antibody" holds for
-    7O52 and fails on 5VL3, whose Fab chains map to S6B291 and Q8TCD0.
-  - `illustration.ts` already downloads and caches mmCIF, `atomsByChain` in
-    `interfaces.ts` parses it, and `contacts.ts` holds the distance helpers.
-    Still to write: the entity-to-UniProt residue mapping, the 5 Å contact
-    call and the projection onto each isoform. Show the collaborator the
-    result before generalising.
+- **Epitope spike, built on 2026-11-16 (branch `epitope-spike`) and written up
+  as the CD22 post.** `src/epitopes.ts` takes the target as the entity RCSB
+  aligns to the accession, groups binder chains into Fabs by their heavy-light
+  interface, and pairs each target copy with the Fab touching it most; 5VL3
+  has four copies, and copy R has 16 residues within 5 Å of copy Q's Fab, which
+  is packing. `web/lib/epitope.ts` projects the contacts onto isoforms. Result:
+  every isoform has all 26 m971 contacts (7O52) but differs only outside its
+  resolved 507–682; of the 30 epratuzumab contacts all four 5VL3 copies share,
+  CD22-alpha has 19 (lacks 11 in d3) and isoform 5 has 27. The sugar on
+  Asn231 is within 5 Å of epratuzumab's Fab in all four copies, and every
+  isoform has Asn231. Run
+  `node src/epitopes.ts` on ada; it writes
+  `web/content/blog/data/cd22-contacts.json`.
 - **Wording, agreed with the owner on 2026-11-16, before any code:**
   - The line is "Contact residues present in this isoform: 14 of 17", where
     the 17 counts only contact residues the structure covers. Never "epitope

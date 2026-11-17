@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Edit, Segment } from '../../src/types.ts'
-import { contactStates } from './epitope.ts'
+import { contactStates, positionsText, sharedContacts } from './epitope.ts'
 
 const deletion = (start: number, end: number, length: number) => ({
   edits: [
@@ -82,5 +82,54 @@ describe('contactStates', () => {
       ],
     })
     expect(states).toMatchObject({ present: 1, missing: [], replaced: [145] })
+  })
+})
+
+describe('sharedContacts', () => {
+  it('keeps the contacts, resolved residues and sugars every copy has', () => {
+    const shared = sharedContacts([
+      {
+        chain: 'Q',
+        binders: ['H', 'L'],
+        contacts: [10, 11, 12],
+        observed: [[1, 50]],
+        sugars: [
+          { site: 5, contact: true },
+          { site: 40, contact: true },
+        ],
+      },
+      {
+        chain: 'R',
+        binders: ['A', 'B'],
+        contacts: [11, 12, 13],
+        observed: [
+          [3, 20],
+          [30, 60],
+        ],
+        sugars: [
+          { site: 5, contact: true },
+          { site: 40, contact: false },
+        ],
+      },
+    ])
+    expect(shared).toEqual({
+      contacts: [11, 12],
+      observed: [
+        [3, 20],
+        [30, 50],
+      ],
+      sugarContacts: [5],
+      sugarSites: [5, 40],
+      sizes: [3, 3],
+      any: 4,
+    })
+  })
+})
+
+describe('positionsText', () => {
+  it('joins consecutive residues into spans', () => {
+    expect(positionsText([245, 247, 266, 267, 268])).toBe(
+      '245, 247 and 266–268',
+    )
   })
 })

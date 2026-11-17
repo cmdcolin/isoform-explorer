@@ -1,0 +1,12 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { contactGridFigure } from '../../lib/contact-grid-figure.ts'
+import { CD22_BINDERS, cd22Structures } from '../../lib/cd22.ts'
+import { gene } from '../../lib/data.ts'
+
+const figure = contactGridFigure(gene('CD22'), cd22Structures(), CD22_BINDERS)
+---
+
+<Layout title="CD22 antibody contacts" indexed={false}>
+  <div class="hero-figure"><Fragment set:html={figure} /></div>
+</Layout>

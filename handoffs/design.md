@@ -112,6 +112,18 @@ story. The same standard applies here.
   not new here. And the site does not deduplicate across the two paths, so
   where UniProt files the same sentence both ways it appears twice (SLC4A8
   Q2Y0W8, "Homodimer.", on the entry and on isoform 4; the only one).
+- **An antibody contact is a residue, not an epitope.** The CD22 post (and any
+  later page) counts the canonical residues with a protein atom within 5 Å of
+  a Fab's protein atoms in a crystal structure, and says "contact residues
+  present in this isoform: N of M", never "epitope intact" or "binds". Sugars
+  are not in the count; `src/epitopes.ts` reports separately which modelled
+  sugars (each attached to the Asn whose ND2 lies within 2 Å) come within 5 Å
+  of the Fab. With several copies in the asymmetric unit, each target copy
+  is paired with the Fab touching it most and the count uses the residues every
+  copy has; contacts with a neighbouring copy's Fab are crystal packing. An
+  isoform whose edits fall outside the residues a structure resolves gets
+  "differs from the canonical only outside the structure", and every count
+  carries the caveat agreed in `status.md`.
 - **Losing confidence is a model's opinion.** pLDDT is the prediction's
   confidence, not a measurement of folding. Say so beside the number.
 - **Not expression.** The site computes and asserts nothing about expression:
@@ -233,7 +245,9 @@ story. The same standard applies here.
   spinal cord to muscle (`web/lib/motor-neuron-figure.ts`), a chart of
   GTEx data, and an illustration of a PDB structure in David Goodsell's style
   (`src/illustration.ts` extracts the atoms, `web/scripts/illustrate.ts` draws
-  them). Screenshots of the gene page and of JBrowse appear inside posts as
+  them), and a grid of antibody contact residues per isoform under CD22's
+  domain map (`web/lib/contact-grid-figure.ts`, contacts from
+  `src/epitopes.ts`). Screenshots of the gene page and of JBrowse appear inside posts as
   figures, never as heroes. A new post needs a hero unlike all of these; the
   owner drops a post whose hero would not be new. A post may cite literature and public expression data to say
   where an isoform is made, attributed to its source; the rules above still

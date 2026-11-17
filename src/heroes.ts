@@ -96,6 +96,14 @@ const SHOTS: Shot[] = [
     wait: 3,
   },
   {
+    name: 'contact-grid',
+    dir: 'heroes',
+    path: 'figures/cd22/',
+    clip: ['.hero-figure'],
+    height: 900,
+    wait: 1,
+  },
+  {
     name: 'ndufc2-gene-view',
     dir: 'figures',
     path: 'gene/NDUFC2/',

@@ -1,14 +1,17 @@
 import { join } from 'node:path'
 
 import { getJson, getText } from './cache.ts'
-import { structTitle } from './illustration.ts'
-import { atomsByChain, interfaceResidues } from './interfaces.ts'
+import { blogDataPath, structTitle } from './illustration.ts'
+import { withinDistance } from './contacts.ts'
+import type { Point } from './contacts.ts'
+import { CONTACT, atomsByChain, interfaceResidues } from './interfaces.ts'
 import type { ChainAtom } from './interfaces.ts'
 import { list, number, record, records, text, writeJson } from './json.ts'
-import { DATA, OUT } from './paths.ts'
+import { DATA } from './paths.ts'
 
 const RCSB = 'https://data.rcsb.org/rest/v1/core'
 const FILES = 'https://files.rcsb.org/download'
+const ATTACHED = 2
 
 export const STRUCTURES = [
   { accession: 'P20273', pdb: '7O52' },
@@ -20,6 +23,7 @@ export interface Entity {
   description: string
   chains: string[]
   toUniProt: Map<number, number>
+  sequence: string
 }
 
 export function entityOf(id: string, json: unknown, accession: string) {
@@ -38,6 +42,11 @@ export function entityOf(id: string, json: unknown, accession: string) {
     chains: list(
       record(entity.rcsb_polymer_entity_container_identifiers).auth_asym_ids,
     ).flatMap(chain => (typeof chain === 'string' ? [chain] : [])),
+    sequence:
+      text(record(entity.entity_poly).pdbx_seq_one_letter_code_can)?.replace(
+        /\s/g,
+        '',
+      ) ?? '',
     toUniProt: new Map(
       regions.flatMap(region => {
         const from = number(region.entity_beg_seq_id) ?? 0
@@ -93,15 +102,86 @@ export function binderUnits(
   })
 }
 
+interface Sugar {
+  chain: string
+  site: number
+  points: Point[]
+}
+
+function atomRows(cif: string) {
+  const header: string[] = []
+  const rows: string[][] = []
+  for (const line of cif.split(/\r?\n/)) {
+    if (line.startsWith('_atom_site.')) {
+      header.push(line.slice('_atom_site.'.length).trim())
+    } else if (
+      header.length &&
+      (line.startsWith('ATOM') || line.startsWith('HETATM'))
+    ) {
+      rows.push(line.trim().split(/\s+/))
+    }
+  }
+  return rows.map(row => {
+    const field = (tag: string) => row[header.indexOf(tag)] ?? ''
+    return {
+      field,
+      point: [
+        Number(field('Cartn_x')),
+        Number(field('Cartn_y')),
+        Number(field('Cartn_z')),
+      ] satisfies Point,
+    }
+  })
+}
+
+/**
+ * Each modelled sugar on the target, as the UniProt position of the
+ * asparagine whose ND2 lies within 2 Å of it, and its atoms. A branched
+ * oligosaccharide is one `label_asym_id`.
+ */
+export function sugars(cif: string, target: Entity) {
+  const rows = atomRows(cif)
+  const groups = Map.groupBy(
+    rows.filter(
+      row =>
+        row.field('group_PDB') === 'HETATM' &&
+        row.field('label_comp_id') !== 'HOH' &&
+        row.field('type_symbol') !== 'H',
+    ),
+    row => row.field('label_asym_id'),
+  )
+  const nitrogens = rows.filter(
+    row =>
+      row.field('group_PDB') === 'ATOM' &&
+      row.field('label_comp_id') === 'ASN' &&
+      row.field('label_atom_id') === 'ND2' &&
+      target.chains.includes(row.field('auth_asym_id')),
+  )
+  return [...groups.values()].flatMap((group): Sugar[] => {
+    const points = group.map(row => row.point)
+    const anchor = nitrogens.find(nitrogen =>
+      withinDistance([nitrogen.point], points, ATTACHED).some(Boolean),
+    )
+    const site = anchor
+      ? target.toUniProt.get(Number(anchor.field('label_seq_id')))
+      : undefined
+    return anchor && site !== undefined
+      ? [{ chain: anchor.field('auth_asym_id'), site, points }]
+      : []
+  })
+}
+
 /**
  * For each copy of the target in the asymmetric unit, the residues within 5 Å
- * of the binder unit touching it most, in UniProt numbering. Contacts with any
- * other unit are crystal packing and only counted.
+ * of the binder unit touching it most, in UniProt numbering, and its modelled
+ * sugars with whether any atom of each is within 5 Å of that unit. Contacts
+ * with any other unit are crystal packing and only counted.
  */
 export function copyContacts(
   atoms: Map<string, ChainAtom[]>,
   target: Entity,
   binders: Entity[],
+  attached: Sugar[] = [],
 ) {
   const units = binderUnits(atoms, binders)
   const uniprot = (positions: number[]) =>
@@ -128,6 +208,19 @@ export function copyContacts(
             binders: paired.unit,
             contacts: paired.residues,
             observed: runsOf(uniprot(own.map(atom => atom.position))),
+            sugars: attached
+              .filter(sugar => sugar.chain === chain)
+              .map(sugar => ({
+                site: sugar.site,
+                contact: withinDistance(
+                  sugar.points,
+                  paired.unit.flatMap(partner =>
+                    (atoms.get(partner) ?? []).map(atom => atom.coord),
+                  ),
+                  CONTACT,
+                ).some(Boolean),
+              }))
+              .toSorted((a, b) => a.site - b.site),
             packing: others
               .filter(({ residues }) => residues.length > 0)
               .map(({ unit, residues }) => ({
@@ -173,8 +266,18 @@ async function structure({ accession, pdb }: (typeof STRUCTURES)[number]) {
       value => number(value),
     )[0],
     target: target?.description ?? null,
+    construct: target
+      ? Object.fromEntries(
+          [...target.toUniProt].map(([position, uniprot]) => [
+            uniprot,
+            target.sequence[position - 1] ?? '',
+          ]),
+        )
+      : {},
     binders: binders.map(binder => binder.description),
-    copies: target ? copyContacts(atomsByChain(cif), target, binders) : [],
+    copies: target
+      ? copyContacts(atomsByChain(cif), target, binders, sugars(cif, target))
+      : [],
   }
 }
 
@@ -183,13 +286,7 @@ if (import.meta.main) {
   for (const entry of STRUCTURES) {
     results.push(await structure(entry))
   }
-  writeJson(join(OUT, 'epitopes.json'), results, 1)
-  console.log(
-    JSON.stringify(
-      results.map(r => ({
-        ...r,
-        copies: r.copies.map(c => ({ ...c, contacts: c.contacts.length })),
-      })),
-    ),
-  )
+  const path = blogDataPath('cd22-contacts.json')
+  writeJson(path, results, 1)
+  console.log(path)
 }

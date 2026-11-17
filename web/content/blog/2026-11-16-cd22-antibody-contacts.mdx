@@ -1,0 +1,174 @@
+---
+title: 'Antibody contact residues across the isoforms of CD22'
+date: '2026-11-16'
+order: 7
+description:
+  'CD22-alpha lacks the third and fourth of the seven Ig-like domains of CD22,
+  and with the third, some of the residues within 5 Å of the antibody
+  epratuzumab in a crystal structure. Every CD22 isoform has the residues within
+  5 Å of m971, on the domain next to the membrane.'
+hero: './heroes/contact-grid.jpg'
+heroPosition: 'left'
+heroAlt:
+  'CD22 drawn as a row of seven rounded boxes labelled d1 to d7, ending at a
+  grey membrane band. A blue bracket over d2 and d3 is labelled epratuzumab and
+  a green bracket over d7 is labelled m971, and thin lines fan down from each
+  contact residue to a column of dots. Below are five rows, the canonical
+  CD22-beta and isoforms CD22-alpha, 3, 4 and 5, each with a blue and a green
+  block of dots. CD22-alpha has a run of open orange rings at the end of the
+  blue block, isoform 5 has three at its start, and every other dot is filled.'
+---
+
+import Html from '../../components/Html.astro'
+import { cd22Contacts, contactTable } from '../../lib/cd22.ts'
+import {
+  ABUT,
+  absentText,
+  contactStates,
+  positionsText,
+} from '../../lib/epitope.ts'
+import { span } from '../../lib/loss.ts'
+import { story } from '../../lib/stories.ts'
+
+export const s = story('CD22', 'P20273-2')
+export const record = s.record
+export const domains = record.features.filter(f => f.type === 'Domain')
+export const d = n => span(domains[n - 1].start, domains[n - 1].end)
+export const five = record.isoforms.find(i => i.name === '5')
+export const m971 = cd22Contacts('7O52')
+export const epratuzumab = cd22Contacts('5VL3')
+export const m971Span = [m971.observed[0][0], m971.observed.at(-1)[1]]
+export const alpha = contactStates(
+  epratuzumab.contacts,
+  epratuzumab.observed,
+  s.isoform,
+)
+export const fiveStates = contactStates(
+  epratuzumab.contacts,
+  epratuzumab.observed,
+  five,
+)
+export const between = epratuzumab.contacts.filter(
+  p => !domains.some(f => p >= f.start && p <= f.end),
+)
+export const eSpan = [
+  epratuzumab.observed[0][0],
+  epratuzumab.observed.at(-1)[1],
+]
+export const sugarLost = record.isoforms.filter(
+  i =>
+    contactStates(epratuzumab.sugarContacts, epratuzumab.observed, i).missing
+      .length > 0,
+)
+export const bareSites = record.features
+  .filter(f => f.type === 'Glycosylation')
+  .map(f => f.start)
+  .filter(
+    p =>
+      p >= eSpan[0] &&
+      p <= eSpan[1] &&
+      !epratuzumab.sugarSites.includes(p),
+  )
+export const RESIDUES = { N: 'asparagine', Q: 'glutamine', D: 'aspartate' }
+export const bareLetters = [
+  ...new Set(bareSites.map(p => epratuzumab.construct[p])),
+]
+export const bareText =
+  bareLetters.length === 1 && bareLetters[0] !== 'N'
+    ? `In the 5VL3 construct those positions are ${RESIDUES[bareLetters[0]] ?? bareLetters[0]}, so asparagines ${positionsText(epratuzumab.sugarSites)} are the only ones in it that could carry sugars.`
+    : 'The structure models no sugar on them.'
+
+CD22 is a receptor on B cells, and
+[Ereño-Orbea et al. (2017)](https://doi.org/10.1038/s41467-017-00836-6) write
+that "as a B-cell-restricted antigen, CD22 is targeted in therapies against
+dysregulated B cells that cause autoimmune diseases and blood cancers". Its
+extracellular part is a row of seven Ig-like domains, which the structural
+papers number d1, at the tip, to d7, next to the membrane. UniProt names d1
+Ig-like V-type ({d(1)}) and d2 to d7 Ig-like C2-type 1 to 6, the names the gene
+page uses. Of the {record.isoforms.length} alternative isoforms UniProt
+describes, CD22-alpha lacks residues 241–417, which take in d3 ({d(3)}) and d4
+({d(4)}) whole:
+
+> {s.answer}
+
+When isoforms of a protein lack whole domains, an antibody against the protein
+may have its contact residues in some isoforms and not in others. For
+an antibody whose complex with CD22 has been crystallised, those residues can be
+counted in each isoform, and this post counts them for two antibodies.
+
+## Two crystal structures
+
+- **m971, PDB [7O52](https://www.rcsb.org/structure/7O52).** The Fab of m971
+  in complex with CD22 d6–d7, at {m971.resolution} Å
+  ([Ereño-Orbea et al., 2021](https://doi.org/10.1016/j.jbc.2021.100966)).
+  According to that paper, T cells with chimeric antigen receptors derived from
+  m971 "have shown promise when used as an immunotherapeutic agent against
+  B-cell acute lymphoblastic leukemia", and the m971 epitope is on d7.
+- **Epratuzumab, PDB [5VL3](https://www.rcsb.org/structure/5VL3).** The Fab of
+  the therapeutic antibody epratuzumab in complex with CD22 d1–d3, at{' '}
+  {epratuzumab.resolution} Å
+  ([Ereño-Orbea et al., 2017](https://doi.org/10.1038/s41467-017-00836-6)). The
+  asymmetric unit holds {epratuzumab.copies.length} copies of the complex.
+
+## How the residues are counted
+
+A contact residue here is a CD22 residue with any protein atom within 5 Å of a
+protein atom of the Fab. Residues are numbered on UniProt's canonical sequence
+through RCSB's alignment of each structure to it. In 5VL3, each CD22 copy is
+paired with the Fab it has the most residues within 5 Å of, and contacts
+with a neighbouring copy's Fab, which come from how the complexes pack in the
+crystal, are left out. The four copies have{' '}
+{Math.min(...epratuzumab.sizes)}–{Math.max(...epratuzumab.sizes)} contact
+residues each; this post counts the {epratuzumab.contacts.length} residues that
+all four have ({epratuzumab.any} appear in at least one).
+
+Each contact residue is then present or missing in each isoform, from the same
+UniProt edits the gene page draws. An isoform that differs from the canonical
+only outside the stretch a structure covers cannot be assessed from that
+structure, and the table marks it.
+
+<Html html={contactTable(record)} />
+
+A crystal contact set is not the epitope: these are residues within 5 Å of the
+antibody in one structure. That an isoform keeps them says nothing about whether
+it folds the same way or binds.
+
+## m971 and epratuzumab across the isoforms
+
+All {m971.contacts.length} m971 contact residues are in every isoform, but each
+of the four isoforms differs from the canonical only outside the stretch 7O52
+covers ({span(...m971Span)}), so none of their edits falls within this
+structure.
+
+The {epratuzumab.contacts.length} epratuzumab contact residues are{' '}
+{positionsText(epratuzumab.contacts)}, in d2 and d3 except for{' '}
+{positionsText(between)}, between the two domains. CD22-alpha has {alpha.present} of
+them, and the {alpha.missing.length} it lacks, residues{' '}
+{positionsText(alpha.missing)}, are in d3.
+
+Isoform 5 lacks residues {absentText(five)}, which include all but the first
+residue of the signal peptide, d1 and the start of d2. It has {fiveStates.present} of the {fiveStates.total} epratuzumab contact
+residues and lacks {positionsText(fiveStates.missing)}; of those present,{' '}
+{fiveStates.abutting.length === 1 ? 'one' : fiveStates.abutting.length}, residue{' '}
+{positionsText(fiveStates.abutting)}, is within {ABUT} residues of the missing
+stretch. Isoforms 3 and 4 differ from the canonical only outside the stretch
+5VL3 covers ({span(...eSpan)}).
+
+## Sugars and expression
+
+The counts above leave out the sugars on CD22. The 2017 paper reports "a
+critical role for CD22 N-linked glycosylation in antibody engagement", and its
+abstract does not say which sugar. In 5VL3, sugars are modelled on asparagines{' '}
+{positionsText(epratuzumab.sugarSites)} of every copy, and the sugar on{' '}
+{positionsText(epratuzumab.sugarContacts)} has atoms within 5 Å of the Fab in
+all four.{' '}
+{sugarLost.length === 0
+  ? `Every isoform has asparagine ${positionsText(epratuzumab.sugarContacts)}.`
+  : `${sugarLost.map(i => i.name).join(', ')} lack it.`}{' '}
+UniProt marks N-glycosylation at {bareSites.length} more asparagines in the
+stretch 5VL3 covers ({positionsText(bareSites)}). {bareText}
+
+Isoform explorer computes nothing about how much of each isoform B cells make;
+each isoform's section on the gene page lists its transcripts.
+
+<a href={s.href}>Open CD22-alpha on the CD22 page</a>.
