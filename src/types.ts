@@ -143,6 +143,12 @@ export interface GeneRecord {
   isoforms: Isoform[]
   /** ENSG ids, with versions. */
   ensemblGenes: string[]
+  /**
+   * GENCODE 49's protein-coding transcripts of this entry's Ensembl genes, and
+   * how many of them UniProt maps to an isoform here. A fact about annotation,
+   * like the MANE Select mark; the unmapped ones have no page.
+   */
+  coding: { genes: number; gencode: number; mapped: number }
   /** Transcripts UniProt lists for the entry without naming an isoform. */
   unmapped: { ensembl: string[]; refseq: string[]; refseqProteins: string[] }
   /** Interface explorer page names for this accession, if it has them. */

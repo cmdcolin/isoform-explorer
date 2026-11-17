@@ -32,10 +32,13 @@ const LOW = 100
 const PATH = join(DATA, 'ensembl_transcripts.json')
 const LAYOUTS = join(DATA, 'gencode_exons.json')
 const TYPES = join(DATA, 'gencode_types.json')
+const GENE_TRANSCRIPTS = join(DATA, 'gencode_gene_transcripts.json')
 const GENCODE = join(DATA, 'gencode.v49.annotation.gff3.gz')
 const GENCODE_URL =
   'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/gencode.v49.annotation.gff3.gz'
 const GFF_TRANSCRIPT = /transcript_id=(ENST\d+)\.\d+;/
+const GFF_GENE = /gene_id=(ENSG\d+)\.\d+/
+const CODING = 'protein_coding'
 const PRIMARY = /^([1-9]|1\d|2[0-2]|X|Y|MT)$/
 
 export type Place = [chromosome: string, start: number, end: number]
@@ -334,6 +337,44 @@ async function readTypes(wanted: Set<string>) {
     if (id && transcript) {
       found.set(id, transcript)
     }
+  }
+  return found
+}
+
+/**
+ * Versionless ENSG to the versionless ENST ids GENCODE 49 types
+ * `protein_coding` for it with a complete coding sequence, from one pass over
+ * the GFF3. A transcript tagged `cds_start_NF` or `cds_end_NF` is left out: its
+ * ends are unknown, so it is not an alternative protein to count. Read whole
+ * rather than by a wanted set, since a gene's count only means something when
+ * every transcript of it is counted.
+ */
+export async function codingTranscripts() {
+  if (existsSync(GENE_TRANSCRIPTS)) {
+    return new Map(
+      Object.entries(record(readJson(GENE_TRANSCRIPTS))).map(([gene, ids]) => [
+        gene,
+        Array.isArray(ids) ? ids.map(id => String(id)) : [],
+      ]),
+    )
+  }
+  const found = new Map<string, string[]>()
+  if (await gencodeFile()) {
+    const lines = createInterface({
+      input: createReadStream(GENCODE).pipe(createGunzip()),
+      crlfDelay: Infinity,
+    })
+    for await (const line of lines) {
+      const [, , type, , , , , , attributes = ''] = line.split('\t')
+      const transcript =
+        type === 'transcript' ? GFF_TRANSCRIPT.exec(attributes)?.[1] : undefined
+      const gene = transcript ? GFF_GENE.exec(attributes)?.[1] : undefined
+      const typed = transcript ? gencodeType(attributes) : null
+      if (transcript && gene && typed?.type === CODING && typed.complete) {
+        found.set(gene, [...(found.get(gene) ?? []), transcript])
+      }
+    }
+    writeJson(GENE_TRANSCRIPTS, Object.fromEntries(found))
   }
   return found
 }

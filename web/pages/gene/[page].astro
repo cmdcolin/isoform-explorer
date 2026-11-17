@@ -156,6 +156,16 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
       )
     }
     {
+      record.coding.gencode > record.coding.mapped && (
+        <p class="muted">
+          GENCODE 49 lists {count(record.coding.gencode)} protein-coding transcripts of {record.coding.genes === 1 ? 'this gene' : 'these genes'},
+          and UniProt maps {count(record.coding.mapped)} of them to an isoform above. The other{' '}
+          {record.coding.gencode - record.coding.mapped === 1 ? 'one is' : `${count(record.coding.gencode - record.coding.mapped)} are`}{' '}
+          not on this site, which covers the isoforms UniProt describes.
+        </p>
+      )
+    }
+    {
       linkedDiseases.length > 0 && (
         <p class="muted">
           UniProt links {record.gene} to{' '}

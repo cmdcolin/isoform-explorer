@@ -23,17 +23,20 @@ committed). `pnpm all` runs the first two in order.
   sequence from UniProt's alternative-sequence edits, places what each one lacks
   on the canonical sequence, attaches AlphaFold DB monomer models (list per
   protein from the API) with their cached pLDDT, and reads the interfaces from
-  `out/interfaces.json`. It also caches Interface explorer's page lists and
-  the GRCh38 places of the isoforms' Ensembl transcripts (one batched pass
-  over Ensembl's REST API) and the exons of every isoform's transcripts
-  (from GENCODE 49's GFF3, downloaded once to `data/`, about 120 MB, into
+  `out/interfaces.json`. It also caches Interface explorer's page lists and the
+  GRCh38 places of the isoforms' Ensembl transcripts (one batched pass over
+  Ensembl's REST API) and the exons of every isoform's transcripts (from GENCODE
+  49's GFF3, downloaded once to `data/`, about 120 MB, into
   `data/gencode_exons.json`, and their GENCODE transcript types into
-  `data/gencode_types.json`), so a rerun needs no network. The canonical's
-  exons number the map's Exons row; one transcript per isoform, the one
-  closest to the canonical's, is drawn in the gene view. Writes `site/data/genes/`, `index.json`, `totals.json`
-  and the search maps in `site/data/search/`. With accessions it
-  rewrites only those gene files, not the totals. It ends by saying how many
-  proteins' model lists and how many models' pLDDT are still pending.
+  `data/gencode_types.json`, and every gene's complete protein-coding
+  transcripts into `data/gencode_gene_transcripts.json` in one further pass,
+  about 11 seconds), so a rerun needs no network. The canonical's exons number
+  the map's Exons row; one transcript per isoform, the one closest to the
+  canonical's, is drawn in the gene view. Writes `site/data/genes/`,
+  `index.json`, `totals.json` and the search maps in `site/data/search/`. With
+  accessions it rewrites only those gene files, not the totals. It ends by
+  saying how many proteins' model lists and how many models' pLDDT are still
+  pending.
 - `pnpm proteome`: downloads AlphaFold DB's human proteome archive (a single
   large tar, fetched in eight resumable parts into `data/proteome/`) and
   extracts the pLDDT of every canonical full-length model the site needs,
@@ -68,17 +71,17 @@ static files), with the base path `/isoform-explorer/`.
 - `pnpm dev`: development server at <http://localhost:4321/isoform-explorer/>.
 - `pnpm build`: writes the static site to `dist/`, one page per protein.
 - `pnpm preview`: serves `dist/` as it will be deployed.
-- `pnpm diseases`: after `pnpm isoforms`, fetches UniProt's disease comments
-  for reviewed human entries (cached in `data/uniprot_diseases.json`) and
-  writes `site/data/diseases.json`, one entry per disease linked to a protein
-  on the site, grouped through MONDO (cached in `data/mondo.obo.gz`), and
+- `pnpm diseases`: after `pnpm isoforms`, fetches UniProt's disease comments for
+  reviewed human entries (cached in `data/uniprot_diseases.json`) and writes
+  `site/data/diseases.json`, one entry per disease linked to a protein on the
+  site, grouped through MONDO (cached in `data/mondo.obo.gz`), and
   `site/data/search/diseases.json` for search.
 - `pnpm expression`: for each isoform in `CASES` in `src/expression.ts`, finds
   the splice junction its GENCODE transcript has and the canonical's lacks,
   counts reads across it and across the canonical junction from the same splice
   site in every GTEx v8 sample (Snaptron's `gtexv2`), and fetches GTEx's median
-  transcript TPM. Writes `web/content/blog/data/expression.json`, which the
-  blog posts read; responses are cached in `data/expression/`.
+  transcript TPM. Writes `web/content/blog/data/expression.json`, which the blog
+  posts read; responses are cached in `data/expression/`.
 - `pnpm illustration`: for each entry in `ILLUSTRATIONS` in
   `src/illustration.ts`, downloads the PDB structure (cached in `data/pdb/`),
   keeps the heavy atoms of the protein and one ligand, turns them so the
@@ -89,11 +92,11 @@ static files), with the base path `/isoform-explorer/`.
 - `pnpm heroes [name ...]`: after a build, retakes the blog's hero and figure
   screenshots in `web/content/blog/` with headless Chrome (`CHROME` overrides
   `/usr/bin/google-chrome`). The JBrowse shots load the deployed site's
-  `jbrowse/config.json` and need the network. `PAGES=F2RL2,NDUFC2,PKM,ZDHHC16
-  pnpm build` builds just the gene pages the shots use.
-  A new post's hero must exist before the site builds, so take its first copy
-  from `pnpm dev` (the `figures/` page at the same path), then retake it with
-  `pnpm heroes <name>` after a build.
+  `jbrowse/config.json` and need the network.
+  `PAGES=F2RL2,NDUFC2,PKM,ZDHHC16 pnpm build` builds just the gene pages the
+  shots use. A new post's hero must exist before the site builds, so take its
+  first copy from `pnpm dev` (the `figures/` page at the same path), then retake
+  it with `pnpm heroes <name>` after a build.
 - `pnpm check-links`: after a build, checks that every internal link in `dist/`
   points at a file that exists.
 - `pnpm test` and `pnpm typecheck`: unit tests (Vitest) and type checks of the
