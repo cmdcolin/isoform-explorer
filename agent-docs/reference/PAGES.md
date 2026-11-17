@@ -8,8 +8,8 @@ description:
 
 # Pages
 
-`claims.md` holds what a page may not say, and `data.md` the files a page
-reads.
+[CLAIMS.md](CLAIMS.md) holds what a page may not say, and [DATA.md](DATA.md) the
+files a page reads.
 
 - **Home:** modelled on Interface explorer's hero: a short headline, one
   sentence saying what the site shows, and a simple diagram (a canonical
@@ -34,7 +34,8 @@ reads.
   `domains` group alone, which is a scope choice rather than a claim that the
   distinction is empty elsewhere: `targeting` spans a signal peptide and a
   transmembrane segment, where whole against cut means as much, and a counted
-  isoform may well cut one. What the column does not say is in `claims.md`.
+  isoform may well cut one. What the column does not say is in
+  [CLAIMS.md](CLAIMS.md).
 - **Gene page (`/gene/<page>/`):** one per protein, one anchored section per
   isoform (`#P04637-2`), so a transcript search lands on its isoform.
   - A map: canonical feature rows, pLDDT band and partner-interface rows above
@@ -51,7 +52,12 @@ reads.
     "Each isoform was modelled alone" where that applies, and repeating it here
     would have been false on the 2,353 pages that do show predicted
     interfaces, since those come from AlphaFold DB complexes of the canonical.
-  - Per isoform, the answer first as a sentence, then the losses grouped under
+  - Per isoform, the answer first as a sentence. Topological domains are left
+    out of it, because a two-residue deletion read "cut: Cytoplasmic
+    (399–821)"; they stay in the detail list. Each clause names at most three
+    features, and the sentence is long where many regions overlap (TP53
+    P04637-2 runs to four clauses); shortening it was declined, because
+    dropping a clause hides a loss. Then the losses grouped under
     the edit that causes them, then transcripts, UniProt's note and links
     (UniProt, Ensembl, RefSeq, AlphaFold DB, isoform superposed on canonical in
     JBrowse, transcripts on the genome).
@@ -86,7 +92,7 @@ reads.
   of JBrowse appear inside posts as figures, never as heroes. A new post needs a
   hero unlike all of these; the owner drops a post whose hero would not be new.
   A post may cite literature and public expression data to say where an isoform
-  is made, attributed to its source; the rules in `claims.md` still
+  is made, attributed to its source; the rules in [CLAIMS.md](CLAIMS.md) still
   hold for every sentence the site generates. GTEx transcript TPM is never
   quoted alone: `pnpm expression` also counts reads across the isoform's own
   splice junction, because the two can disagree completely (NDUFC2 isoform 4:

@@ -36,7 +36,9 @@ and every partner interface was blank on main until it was regenerated. Check:
 
 ## Formatting
 
-- Prettier ignores `*.mdx`, because it splits `{' '}` across lines and breaks
-  the build.
-- Don't run prettier on `handoffs/*.md`; they aren't formatted to the repo
-  config, and it rewrites whole files.
+`.prettierignore` holds both of these, so they are enforced rather than
+remembered:
+
+- `*.mdx`, because prettier splits `{' '}` across lines and breaks the build.
+- `agent-docs`, whose markdown is wrapped by hand at 80 columns; prettier
+  reflows whole files and buries the real change in a diff.

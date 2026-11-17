@@ -1,31 +1,36 @@
 ---
-name: design
+name: architecture
 description:
-  "What Isoform explorer is for, the one question it answers, what counts as a
-  loss, and the rules a session works by. The entry point to the other handoff
-  files. Read first."
+  "What Isoform explorer is for, the one question every page answers, and what
+  counts as a loss. The map: it routes to the doc that holds the depth. Read
+  first."
 ---
 
-# Isoform explorer: design
+# Isoform explorer
 
-A sibling of Interface explorer (`~/src/interface-atlas`, deployed at
+A static site: look up a transcript, a gene symbol or a UniProt accession, and
+see what the isoform it encodes lacks against the canonical protein. A sibling
+of Interface explorer (`~/src/interface-atlas`, deployed at
 `cmdcolin.github.io/interface-explorer`). That site covers isoforms only for
 proteins with a disease annotation, about a third of those that have any. This
 one covers every reviewed human UniProt entry with a described alternative
-isoform: 10,649 proteins and 22,131 alternative isoforms on 2026-11-15.
+isoform: 10,587 proteins and 22,131 alternative isoforms
+(`site/data/totals.json`, which is where any count in prose should come from).
 
-The rest of the handoffs, each written to be read on its own:
+This file is the map. Depth is in the docs it routes to; see
+[CLAUDE.md](CLAUDE.md) for what belongs where.
 
-- `claims.md`: what the site refuses to claim, and why. Read before writing any
-  sentence a visitor will see.
-- `pages.md`: what each page shows and how it is laid out.
-- `data.md`: the files the pipeline writes and the site reads.
-- `reviewed-out.md`: what the site was asked to show and does not.
-- `open-questions.md`: what is still open.
-- `build-server.md`: where downloads, full builds and the full suite run.
-- `deploy.md`: how the site is published and how its JBrowse links load.
-- `epitopes.md`: antibody contact residues across isoforms.
-- `ig-collaboration.md`: the Ig-domain collaboration and what came out of it.
+| To | Read |
+| --- | --- |
+| write a sentence a visitor will see | [reference/CLAIMS.md](reference/CLAIMS.md) |
+| add or change a page | [reference/PAGES.md](reference/PAGES.md) |
+| change `src/types.ts` or anything writing `site/data` | [reference/DATA.md](reference/DATA.md) |
+| run the pipeline, a full build or the full suite | [reference/BUILD_SERVER.md](reference/BUILD_SERVER.md) |
+| push, change a JBrowse link, delete a branch | [reference/DEPLOY.md](reference/DEPLOY.md) |
+| touch the antibody-contact code or copy | [reference/EPITOPES.md](reference/EPITOPES.md) |
+| propose work for the Ig collaborators | [reference/IG_COLLABORATION.md](reference/IG_COLLABORATION.md) |
+| find the next piece of work | [ideas/README.md](ideas/README.md) |
+| build or operate the data | [docs/running.md](../docs/running.md) |
 
 ## The one question
 
@@ -101,8 +106,8 @@ first three, so they cover every described isoform, not only the modelled ones.
   don't push. The owner opens PRs and creates the GitHub repository.
 - Run only the tests for the files you touched while iterating; run the full
   suite, typecheck, a full build and `pnpm check-links` once at the end, on the
-  build server. Repeat this rule in any subagent brief. `build-server.md` says
-  where and how.
+  build server. Repeat this rule in any subagent brief.
+  [reference/BUILD_SERVER.md](reference/BUILD_SERVER.md) says where and how.
 - Self-explanatory code with minimal or no comments; no `any` or type casts,
   inferred return types; nested ifs or ternaries instead of early returns;
   bullet lists, not numbered ones, in markdown and tests.

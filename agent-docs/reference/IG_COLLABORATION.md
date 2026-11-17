@@ -18,8 +18,8 @@ same name covering the collaboration from that site's side.
 
 Each change is generic rather than Ig-specific: only 343 of the site's
 proteins have an Ig-like domain, and whole-unit excision is commoner in
-zinc-finger, ANK, WD and calponin-homology arrays. `claims.md` records what
-each one claims and does not.
+zinc-finger, ANK, WD and calponin-homology arrays. [CLAIMS.md](CLAIMS.md)
+records what each one claims and does not.
 
 - Browse's "Domains lost whole, none cut" column (`excised` on `IndexRow` and
   in `totals.lacking`): 2,832 isoforms missing at least one whole domain or
@@ -32,7 +32,7 @@ each one claims and does not.
   compute: CD33 "Homodimer; disulfide-linked", CD22 "Predominantly monomer of
   isoform CD22-beta. Also found as heterodimer of isoform CD22-beta and a
   shorter isoform."
-- The CD22 epitope spike and its post; see `epitopes.md`.
+- The CD22 epitope spike and its post; see [EPITOPES.md](EPITOPES.md).
 - The CD19 post (`2026-11-16-cd19-exon-2.mdx`), on the exon 2-skipped mRNA
   behind CART-19 relapses, which Sotillo et al. reported in 2015. It is the
   case the GENCODE count does not help: UniProt describes no such isoform,

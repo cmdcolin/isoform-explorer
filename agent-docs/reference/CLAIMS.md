@@ -8,11 +8,19 @@ description:
 
 # What the site does not claim
 
-Interface explorer withheld a 3D distance from pathogenic sites to
-interfaces because the sites sat in pLDDT < 50 regions and the number
-invited a proximity story. The same standard applies here. `design.md` says
-what the site is for, and `reviewed-out.md` lists the features these rules
-ruled out.
+Interface explorer withheld a 3D distance from pathogenic sites to interfaces
+because the sites sat in pLDDT < 50 regions and the number invited a proximity
+story. The same standard applies here, and
+[ARCHITECTURE.md](../ARCHITECTURE.md) says what the site is for.
+
+Each bullet carries the reason it exists, and most of them exist because a
+draft claimed more than it showed. A feature these rules ruled out is recorded
+in the bullet that rules it out, not on a shelf of its own.
+
+Several of them come from one outside review on 2026-11-15, where a reader
+told nothing of the design checked eight isoforms against UniProt's REST API
+and then checked the site against its own rules. Every UniProt-derived
+statement matched; the findings were about the copy.
 
 - **No consequence.** The site lists what the sequence lacks. It never says an
   isoform is non-functional, mislocalised, secreted, soluble, degraded or
@@ -26,7 +34,10 @@ ruled out.
   "has N different residues in place of M residues"; the lost-feature counts on
   the home page and browse table use `missing` only. The verb is "has": the
   sentences say "has N different residues in place of M residues of …", never
-  "swaps … for", "inserts" or "carries".
+  "swaps … for", "inserts" or "carries". Matching residues by position inside a
+  swap was tried and dropped: it counted coincidental identical letters as
+  carried over. A point feature inside a swap is said to fall in the replaced
+  stretch, and the page does not assert the residue changed.
 - **Counts by confidence, never "no fold".** pLDDT is the prediction's
   confidence, not a measurement of folding. For the residues an isoform lacks,
   give the counts: of the M missing (or replaced) residues, N are confidently
@@ -70,15 +81,18 @@ ruled out.
   copy has; contacts with a neighbouring copy's Fab are crystal packing. An
   isoform whose edits fall outside the residues a structure resolves gets
   "differs from the canonical only outside the structure", and every count
-  carries the fixed caveat. `epitopes.md` has the wording and the method.
+  carries the fixed caveat. [EPITOPES.md](EPITOPES.md) has the wording and the
+  method.
 - **Losing confidence is a model's opinion.** pLDDT is the prediction's
   confidence, not a measurement of folding. Say so beside the number.
 - **Not expression.** The site computes and asserts nothing about expression:
   no GTEx, no tissue claims, no "major isoform" of its own. UniProt's notes are
   quoted verbatim and attributed, including where UniProt mentions expression
-  ("A major isoform"). The MANE Select transcript is marked because it is a
-  fact about annotation; when it encodes a non-canonical isoform, the page says
-  so, since "loses" is measured against UniProt's canonical.
+  ("A major isoform"); filtering the expression out of a note was declined,
+  because a quote stops being a quote once it is edited. The MANE Select
+  transcript is marked because it is a fact about annotation; when it encodes a
+  non-canonical isoform, the page says so, since "loses" is measured against
+  UniProt's canonical.
 - **GENCODE's decay type is GENCODE's.** Each Ensembl transcript GENCODE 49
   types `nonsense_mediated_decay` carries that term, verbatim and attributed,
   as MANE Select is marked. Only when every Ensembl transcript of an isoform is

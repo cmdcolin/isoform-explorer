@@ -24,7 +24,8 @@
     "expression": "node src/expression.ts",
     "diseases": "node src/diseases.ts",
     "epitopes": "node src/epitopes.ts",
-    "gene-transcripts": "node src/gene-transcripts.ts"
+    "gene-transcripts": "node src/gene-transcripts.ts",
+    "docs-index": "node src/docsIndex.ts"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",

@@ -13,6 +13,13 @@ Built as a spike on CD22 (P20273) with two structures and written up as the
 post `2026-11-16-cd22-antibody-contacts.mdx`. Nothing outside that post uses
 it.
 
+This is the scoped version of a feature declined in general form: an outside
+reviewer asked for experimental (PDB) coverage of every isoform's absent
+residues, which was not built, because most entries have no structure over the
+residues in question and a partial structure invites the reader to read absence
+of coverage as absence of the residues. "Differs only outside the structure" is
+the rule that replaced it.
+
 ## Wording, agreed with the owner before the code
 
 - The line is "Contact residues present in this isoform: N of M", where M
@@ -31,8 +38,8 @@ it.
   That an isoform keeps them says nothing about whether it folds the same way
   or binds."
 
-`claims.md` ("An antibody contact is a residue, not an epitope") holds the
-rule in short.
+[CLAIMS.md](CLAIMS.md) ("An antibody contact is a residue, not an epitope")
+holds the rule in short.
 
 ## Method
 

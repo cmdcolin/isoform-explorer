@@ -101,7 +101,8 @@ static files), with the base path `/isoform-explorer/`.
   RCSB which polymer entity aligns to the accession, downloads the structure
   (cached in `data/pdb/`) and writes the residues within 5 Å of each binder, its
   modelled sugars and the crystallised sequence to
-  `web/content/blog/data/cd22-contacts.json`. `handoffs/epitopes.md` has the
+  `web/content/blog/data/cd22-contacts.json`. [agent-docs/reference/EPITOPES.md](../agent-docs/reference/EPITOPES.md)
+  has the
   rules.
 - `pnpm gene-transcripts`: for each entry in `GENES` in
   `src/gene-transcripts.ts`, writes every transcript GENCODE 49 lists for that
