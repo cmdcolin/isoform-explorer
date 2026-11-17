@@ -175,16 +175,18 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
   GENCODE track is kept, so ENST-only isoforms can open. GENCODE's GFF3 has no
   `Name` attribute, so the track's label expression shows `gene_name` on genes
   and the transcript id on transcripts; without it genes read as ENSG ids.
-  Opening an isoform by ENST has still not been seen working end to end in a
-  browser.
+  Opening an isoform by ENST was seen working end to end on 2026-11-16 in
+  headless Chrome: AAMDC Q9H7C9-3 (ENST00000532481.5, no RefSeq id) opened a
+  protein view with both AlphaFold models superposed and the GENCODE V49 track
+  in the connected genome view, with no console errors. A gene page's genome
+  link opens RefSeq's track only; GENCODE's can be turned on from the track
+  list.
 
 ## Open, small
 
 - The first sentence for isoforms with many overlapping regions is still long
   (TP53 P04637-2 runs to four clauses). Each clause names at most three
   features; dropping a clause would hide losses.
-- A swap that only partly overlaps a domain names no feature in its lead (APP
-  P05067-2 at 290–305).
 - pLDDT is rounded per residue before thresholds and means, so a count or mean
   can differ by one from AlphaFold DB's own page.
 - Interface explorer does not link back to this site.
