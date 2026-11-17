@@ -15,12 +15,16 @@ export function groupMissing(group: FeatureGroup) {
 
 export const INTERFACE_MISSING = `missing at least ${share(INTERFACE_LOST_SHARE)} of a predicted partner interface`
 
+export const DOMAINS_WHOLE =
+  'missing at least one whole domain or region, with none cut or swapped partway'
+
 export const MODELLED = `confidently modelled canonical residues (pLDDT ≥ ${FOLDED_PLDDT} in the AlphaFold DB model)`
 
 export const MODELLED_MISSING = `missing ${MODELLED}`
 
 export const LACKING_PHRASES: Record<string, string> = {
   ...Object.fromEntries(GROUPS.map(group => [group, groupMissing(group)])),
+  excised: DOMAINS_WHOLE,
   interface: INTERFACE_MISSING,
   modelled: MODELLED_MISSING,
 }
@@ -47,5 +51,6 @@ export const COLUMN_NOTES: Record<string, string> = {
       `Isoforms ${groupMissing(group)} (${FEATURE_GROUPS[group].join(', ').toLowerCase()}), counting missing residues only.`,
     ]),
   ),
+  excised: `Isoforms ${DOMAINS_WHOLE}.`,
   interface: `Isoforms ${INTERFACE_MISSING}.`,
 }

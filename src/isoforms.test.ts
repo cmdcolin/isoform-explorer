@@ -467,8 +467,57 @@ describe('summaries', () => {
       mostMissing: 61,
       foldedMissing: 12,
       lost: { targeting: 1, domains: 1, sites: 1, modifications: 0 },
+      excised: 1,
       interfacesLost: 1,
     })
+  })
+
+  it('does not count an isoform whose other domain is wholly replaced', () => {
+    const second: Feature = {
+      type: 'Repeat',
+      start: 62,
+      end: 68,
+      description: '',
+    }
+    const swapping = isoform({
+      accession: 'P1-5',
+      features: [
+        [1, 31, 0],
+        [4, 0, 7],
+      ],
+    })
+    expect(
+      indexRow(
+        gene({
+          features: [signal, domain, activeSite, transmembrane, second],
+          isoforms: [swapping],
+        }),
+      ).excised,
+    ).toBe(0)
+  })
+
+  it('does not count an isoform that cuts into any domain as excising one', () => {
+    const second: Feature = {
+      type: 'Repeat',
+      start: 62,
+      end: 68,
+      description: '',
+    }
+    const cutting = isoform({
+      accession: 'P1-4',
+      features: [
+        [1, 31, 0],
+        [4, 3, 0],
+      ],
+    })
+    expect(
+      indexRow(
+        gene({
+          features: [signal, domain, activeSite, transmembrane, second],
+          isoforms: [cutting],
+        }),
+      ).excised,
+    ).toBe(0)
   })
 
   it('totals isoforms across proteins', () => {
@@ -487,6 +536,7 @@ describe('summaries', () => {
           domains: 1,
           sites: 1,
           modifications: 0,
+          excised: 1,
           interface: 1,
           folded: 1,
         },

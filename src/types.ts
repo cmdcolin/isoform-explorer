@@ -191,6 +191,8 @@ export interface IndexRow {
   foldedMissing: number | null
   /** Isoforms lacking, in full, at least one feature of the group. */
   lost: Record<FeatureGroup, number>
+  /** Isoforms lacking at least one domain or region and cutting into none. */
+  excised: number
   /** Isoforms missing at least half of a partner's interface. */
   interfacesLost: number
 }
@@ -208,7 +210,7 @@ export interface Totals {
   /** Canonical and isoform models whose pLDDT is not yet cached. */
   modelsPending: number
   maneSelectNotCanonical: number
-  lacking: Record<FeatureGroup | 'interface' | 'folded', number>
+  lacking: Record<FeatureGroup | 'interface' | 'folded' | 'excised', number>
 }
 
 /**

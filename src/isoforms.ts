@@ -643,14 +643,34 @@ function perGroup(value: (group: FeatureGroup) => number) {
   } satisfies Record<FeatureGroup, number>
 }
 
-function lacksGroup(gene: GeneRecord, isoform: Isoform, group: FeatureGroup) {
+function groupLosses(gene: GeneRecord, isoform: Isoform, group: FeatureGroup) {
   const types: readonly string[] = FEATURE_GROUPS[group]
-  return isoform.features.some(loss => {
+  return isoform.features.flatMap(loss => {
     const feature = gene.features[loss[0]]
     return feature !== undefined && types.includes(feature.type)
-      ? lacksInFull(feature, loss)
-      : false
+      ? [{ feature, loss }]
+      : []
   })
+}
+
+function lacksGroup(gene: GeneRecord, isoform: Isoform, group: FeatureGroup) {
+  return groupLosses(gene, isoform, group).some(({ feature, loss }) =>
+    lacksInFull(feature, loss),
+  )
+}
+
+/**
+ * Every domain or region this isoform touches is gone whole, and at least one
+ * is: the deletion falls between units rather than inside one. Counted for
+ * `domains` alone, where a unit has a size for the distinction to mean
+ * something; a bond or a single modified residue is all or nothing already.
+ */
+function excisesDomains(gene: GeneRecord, isoform: Isoform) {
+  const losses = groupLosses(gene, isoform, 'domains')
+  return (
+    losses.length > 0 &&
+    losses.every(({ feature, loss }) => lacksInFull(feature, loss))
+  )
 }
 
 function hasTranscript(isoform: Isoform) {
@@ -680,6 +700,7 @@ export function indexRow(gene: GeneRecord) {
     lost: perGroup(
       group => isoforms.filter(i => lacksGroup(gene, i, group)).length,
     ),
+    excised: isoforms.filter(i => excisesDomains(gene, i)).length,
     interfacesLost: isoforms.filter(lacksInterface).length,
   } satisfies IndexRow
 }
@@ -715,6 +736,7 @@ export function totals(genes: GeneRecord[]) {
       ...perGroup(group =>
         counted(({ gene, isoform }) => lacksGroup(gene, isoform, group)),
       ),
+      excised: counted(({ gene, isoform }) => excisesDomains(gene, isoform)),
       interface: counted(({ isoform }) => lacksInterface(isoform)),
       folded: counted(({ isoform }) => (isoform.foldedMissing ?? 0) > 0),
     },

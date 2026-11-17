@@ -106,6 +106,19 @@ story. The same standard applies here.
   bases before a downstream splice site). Never paraphrase it as degraded, not
   made or predicted NMD. A mixed isoform gets the inline marks only: there the
   type often reflects a spliced 3′ UTR, not the protein (ADARB1).
+- **A whole domain is a span, not a brick.** "Domains lost whole, none cut"
+  compares the isoform's missing residues with UniProt's feature spans, and
+  UniProt's edges are one source's call: Pfam and InterPro place the same
+  domain a few residues either way. It says only that no domain or region is
+  left partly missing — not where the deletion falls. Most isoforms it counts
+  have an edit reaching a terminus, so they are truncations, and over half lose
+  no `Domain` feature at all, qualifying on a Region, Motif, Coiled coil,
+  Repeat or Zinc finger. Many cut a targeting feature partway (ABCC6 O95255-2
+  loses 19 of a 21-residue transmembrane segment and is still counted). Browse
+  carries the classification because a filter is a search aid; the gene page
+  keeps the numbers ("missing in full: Ig-like V-type (domain, 19–135)"). Never
+  read it as a deletion that falls between units, or as a protein that still
+  works.
 - **Not novel transcripts.** Only isoforms UniProt describes. A transcript not
   mapped to one is not on the site; About says so.
 
@@ -127,7 +140,15 @@ story. The same standard applies here.
   rather than straight to GTEx, whose per-transcript numbers that post shows
   can mislead. The home page has no tiles of counts: the owner found them
   noisy and visitors prefer pictures; About and Browse keep the totals.
-- **Browse:** one sortable, filterable row per protein from `index.json`.
+- **Browse:** one sortable, filterable row per protein from `index.json`. The
+  "Domains lost whole, none cut" column counts the protein's isoforms missing
+  at least one whole domain or region while leaving none partly missing, which
+  narrows a search to losses that stop at a unit's edge. It covers the
+  `domains` group alone, which is a scope choice rather than a claim that the
+  distinction is empty elsewhere: `targeting` spans a signal peptide and a
+  transmembrane segment, where whole against cut means as much, and a counted
+  isoform may well cut one. What the column does not say is under "What the
+  site does not claim".
 - **Gene page (`/gene/<page>/`):** one per protein, one anchored section per
   isoform (`#P04637-2`), so a transcript search lands on its isoform.
   - A map: canonical feature rows, pLDDT band and partner-interface rows above
@@ -229,6 +250,10 @@ story. The same standard applies here.
     group: every residue of a range, or either residue of a disulfide bond or
     cross-link. Missing only: residues of a swap (an edit adding at least
     half as many residues as it removes) never count.
+  - `lacking.excised`: isoforms missing in full at least one `domains` feature
+    and leaving none of them partly missing. An isoform whose other domain is
+    wholly inside a swap is left out: `lacksInFull` counts missing residues
+    only, so a swapped domain is neither lost nor intact (LMO7 Q8WWI1-5).
   - `lacking.interface`: isoforms missing at least half of the interface
     residues of at least one predicted partner.
   - `lacking.folded`: isoforms missing at least one canonical residue with

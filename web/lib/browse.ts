@@ -63,6 +63,15 @@ export const COLUMNS: BrowseColumn[] = [
   },
   ...lostColumns,
   {
+    key: 'excised',
+    label: 'Domains lost whole, none cut',
+    num: true,
+    cell: row => String(row.excised ?? ''),
+    sort: row => row.excised ?? -1,
+    keep: row => (row.excised ?? 0) > 0,
+    isoforms: row => row.excised ?? 0,
+  },
+  {
     key: 'interface',
     label: 'Partner interface',
     num: true,

@@ -2,6 +2,8 @@ import { expect, test } from 'vitest'
 
 import type { IndexRow } from '../../src/types.ts'
 import {
+  COLUMNS,
+  FILTERS,
   browseQuery,
   countLine,
   nextSort,
@@ -10,6 +12,7 @@ import {
   searchText,
   viewFrom,
 } from './browse.ts'
+import { COLUMN_NOTES, LACKING_PHRASES } from './labels.ts'
 import { geneHref } from './site.ts'
 
 function row(gene: string, overrides: Partial<IndexRow> = {}): IndexRow {
@@ -24,10 +27,20 @@ function row(gene: string, overrides: Partial<IndexRow> = {}): IndexRow {
     mostMissing: 8,
     foldedMissing: 4,
     lost: { targeting: 0, domains: 0, sites: 0, modifications: 0 },
+    excised: 0,
     interfacesLost: 0,
     ...overrides,
   }
 }
+
+test('every filter has a phrase and every column a note', () => {
+  for (const column of COLUMNS) {
+    expect(COLUMN_NOTES[column.key]).toBeTypeOf('string')
+  }
+  for (const filter of FILTERS) {
+    expect(LACKING_PHRASES[filter.key]).toBeTypeOf('string')
+  }
+})
 
 const rows = [
   row('AAA', { foldedMissing: 0 }),
