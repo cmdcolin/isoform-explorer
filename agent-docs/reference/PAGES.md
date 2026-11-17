@@ -17,10 +17,12 @@ files a page reads.
   (`site/preview.png`: RAD51C, `figures/home-hero/`, linked to its page and
   hidden on phones). It is a three-row schematic (the residues that contact
   XRCC3, the canonical bar, isoform 2's bar) above two AlphaFold backbone
-  models, with the same three colours in both: dark for residues isoform 2 has,
-  pale for residues it lacks, blue for contacts. The full gene-page map was
-  tried first and dropped, because its pLDDT, exon and domain rows gave the
-  reader too much to map onto the 3D. The isoform's panel has no partner,
+  models, with the same colours in both: teal for residues isoform 2 has,
+  salmon for residues it lacks, blue for contacts, gold for the partner. Greys
+  for the first two were tried and dropped, because dark and pale grey both
+  read as plain protein and did not separate the parts. The full gene-page map
+  was tried first and dropped, because its pLDDT, exon and domain rows gave
+  the reader too much to map onto the 3D. The isoform's panel has no partner,
   because its model is of the isoform alone, and the picture says "keeps 5 of
   those 60 contacts", never that it does not bind (see
   [CLAIMS.md](CLAIMS.md)). Isoform 2's model is aligned to the canonical's

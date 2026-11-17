@@ -5,8 +5,7 @@ import { heroSchematic, isoformName, keptContacts, loadHomeHero } from '../../li
 
 const hero = loadHomeHero()
 const kept = Math.max(...hero.kept.map(([, end]) => end))
-const swatch = (colour: string, border = false) =>
-  `background:${colour}${border ? ';border:1px solid #bdb7ab' : ''}`
+const swatch = (colour: string) => `background:${colour}`
 ---
 
 <Layout title="Home hero" indexed={false}>
@@ -32,7 +31,7 @@ const swatch = (colour: string, border = false) =>
     </div>
     <p class="home-hero-key">
       <span><i style={swatch(HERO_COLOURS.present)}></i>residues {isoformName(hero)} has (1–{kept})</span>
-      <span><i style={swatch(HERO_COLOURS.lost, true)}></i>residues it lacks ({kept + 1}–{hero.length})</span>
+      <span><i style={swatch(HERO_COLOURS.lost)}></i>residues it lacks ({kept + 1}–{hero.length})</span>
       <span><i style={swatch(HERO_COLOURS.contact)}></i>contacts {hero.partnerGene}</span>
       <span><i style={swatch(HERO_COLOURS.partner)}></i>{hero.partnerGene}, the partner protein</span>
     </p>

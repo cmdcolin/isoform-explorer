@@ -80,8 +80,8 @@ ${bar(52, 1, keptEnd, present)}${bar(52, keptEnd + 1, hero.length, lost)}
 ${label(100, hero.isoformId)}
 ${bar(86, 1, keptEnd, present)}
 <line x1="${boundary}" x2="${x(hero.length + 1)}" y1="95" y2="95" stroke="${lost}" stroke-width="1.5"/>
-<line x1="${boundary}" x2="${boundary}" y1="10" y2="112" stroke="#c97a10" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="${boundary + 6}" y="44" font-size="12.5" fill="#c97a10">${isoformName(hero)} ends at residue ${keptEnd}</text>
+<line x1="${boundary}" x2="${boundary}" y1="10" y2="112" stroke="${muted}" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="${boundary + 6}" y="44" font-size="12.5" fill="${muted}">${isoformName(hero)} ends at residue ${keptEnd}</text>
 <line x1="${LEFT}" x2="${RIGHT}" y1="118" y2="118" stroke="${ink}"/>${ticks}
 </svg>`
 }
