@@ -327,6 +327,9 @@ story. The same standard applies here.
   clearer to a biologist, a curator or someone with a transcript in hand.
   Before adding a feature, get a skeptical subagent review that sees the site,
   not your conclusion, and may answer "none".
+- **Review every new sentence a reader will see,** against the built output.
+  Three reviews on 2026-11-16 each found the computation right and the copy
+  claiming more than it showed.
 - **Numbers in prose come from the pipeline,** never typed by hand.
 - **Plain browsing.** No headline findings; statistics are there to say what
   can be explored.

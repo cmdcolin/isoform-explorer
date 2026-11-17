@@ -97,14 +97,13 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
 
 ## Open from 2026-11-16
 
-- Run a full build and `pnpm check-links` before pushing; every build on
-  2026-11-16 was partial (`PAGES=`).
-- Ideas reviewed and not built, worth keeping: experimental PDB contacts and
-  epitope survival per isoform (**SIFTS is no longer the blocker status.md
-  claimed** — RCSB's REST API returns SIFTS alignments directly, `contacts.ts`
-  and `interfaces.ts` already parse mmCIF, and 7O52 is CD22 d6-d7 with the Fab
-  of the CAR binder m971). Ruled out: folding isoform-partner complexes here,
-  and any escape-risk score.
+- The previous session reported a full build (15,060 pages, exit 0),
+  `pnpm check-links` with 0 broken of 257,527, `astro check` clean and 239
+  tests passing. Main is ahead of origin and unpushed; pushing is the owner's.
+  The `domain-excision` and `subunit-notes` worktrees are merged and clean and
+  can be deleted. `blog` and `gtex-post-retitle` are unmerged; leave them.
+- Ruled out: folding isoform-partner complexes here, and any escape-risk
+  score.
 - `cc_subcellular_location` is the other half of the multimer-and-location
   idea and is **not** fetched; adding it to `ENTRY_FIELDS` means refetching
   `data/uniprot_isoforms.json` for all 10,683 entries, so it was left out.
@@ -118,6 +117,37 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
 - Candidate posts with a new kind of hero: LEF1 isoform 7 (lacks every
   predicted β-catenin contact; a Wnt pathway cartoon) and NDUFV3 (MANE encodes
   473 residues against UniProt's 108; a ruler drawn to scale).
+
+## Next, in order (planned 2026-11-16, nothing built)
+
+- **Name the genes on multi-gene pages.** `web/lib/labels.ts` writes "these
+  genes" when an entry has more than one Ensembl gene, without naming them
+  (FXYD6 and 98 other pages). Pass the gene names in, not the count. Small, and
+  it is wrong copy on live pages, so it goes first.
+- **Epitope spike: 7O52 and CD22 only, about half a day.** Checked against
+  RCSB on 2026-11-16: 7O52 is "CD22 d6-d7 in complex with Fab m971" at 2.41 Å;
+  `data.rcsb.org/rest/v1/core/polymer_entity/7O52/3` aligns entity residue 2
+  to P20273 position 504 for 184 residues; the two Fab entities carry no
+  UniProt id, which is enough to tell antibody from target here.
+  `illustration.ts` already downloads and caches mmCIF, `atomsByChain` in
+  `interfaces.ts` parses it, and `contacts.ts` holds the distance helpers.
+  Still to write: the entity-to-UniProt residue mapping, the 5 Å contact call
+  and the projection onto each CD22 isoform. Show the collaborator the result
+  before generalising.
+- **Agree the wording before the code.** Say "contact residues present in this
+  isoform: 14 of 17". Never "epitope intact" or "binds". Each isoform's
+  residues are in one of three states: present, missing, or not covered by the
+  structure (7O52 covers only 504–687, so an isoform differing elsewhere
+  cannot be assessed from it). Carry a fixed caveat that a crystal contact set
+  is not the epitope and that retained residues imply neither fold nor
+  binding. Decide how to describe present residues that abut a deletion.
+- **CD19 scope post,** framed as above: the count does not rescue it. Prose
+  only, so it can run alongside the spike. Write it on the `blog` branch or
+  after that branch lands, not on a third line of history.
+- **Epitope rollout,** only if the spike answers the collaborator's question.
+  The hard part is knowing which chains are antibody across PDB; "no UniProt
+  id" will not generalise. Start from a curated list of therapeutic-antibody
+  complexes (SAbDab or Thera-SAbDab) rather than detecting them.
 
 ## Deployment
 
@@ -160,9 +190,9 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
 - **A whole-protein Chain as a feature.** Every isoform cuts it. Chains are kept
   only when an entry has several products and the chain is not the longest.
 - **Experimental (PDB) coverage of the absent residues,** suggested by the
-  reviewer. Not built, and still needs a rule for partial structures, but the
-  source is no longer missing: see the SIFTS note under what was reviewed and
-  not built, above.
+  reviewer. Not built as a general feature; the planned epitope spike under
+  "Next, in order" is the scoped version, with "not covered by this
+  structure" as its rule for partial structures.
 - **Filtering expression out of UniProt's notes.** Notes are quoted whole and
   attributed. The rule is that the site computes and asserts nothing about
   expression.
