@@ -294,8 +294,8 @@ export function changeText(change: Change) {
       : '',
     change.added
       ? change.missing || change.replaced
-        ? `${plural(change.added, 'residue')} the canonical lacks added`
-        : `inserts ${plural(change.added, 'residue')} the canonical lacks`
+        ? `${plural(change.added, 'residue')} added, absent from the canonical`
+        : `inserts ${plural(change.added, 'residue')} absent from the canonical`
       : '',
   ].filter(Boolean)
   return `${span(change.start, change.end)}: ${listText(parts)}`
@@ -491,7 +491,7 @@ export function residueClause(
         ]
   const inserted = inserts.reduce((sum, e) => sum + e.novel, 0)
   const insertNoun = inserts.length
-    ? `${plural(inserted, 'residue')} the canonical lacks, at ${
+    ? `${plural(inserted, 'residue')} absent from the canonical, at ${
         inserts.length === 1 && inserts[0]
           ? span(inserts[0].edit.start, inserts[0].edit.end)
           : `${inserts.length} places`

@@ -322,7 +322,7 @@ describe('the answer sentence', () => {
       novel: 4,
     })
     expect(answer(record({}), i)).toBe(
-      'Has every canonical residue and 4 residues the canonical lacks, at 50.',
+      'Has every canonical residue and 4 residues absent from the canonical, at 50.',
     )
   })
 })

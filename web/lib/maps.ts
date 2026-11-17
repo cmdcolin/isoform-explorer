@@ -346,7 +346,7 @@ function isoformBar(s: Scale, row: Row, y: number, length: number) {
     .join('')}${added
     .map(
       e =>
-        `<rect class="n" x="${fixed(s.x(e.edit.start) - 1)}" y="${y - 2}" width="2.2" height="14"><title>${esc(`${plural(e.novel, 'residue')} the canonical lacks, at ${span(e.edit.start, e.edit.end)}`)}</title></rect>`,
+        `<rect class="n" x="${fixed(s.x(e.edit.start) - 1)}" y="${y - 2}" width="2.2" height="14"><title>${esc(`${plural(e.novel, 'residue')} absent from the canonical, at ${span(e.edit.start, e.edit.end)}`)}</title></rect>`,
     )
     .join('')}`
 }

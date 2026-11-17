@@ -131,7 +131,7 @@ const sections = record.isoforms.map(i => {
   }
 })
 const structures = structureMap(record, mane?.accession)
-const description = `What ${others === 1 ? 'the one alternative isoform' : `each of the ${others} alternative isoforms`} of ${record.gene} (${record.protein}) lacks relative to the canonical protein: residues, UniProt features, model confidence${partners ? ' and predicted partner interfaces' : ''}.`
+const description = `${others === 1 ? 'The one alternative isoform' : `Each of the ${others} alternative isoforms`} of ${record.gene} (${record.protein}) compared with the canonical protein, residue by residue, across UniProt features, model confidence${partners ? ' and predicted partner interfaces' : ''}.`
 ---
 
 <Layout title={`${record.gene} isoforms`} description={description}>
@@ -139,15 +139,15 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
     <h1>{record.gene} <span class="muted">· {record.protein}</span></h1>
     <p class="lede">
       UniProt <a href={uniprot}>{record.accession}</a> describes {others + 1} isoforms of this {count(record.length)}-residue
-      protein{events && <>, from {events}</>}. {others === 1 ? 'The section below lists what the one alternative isoform lacks relative to' : `Each section below lists what one of the ${others} alternative isoforms lacks relative to`}{' '}
-      the canonical isoform, <a href={`#${canonical.accession}`}>{canonical.accession}</a>.
+      protein{events && <>, from {events}</>}. {others === 1 ? 'The section below compares the one alternative isoform with' : `Each section below compares one of the ${others} alternative isoforms with`}{' '}
+      the canonical isoform, <a href={`#${canonical.accession}`}>{canonical.accession}</a>, residue by residue.
     </p>
     {
       maneElsewhere ? (
         <p class="note mane-note">
           <strong>MANE Select encodes <a href={`#${maneElsewhere.accession}`}>{maneElsewhere.accession}</a>, not UniProt's
           canonical isoform.</strong> Every loss on this page is measured against the canonical, {canonical.accession}, so the
-          section for {maneElsewhere.accession} lists what the MANE Select protein lacks relative to it, and the canonical
+          section for {maneElsewhere.accession} compares the MANE Select protein with it, and the canonical
           has no MANE Select transcript.
         </p>
       ) : mane ? (
@@ -185,7 +185,7 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
           {explorerGene && explorerIsoforms && ' and '}
           {explorerIsoforms && (
             <a href={`${INTERFACE_EXPLORER}isoforms/${encodeURIComponent(explorerIsoforms)}/`}>
-              which ClinVar pathogenic sites each of its isoforms lacks
+              where ClinVar pathogenic sites fall across its isoforms
             </a>
           )}
           ; this site shows no variants.
@@ -251,7 +251,7 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
     <span><span class="swatch kept"></span>present</span>
     <span>gap: missing</span>
     <span><span class="swatch replaced-swatch"></span>replaced by other residues</span>
-    <span><span class="swatch inserted"></span>residues the canonical lacks</span>
+    <span><span class="swatch inserted"></span>residues absent from the canonical</span>
     {
       record.exons && (
         <span>

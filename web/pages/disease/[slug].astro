@@ -33,7 +33,7 @@ const relatives = series
 <Layout
   title={disease.name}
   nav="diseases"
-  description={`${disease.name}: the ${genes.length === 1 ? 'protein' : 'proteins'} UniProt links to it (${names}) and what each of their isoforms lacks compared with the canonical protein.`}
+  description={`${disease.name}: the ${genes.length === 1 ? 'protein' : 'proteins'} UniProt links to it (${names}), with ${genes.length === 1 ? 'its' : 'their'} isoforms drawn on the canonical sequence, residue by residue.`}
 >
   <p><a href={href('diseases/')}>← All diseases</a></p>
   <h1>{disease.name}</h1>
