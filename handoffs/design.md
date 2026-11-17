@@ -247,7 +247,10 @@ story. The same standard applies here.
   (`src/illustration.ts` extracts the atoms, `web/scripts/illustrate.ts` draws
   them), and a grid of antibody contact residues per isoform under CD22's
   domain map (`web/lib/contact-grid-figure.ts`, contacts from
-  `src/epitopes.ts`). Screenshots of the gene page and of JBrowse appear inside posts as
+  `src/epitopes.ts`), and an Euler diagram of CD19's transcripts in GENCODE
+  and UniProt, each drawn as an exon glyph from GENCODE coordinates, with the
+  exon 2-skipped mRNA outside both (`web/lib/transcript-sets-figure.ts`,
+  transcripts from `src/gene-transcripts.ts`). Screenshots of the gene page and of JBrowse appear inside posts as
   figures, never as heroes. A new post needs a hero unlike all of these; the
   owner drops a post whose hero would not be new. A post may cite literature and public expression data to say
   where an isoform is made, attributed to its source; the rules above still

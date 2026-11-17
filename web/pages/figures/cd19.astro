@@ -1,0 +1,12 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { cd19Transcripts } from '../../lib/cd19.ts'
+import { gene } from '../../lib/data.ts'
+import { transcriptSetsFigure } from '../../lib/transcript-sets-figure.ts'
+
+const figure = transcriptSetsFigure(gene('CD19'), cd19Transcripts().transcripts, 2)
+---
+
+<Layout title="CD19 transcripts" indexed={false}>
+  <div class="hero-figure"><Fragment set:html={figure} /></div>
+</Layout>

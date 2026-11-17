@@ -1,0 +1,41 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+import type { GeneTranscript } from '../../src/gene-transcripts.ts'
+
+export function cd19Transcripts() {
+  const data: { gene: string; release: string; transcripts: GeneTranscript[] } =
+    JSON.parse(
+      readFileSync(
+        join(
+          process.cwd(),
+          'web',
+          'content',
+          'blog',
+          'data',
+          'cd19-transcripts.json',
+        ),
+        'utf8',
+      ),
+    )
+  return data
+}
+
+/**
+ * Whether any transcript splices the canonical's exon before `exon` straight
+ * to the one after it.
+ */
+export function skipsExon(
+  transcripts: GeneTranscript[],
+  canonical: GeneTranscript,
+  exon: number,
+) {
+  const before = canonical.exons[exon - 2]
+  const after = canonical.exons[exon]
+  return transcripts.filter(t =>
+    t.exons.some(
+      (piece, i) =>
+        piece[1] === before?.[1] && t.exons[i + 1]?.[0] === after?.[0],
+    ),
+  )
+}

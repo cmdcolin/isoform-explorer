@@ -33,7 +33,7 @@ const PATH = join(DATA, 'ensembl_transcripts.json')
 const LAYOUTS = join(DATA, 'gencode_exons.json')
 const TYPES = join(DATA, 'gencode_types.json')
 const GENE_TRANSCRIPTS = join(DATA, 'gencode_v49_genes.json')
-const GENCODE = join(DATA, 'gencode.v49.annotation.gff3.gz')
+export const GENCODE = join(DATA, 'gencode.v49.annotation.gff3.gz')
 const GENCODE_URL =
   'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/gencode.v49.annotation.gff3.gz'
 const GFF_TRANSCRIPT = /transcript_id=(ENST\d+)\.\d+;/
@@ -231,7 +231,7 @@ function cachedLayouts() {
   )
 }
 
-async function gencodeFile() {
+export async function gencodeFile() {
   if (!existsSync(GENCODE)) {
     const response = await fetch(GENCODE_URL)
     if (response.ok && response.body) {

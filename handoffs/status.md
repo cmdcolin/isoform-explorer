@@ -155,9 +155,12 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
     epitope: these are residues within 5 Å of the antibody in one structure.
     That an isoform keeps them says nothing about whether it folds the same
     way or binds."
-- **CD19 scope post,** framed as above: the count does not rescue it. Prose
-  only, so it can run alongside the spike. Write it from main, where the
-  posts live (`web/content/blog/`).
+- **Done: the CD19 scope post** (`2026-11-16-cd19-exon-2.mdx`). It quotes
+  Sotillo et al. 2015 on the exon 2-skipped mRNA in relapsed B-ALL, places
+  exon 2 on the canonical (coding nucleotides 89–355, residues 30–119), and
+  says the gene page reads 2 of 2 because GENCODE 49's 5 CD19 transcripts
+  include none joining exon 1 to exon 3. `node src/gene-transcripts.ts`
+  writes `web/content/blog/data/cd19-transcripts.json` from the GFF3.
 - **Epitope rollout,** only if the spike answers the collaborator's question.
   The hard part is knowing which entries are antibody complexes at all. Start
   from a curated list of therapeutic-antibody

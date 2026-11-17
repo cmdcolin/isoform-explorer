@@ -104,6 +104,14 @@ const SHOTS: Shot[] = [
     wait: 1,
   },
   {
+    name: 'transcript-sets',
+    dir: 'heroes',
+    path: 'figures/cd19/',
+    clip: ['.hero-figure'],
+    height: 900,
+    wait: 1,
+  },
+  {
     name: 'ndufc2-gene-view',
     dir: 'figures',
     path: 'gene/NDUFC2/',
