@@ -32,12 +32,12 @@ const LOW = 100
 const PATH = join(DATA, 'ensembl_transcripts.json')
 const LAYOUTS = join(DATA, 'gencode_exons.json')
 const TYPES = join(DATA, 'gencode_types.json')
-const GENE_TRANSCRIPTS = join(DATA, 'gencode_gene_transcripts.json')
+const GENE_TRANSCRIPTS = join(DATA, 'gencode_v49_gene_transcripts.json')
 const GENCODE = join(DATA, 'gencode.v49.annotation.gff3.gz')
 const GENCODE_URL =
   'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/gencode.v49.annotation.gff3.gz'
 const GFF_TRANSCRIPT = /transcript_id=(ENST\d+)\.\d+;/
-const GFF_GENE = /gene_id=(ENSG\d+)\.\d+/
+const GFF_GENE = /(?:^|;)gene_id=(ENSG\d+)\.\d+/
 const CODING = 'protein_coding'
 const PRIMARY = /^([1-9]|1\d|2[0-2]|X|Y|MT)$/
 
@@ -358,24 +358,27 @@ export async function codingTranscripts() {
       ]),
     )
   }
-  const found = new Map<string, string[]>()
-  if (await gencodeFile()) {
-    const lines = createInterface({
-      input: createReadStream(GENCODE).pipe(createGunzip()),
-      crlfDelay: Infinity,
-    })
-    for await (const line of lines) {
-      const [, , type, , , , , , attributes = ''] = line.split('\t')
-      const transcript =
-        type === 'transcript' ? GFF_TRANSCRIPT.exec(attributes)?.[1] : undefined
-      const gene = transcript ? GFF_GENE.exec(attributes)?.[1] : undefined
-      const typed = transcript ? gencodeType(attributes) : null
-      if (transcript && gene && typed?.type === CODING && typed.complete) {
-        found.set(gene, [...(found.get(gene) ?? []), transcript])
-      }
-    }
-    writeJson(GENE_TRANSCRIPTS, Object.fromEntries(found))
+  if (!(await gencodeFile())) {
+    throw new Error(
+      "GENCODE's GFF3 is neither cached nor downloadable, so no gene's coding transcripts can be counted. Rerun with the network: carrying on would write every gene file with a count of zero and drop the note from every page.",
+    )
   }
+  const found = new Map<string, string[]>()
+  const lines = createInterface({
+    input: createReadStream(GENCODE).pipe(createGunzip()),
+    crlfDelay: Infinity,
+  })
+  for await (const line of lines) {
+    const [, , type, , , , , , attributes = ''] = line.split('\t')
+    const transcript =
+      type === 'transcript' ? GFF_TRANSCRIPT.exec(attributes)?.[1] : undefined
+    const gene = transcript ? GFF_GENE.exec(attributes)?.[1] : undefined
+    const typed = transcript ? gencodeType(attributes) : null
+    if (transcript && gene && typed?.type === CODING && typed.complete) {
+      found.get(gene)?.push(transcript) ?? found.set(gene, [transcript])
+    }
+  }
+  writeJson(GENE_TRANSCRIPTS, Object.fromEntries(found))
   return found
 }
 

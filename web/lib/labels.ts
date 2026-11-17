@@ -1,7 +1,8 @@
 import { FOLDED_PLDDT, INTERFACE_LOST_SHARE } from '../../src/isoforms.ts'
 import { FEATURE_GROUPS } from '../../src/types.ts'
-import type { FeatureGroup, Totals } from '../../src/types.ts'
+import type { FeatureGroup, GeneRecord, Totals } from '../../src/types.ts'
 import { GROUPS, GROUP_MISSING } from './features.ts'
+import { count, plural } from './loss.ts'
 
 const SHARES: Record<number, string> = { 0.5: 'half' }
 
@@ -14,6 +15,40 @@ export function groupMissing(group: FeatureGroup) {
 }
 
 export const INTERFACE_MISSING = `missing at least ${share(INTERFACE_LOST_SHARE)} of a predicted partner interface`
+
+/**
+ * What GENCODE 49 lists for the gene against what UniProt describes, or '' when
+ * every one of its complete coding transcripts is mapped. "Complete" and "of
+ * GENCODE's other types" are both said out loud: the count leaves out
+ * transcripts tagged `cds_start_NF` or `cds_end_NF`, and leaves out the types
+ * UniProt sometimes maps to an isoform shown here, so a reader comparing it
+ * with the Transcripts lists on the page is told why they differ.
+ */
+export function codingNote({ genes, gencode, mapped }: GeneRecord['coding']) {
+  const rest = gencode - mapped
+  const subject =
+    rest === gencode
+      ? gencode === 1
+        ? ['It has', 'it is']
+        : ['They have', 'they are']
+      : [
+          `The other ${rest === 1 ? 'one has' : `${count(rest)} have`}`,
+          'they are',
+        ]
+  return rest <= 0
+    ? ''
+    : [
+        `GENCODE 49 lists ${plural(gencode, 'complete protein-coding transcript')}`,
+        ` of ${genes > 1 ? 'these genes' : 'this gene'}, `,
+        gencode === 1
+          ? 'mapped to no isoform above. '
+          : mapped === 0
+            ? 'none of them mapped to an isoform above. '
+            : `${count(mapped)} of them mapped to an isoform above. `,
+        `${subject[0]} no page here, since the site covers the isoforms UniProt describes; ${subject[1]} in JBrowse's GENCODE track.`,
+        " Transcripts of GENCODE's other types are outside the count, including any UniProt maps to an isoform here.",
+      ].join('')
+}
 
 export const DOMAINS_WHOLE =
   'missing at least one whole domain or region, with none cut or swapped partway'

@@ -120,15 +120,23 @@ story. The same standard applies here.
   read it as a deletion that falls between units, or as a protein that still
   works.
 - **Not novel transcripts.** Only isoforms UniProt describes. A transcript not
-  mapped to one is not on the site; About says so, and a gene page now gives
-  the size of the gap: GENCODE 49 lists N complete protein-coding transcripts
-  of the entry's Ensembl genes and UniProt maps M of them to an isoform here
-  (8,824 of 10,587 pages have at least one it does not). A count of GENCODE's
+  mapped to one has no page; About says so, and a gene page gives the size of
+  the gap (`codingNote` in `web/lib/labels.ts`, 8,824 of 10,587 pages): GENCODE
+  49 lists N complete protein-coding transcripts of the entry's Ensembl genes
+  and UniProt maps M of them to an isoform there. A count of GENCODE's
   annotation, like the MANE Select mark, and no more than that: the unmapped
   transcripts are not named, not drawn and not claimed to encode a distinct
   protein. Many differ only outside the coding sequence, and GENCODE 49 is deep
   for some genes (LRRFIP2 has 306 against 29 mapped), so a wide gap is not
-  evidence of missing biology.
+  evidence of missing biology. Three things the sentence has to keep saying,
+  because each was wrong in a first draft: "no page here" rather than "not on
+  this site", since `site/data/search/` finds those ids and the site's own
+  JBrowse draws them; "complete", since `cds_start_NF` and `cds_end_NF`
+  transcripts are left out and a reader checking Ensembl sees a larger number
+  (About defines the term); and that GENCODE's other types are outside the
+  count, since UniProt maps an NMD or retained-intron transcript to a shown
+  isoform on 1,592 pages, which would otherwise read as a contradiction of the
+  Transcripts lists on the same page.
 
 ## Pages
 

@@ -58,10 +58,49 @@ file says where the work stands.
 - **Prettier** ignores `*.mdx`; it splits `{' '}` across lines and breaks the
   build.
 
+## Added on 2026-11-16, after a review of what the site could answer next
+
+A collaborator on Ig-domain immunotherapy targets (CD33, CD22) argued that
+splicing moves whole Ig domains in and out, that the interesting question is
+when an isoform is in play, and that "a database is not going to be a
+solution". Two changes came out of it, both generic rather than Ig-specific:
+only 343 of the site's proteins carry an Ig-like domain, and whole-unit
+excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
+
+- **Browse: "Domains lost whole, none cut"** (`excised` on `IndexRow` and in
+  `totals.lacking`): 2,832 isoforms missing at least one whole domain or region
+  and leaving none partly missing. Two things a reviewer established and
+  `design.md` now records: the column says nothing about where the deletion
+  falls (most counted isoforms have an edit reaching a terminus, over half lose
+  no `Domain` feature, and some cut a transmembrane segment partway), and an
+  isoform whose other domain sits wholly inside a swap is left out, since
+  `lacksInFull` counts missing residues only.
+- **Gene page: GENCODE's coding transcripts against UniProt's isoforms.**
+  8,824 of 10,587 pages say how many complete protein-coding transcripts
+  GENCODE 49 lists for the entry's Ensembl genes and how many UniProt maps to
+  an isoform there. `data/gencode_gene_transcripts.json` caches the pass.
+- **CD19 is the case that motivated the second one and the case it does not
+  help**: its Δex2 escape isoform is not in UniProt's alternative products, and
+  GENCODE lists only 2 complete coding transcripts, both mapped, so the page
+  reads 2/2 and shows no sentence. Any post about the site's scope has to say
+  that plainly rather than lean on the count.
+
 ## Open from 2026-11-16
 
 - Run a full build and `pnpm check-links` before pushing; every build on
   2026-11-16 was partial (`PAGES=`).
+- Ideas reviewed and not built, worth keeping: experimental PDB contacts and
+  epitope survival per isoform (**SIFTS is no longer the blocker status.md
+  claimed** — RCSB's REST API returns SIFTS alignments directly, `contacts.ts`
+  and `interfaces.ts` already parse mmCIF, and 7O52 is CD22 d6-d7 with the Fab
+  of the CAR binder m971); quoting UniProt's `cc_subunit` and
+  `cc_subcellular_location` verbatim for multimer context; labelling
+  self-partners in the interface rows (930 proteins have one). Ruled out:
+  folding isoform-partner complexes here, and any escape-risk score.
+- Expression beyond the five blog cases is computable for 13,614 isoforms with
+  a defining junction, but it breaks the "Not expression" refusal, and GTEx is
+  the wrong panel for immune activation; Snaptron's `srav3h` is the same code
+  path if it is ever scoped that way.
 - Candidate posts with a new kind of hero: LEF1 isoform 7 (lacks every
   predicted β-catenin contact; a Wnt pathway cartoon) and NDUFV3 (MANE encodes
   473 residues against UniProt's 108; a ruler drawn to scale).
@@ -107,14 +146,17 @@ file says where the work stands.
 - **A whole-protein Chain as a feature.** Every isoform cuts it. Chains are kept
   only when an entry has several products and the chain is not the longest.
 - **Experimental (PDB) coverage of the absent residues,** suggested by the
-  reviewer. It needs a new source (SIFTS) and a rule for partial structures; not
-  built.
+  reviewer. Not built, and still needs a rule for partial structures, but the
+  source is no longer missing: see the SIFTS note under what was reviewed and
+  not built, above.
 - **Filtering expression out of UniProt's notes.** Notes are quoted whole and
   attributed. The rule is that the site computes and asserts nothing about
   expression.
 - **ClinVar, GTEx, consequence calls, transcripts UniProt does not describe:**
   out of scope by design. ClinVar lives on Interface explorer, linked from a
-  gene page only when that site has the page.
+  gene page only when that site has the page. A gene page now counts the
+  coding transcripts UniProt does not describe, which is a count of GENCODE's
+  annotation; naming or drawing them stays out of scope.
 
 ## Working rules
 
