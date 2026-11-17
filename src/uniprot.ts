@@ -198,6 +198,24 @@ export function notesByMolecule(entry: UniProtEntry) {
   return notes
 }
 
+/**
+ * UniProt's SUBUNIT comments that name no isoform, verbatim and in the entry's
+ * order. They are about the entry, so they belong nowhere near a single
+ * isoform's section; `notesByMolecule` keeps the ones that do name an isoform
+ * and these would otherwise be dropped. Nothing is filtered, including the
+ * "(Microbial infection)" paragraphs some entries carry.
+ */
+export function subunitNotes(entry: UniProtEntry) {
+  return records(entry.comments).flatMap((comment): Note[] => {
+    const note = records(comment.texts)
+      .flatMap(t => text(t.value) ?? [])
+      .join(' ')
+    return comment.commentType === 'SUBUNIT' && !text(comment.molecule) && note
+      ? [{ topic: 'Subunit', text: note }]
+      : []
+  })
+}
+
 export function eventsOf(entry: UniProtEntry) {
   const comment = records(entry.comments).find(
     c => c.commentType === 'ALTERNATIVE PRODUCTS',

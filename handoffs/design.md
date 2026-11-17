@@ -89,6 +89,17 @@ story. The same standard applies here.
   both BRCT domains).
 - **A kept interface is not binding.** No isoform was modelled with a partner.
   A full circle means the residues are present, nothing more.
+- **An entry's subunit note is the entry's.** UniProt's SUBUNIT comments that
+  name no isoform are quoted verbatim on 7,481 gene pages, under their own
+  heading above the isoform sections and never inside one, because they are
+  about the entry: "Homodimer" is not a statement about a particular isoform.
+  `subunitNotes` in `src/uniprot.ts` takes only the comments without a
+  `molecule`, which `notesByMolecule` drops; the isoform-specific ones keep
+  going where they already went. Nothing is filtered, the
+  "(Microbial infection)" paragraphs included, and the site adds no reading of
+  its own — where UniProt names an isoform (CD22's "heterodimer of isoform
+  CD22-beta and a shorter isoform"), that is UniProt's words, not a claim the
+  site computed.
 - **Losing confidence is a model's opinion.** pLDDT is the prediction's
   confidence, not a measurement of folding. Say so beside the number.
 - **Not expression.** The site computes and asserts nothing about expression:
@@ -174,6 +185,9 @@ story. The same standard applies here.
     map, with a band joining the canonical's coding exons to its residues; it
     exists so splicing that cuts inside an exon (an alternative acceptor or
     donor) can be seen rather than explained.
+  - `#subunit`, above the isoform sections: UniProt's entry-level SUBUNIT
+    comments, where the entry has any. The nearest the site comes to the
+    multimer question, and it comes no nearer than quoting.
   - Per isoform, the answer first as a sentence, then the losses grouped under
     the edit that causes them, then transcripts, UniProt's note and links
     (UniProt, Ensembl, RefSeq, AlphaFold DB, isoform superposed on canonical in

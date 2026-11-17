@@ -274,6 +274,23 @@ const description = `What ${others === 1 ? 'the one alternative isoform' : `each
   }
   {partners === 0 && <p class="muted">No AlphaFold DB complex of this protein has a confident predicted interface.</p>}
   {
+    record.subunit.length > 0 && (
+      <div class="shared-notes" id="subunit">
+        <h2>UniProt on how the protein assembles</h2>
+        <p class="muted">
+          UniProt attaches these to {record.accession} as a whole rather than to an isoform, and this site assigns them
+          to none: an entry reading “Homodimer” is not a statement about any one isoform below. Where UniProt does name
+          an isoform, the quote names it. No isoform here was modelled with a partner.
+        </p>
+        {record.subunit.map(n => (
+          <p class="quote">
+            “{n.text}.” <cite>UniProt, {n.topic}; on the entry</cite>
+          </p>
+        ))}
+      </div>
+    )
+  }
+  {
     sharedNotes.length > 0 && (
       <div class="shared-notes" id="shared-notes">
         <h2>UniProt notes on several isoforms</h2>

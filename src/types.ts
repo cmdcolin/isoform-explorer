@@ -140,6 +140,12 @@ export interface GeneRecord {
   }
   features: Feature[]
   interfaces: Record<string, number[]>
+  /**
+   * UniProt's SUBUNIT comments that name no isoform, verbatim. About the entry,
+   * not about any one isoform: an entry saying "Homodimer" says nothing about
+   * which isoforms pair.
+   */
+  subunit: Note[]
   isoforms: Isoform[]
   /** ENSG ids, with versions. */
   ensemblGenes: string[]

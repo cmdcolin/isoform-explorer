@@ -97,6 +97,7 @@ function record(overrides: Partial<GeneRecord>): GeneRecord {
     },
     features: [],
     interfaces: {},
+    subunit: [],
     isoforms: [],
     ensemblGenes: [],
     coding: { genes: 0, gencode: 0, mapped: 0 },

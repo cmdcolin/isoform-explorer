@@ -85,6 +85,16 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
   reads 2/2 and shows no sentence. Any post about the site's scope has to say
   that plainly rather than lean on the count.
 
+- **Entry-level subunit notes**, the third change out of that review: UniProt's
+  SUBUNIT comments naming no isoform were being dropped by `notesByMolecule`,
+  which keeps only comments with a `molecule`. `subunitNotes` keeps them and
+  7,481 gene pages now quote them under `#subunit`, above the isoform sections.
+  `cc_subunit` was already in `ENTRY_FIELDS`, so this needed no refetch. The
+  text is often exactly the multimer answer the collaborator wanted and the
+  site cannot compute: CD33 "Homodimer; disulfide-linked", CD22 "Predominantly
+  monomer of isoform CD22-beta. Also found as heterodimer of isoform CD22-beta
+  and a shorter isoform."
+
 ## Open from 2026-11-16
 
 - Run a full build and `pnpm check-links` before pushing; every build on
@@ -93,10 +103,14 @@ excision is commoner in zinc-finger, ANK, WD and calponin-homology arrays.
   epitope survival per isoform (**SIFTS is no longer the blocker status.md
   claimed** — RCSB's REST API returns SIFTS alignments directly, `contacts.ts`
   and `interfaces.ts` already parse mmCIF, and 7O52 is CD22 d6-d7 with the Fab
-  of the CAR binder m971); quoting UniProt's `cc_subunit` and
-  `cc_subcellular_location` verbatim for multimer context; labelling
-  self-partners in the interface rows (930 proteins have one). Ruled out:
-  folding isoform-partner complexes here, and any escape-risk score.
+  of the CAR binder m971). Ruled out: folding isoform-partner complexes here,
+  and any escape-risk score.
+- `cc_subcellular_location` is the other half of the multimer-and-location
+  idea and is **not** fetched; adding it to `ENTRY_FIELDS` means refetching
+  `data/uniprot_isoforms.json` for all 10,683 entries, so it was left out.
+- Labelling self-partners in the interface rows was already built:
+  `partnerName` in `web/lib/loss.ts` renders "GENE (itself)". A review
+  proposed it as new; it is not.
 - Expression beyond the five blog cases is computable for 13,614 isoforms with
   a defining junction, but it breaks the "Not expression" refusal, and GTEx is
   the wrong panel for immune activation; Snaptron's `srav3h` is the same code

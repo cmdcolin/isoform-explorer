@@ -4,6 +4,7 @@ import {
   eventsOf,
   featuresOf,
   notesByMolecule,
+  subunitNotes,
   proteinOf,
   withoutWholeChains,
   withoutEvidence,
@@ -182,5 +183,49 @@ describe('withoutWholeChains', () => {
         { type: 'Peptide', start: 85, end: 116, description: 'Calcitonin' },
       ]),
     ).toHaveLength(1)
+  })
+})
+
+describe('subunitNotes', () => {
+  it('keeps the entry’s own subunit comments and leaves the isoform ones alone', () => {
+    const entry = {
+      comments: [
+        {
+          commentType: 'SUBUNIT',
+          texts: [{ value: 'Homodimer; disulfide-linked' }],
+        },
+        {
+          commentType: 'SUBUNIT',
+          molecule: 'Isoform 2',
+          texts: [{ value: 'Monomer' }],
+        },
+        {
+          commentType: 'SUBUNIT',
+          texts: [{ value: '(Microbial infection) Interacts with E6' }],
+        },
+        { commentType: 'FUNCTION', texts: [{ value: 'Binds DNA' }] },
+      ],
+    }
+    expect(subunitNotes(entry)).toEqual([
+      { topic: 'Subunit', text: 'Homodimer; disulfide-linked' },
+      { topic: 'Subunit', text: '(Microbial infection) Interacts with E6' },
+    ])
+    expect(notesByMolecule(entry).get('Isoform 2')).toEqual([
+      { topic: 'Subunit', text: 'Monomer' },
+    ])
+  })
+
+  it('joins a comment’s texts and drops an empty one', () => {
+    expect(
+      subunitNotes({
+        comments: [
+          {
+            commentType: 'SUBUNIT',
+            texts: [{ value: 'Heterodimer' }, { value: 'with CD22-beta' }],
+          },
+          { commentType: 'SUBUNIT', texts: [] },
+        ],
+      }),
+    ).toEqual([{ topic: 'Subunit', text: 'Heterodimer with CD22-beta' }])
   })
 })

@@ -63,6 +63,7 @@ import {
   geneOf,
   isoformEntries,
   notesByMolecule,
+  subunitNotes,
   proteinOf,
   sequenceOf,
 } from './uniprot.ts'
@@ -588,6 +589,7 @@ export async function geneRecord(
     },
     features,
     interfaces,
+    subunit: subunitNotes(entry),
     isoforms: built,
     ensemblGenes: ensemblGenes(entry),
     unmapped: transcripts.unmapped(
